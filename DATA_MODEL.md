@@ -117,7 +117,8 @@ Tracks every user who has registered for an event, including their status. The d
 {
   "uid": "string",
   "displayName": "string",
-  "status": "string", // "Requested", "Confirmed", "Waitlisted", "Withdrawn"
+  "status": "string", // "Requested", "Confirmed", "Waitlisted", "Withdrawn", "Denied"
+  "denialReason": "string", // Optional: "Insufficient funds", "Event full", etc.
   "paymentStatus": "string", // "Pending", "Paid", "Failed" - Tracks fee payment after commitment deadline
   "registeredAt": "timestamp" // Used to determine waitlist order (first-come, first-served)
 }

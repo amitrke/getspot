@@ -1,6 +1,6 @@
 # GetSpot High-Level Architecture
 
-This document outlines the basic architectural model for the GetSpot application, detailing the flow of data and control between the client, authentication, database, and backend logic.
+This document outlines the "write-to-trigger" architectural model for the GetSpot application, detailing the flow of data and control between the client, database, and backend logic.
 
 ```mermaid
 graph TD
@@ -18,23 +18,27 @@ graph TD
     A -- "Signs in / Registers" --> B
     B -- "Provides Auth Token" --> A
 
-    A -- "Read/Write Data (with Auth Token)" --> D
-    D -- "Validates Request" --> C
-
-    A -- "Triggers Sensitive Operation (e.g., Register)" --> E
-
-    E -- "Performs Trusted Logic (e.g., process queue)" --> C
-    C -- "Data updates trigger UI changes" --> A
+    A -- "1. Writes 'request' doc (e.g., {status: 'requested'})" --> D
+    D -- "2. Allows safe initial write" --> C
+    
+    C -- "3. onCreate event triggers Function" --> E
+    E -- "4. Performs trusted logic (checks, etc.)" --> C
+    C -- "5. Updates doc (e.g., {status: 'Confirmed'})" --> A
 ```
 
 ## Architectural Flow Explained
 
-*   **Authentication:** The user signs in or registers via the **Flutter App**, which communicates with **Firebase Auth**.
-*   **Auth Token:** Firebase Auth returns a secure ID Token to the app. This token is sent with all subsequent requests to prove the user's identity.
-*   **Direct Database Access:** For simple, safe operations (like reading event details or updating a user's own profile), the Flutter App makes a request directly to **Firestore**.
-*   **Security Rules:** **Firestore Security Rules** intercept every direct request. They check the user's Auth Token and other conditions (e.g., `request.auth.uid == userId`) to allow or deny the operation. This is the primary security layer.
-*   **Sensitive Operations:** For complex or sensitive actions (like registering for an event, which requires checking spots, balance, and updating counts), the Flutter App calls a specific **Firebase Function**.
-*   **Trusted Backend Logic:** The **Firebase Function**, running in a secure server environment, executes the complex logic. It has privileged access to Firestore to perform necessary reads and writes (e.g., creating a "requested" document, then processing it to change the status to "Confirmed" or "Waitlisted").
-*   **Real-time Updates:** The Flutter App listens for real-time changes in the **Firestore Database**, so when the Firebase Function updates a user's registration status, the UI on the user's device updates automatically.
+This architecture uses a **"write-to-trigger"** pattern for handling sensitive operations, providing excellent resilience and user experience.
 
-This model ensures that the client is only responsible for the presentation layer, while all critical business logic and security enforcement happens on the backend.
+*   **Authentication:** The user signs in via the **Flutter App**, which communicates with **Firebase Auth** to get a secure ID Token.
+
+*   **Simple Reads:** For reading public data (like event details), the app queries Firestore directly.
+
+*   **Sensitive Operations (e.g., Event Registration):**
+    1.  **Initial Write:** The Flutter App performs a simple, fast write to Firestore to create a new document representing the user's intent (e.g., `/events/{eventId}/participants/{userId}` with a status of `"requested"`).
+    2.  **Security Rules:** **Firestore Security Rules** allow this specific write operation, but only if the status is `"requested"`. The rules would deny any attempt by the client to write `"Confirmed"` or any other status directly.
+    3.  **Function Trigger:** A **Firebase Function** is configured to automatically trigger whenever a new participant document is created.
+    4.  **Trusted Backend Logic:** The Function executes all the complex validation logic in a secure environment: checking the user's wallet balance, verifying spot availability, and ensuring fairness (first-come, first-served).
+    5.  **Final Update & Real-time Sync:** The Function updates the participant document with the final status (`"Confirmed"`, `"Waitlisted"`, or `"Denied"` with a reason). Because the Flutter App is listening for real-time changes to this document, the UI updates automatically to show the user their final status.
+
+This model is highly scalable and robust. The initial write acts as a durable request queue within Firestore, and the user gets immediate feedback while the complex logic runs securely in the background.

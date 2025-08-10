@@ -71,7 +71,7 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 *   [ ] Join groups or request to join.
 *   [ ] View event details (including the Commitment Deadline).
 *   [ ] Submit a registration request for an event. The initial status will show as **"Requested"**.
-*   [ ] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"** or **"Waitlisted"**) reasonably quickly.
+*   [ ] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.
 *   [ ] Withdraw from an event (understanding the penalty if after the deadline).
 *   [ ] Join a waitlist if all spots are filled when the request is processed.
 *   [ ] Receive push notifications for status updates, event changes, and commitment deadlines.
