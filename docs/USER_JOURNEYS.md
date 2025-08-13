@@ -37,7 +37,7 @@ graph TD
     A[User navigates to 'Create Group'] --> B[Fills out Group Details form];
     B --> C["Selects Membership Type ('Open' or 'By Approval')"];
     C -- Clicks 'Create' --> D[New doc created in `/groups` collection];
-    D -- User is automatically added --> E[New doc created in `/groups/{groupId}/members/{userId}`];
+    D -->|User is automatically added| E["New doc created in `/groups/{groupId}/members/{userId}`"];
     E --> F[User is redirected to the new Group's dashboard];
 ```
 
@@ -55,7 +55,7 @@ This flow describes how a player joins a group, covering both "Open" and "By App
 ```mermaid
 graph TD
     A[Player finds an 'Open' group] --> B[Clicks 'Join Group'];
-    B --> C[New doc created in `/groups/{groupId}/members/{userId}`];
+    B --> C["New doc created in `/groups/{groupId}/members/{userId}`"];
     C --> D[Player sees group events and content immediately];
 ```
 
@@ -64,9 +64,9 @@ graph TD
 ```mermaid
 graph TD
     A[Player finds a 'By Approval' group] --> B[Clicks 'Request to Join'];
-    B --> C[New doc created in `/groups/{groupId}/joinRequests/{userId}`];
+    B --> C["New doc created in `/groups/{groupId}/joinRequests/{userId}`"];
     C --> D[Player sees 'Request Pending' status];
-    D -- Organizer approves request --> E[Firebase Function moves user from 'joinRequests' to 'members' subcollection];
+    D -->|Organizer approves request| E[Firebase Function moves user from 'joinRequests' to 'members' subcollection];
     E --> F[Player receives notification and can now access the group];
 ```
 
@@ -105,7 +105,7 @@ graph TD
     subgraph "Player's Device (Flutter App)"
         A[Player views an event] --> B{Wallet balance sufficient?};
         B -- Yes --> C[Clicks 'Register'];
-        C --> D[Writes 'participant' doc with {status: 'requested'}];
+        C --> D["Writes 'participant' doc with {status: 'requested'}"];
         D -- Listens for real-time update --> G[UI updates to 'Confirmed' or 'Waitlisted'];
     end
 
