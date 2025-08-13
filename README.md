@@ -9,7 +9,8 @@ This project is well-documented to ensure a clear understanding of its goals, ar
 *   **[REQUIREMENTS.md](./docs/REQUIREMENTS.md):** Detailed functional and non-functional requirements, including user stories, core concepts, and feature lists.
 *   **[ARCHITECTURE.md](./docs/ARCHITECTURE.md):** A high-level overview of the system architecture, explaining the roles of the Flutter frontend, Firebase services, and security model.
 *   **[DATA_MODEL.md](./docs/DATA_MODEL.md):** The proposed data model for the Firestore database, outlining all collections, subcollections, and document schemas.
+*   **[USER_JOURNEYS.md](./docs/USER_JOURNEYS.md):** Describes the paths users take to complete core tasks, illustrating the app's workflow from different user perspectives.
 
 ## Getting Started
 
-*(This section will be updated with instructions on how to set up and run the project once development begins.)*
+For instructions on how to set up and run the project locally, please see the **[Local Development Guide](./docs/LOCAL_DEVELOPMENT.md)**.

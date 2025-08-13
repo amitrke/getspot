@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "932396176333",
+    "project_id": "getspot01",
+    "storage_bucket": "getspot01.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932396176333:android:6a7f6c73b2a9bfda95aa84",
+        "android_client_info": {
+          "package_name": "com.example.getspot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDv4e7YSOf80uaVDcUy03esDJK0_sduOp8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
