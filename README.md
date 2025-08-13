@@ -6,9 +6,9 @@ Welcome to the GetSpot project! This application is designed to streamline the o
 
 This project is well-documented to ensure a clear understanding of its goals, architecture, and data structure. Please review the following documents for a complete overview:
 
-*   **[REQUIREMENTS.md](./REQUIREMENTS.md):** Detailed functional and non-functional requirements, including user stories, core concepts, and feature lists.
-*   **[ARCHITECTURE.md](./ARCHITECTURE.md):** A high-level overview of the system architecture, explaining the roles of the Flutter frontend, Firebase services, and security model.
-*   **[DATA_MODEL.md](./DATA_MODEL.md):** The proposed data model for the Firestore database, outlining all collections, subcollections, and document schemas.
+*   **[REQUIREMENTS.md](./docs/REQUIREMENTS.md):** Detailed functional and non-functional requirements, including user stories, core concepts, and feature lists.
+*   **[ARCHITECTURE.md](./docs/ARCHITECTURE.md):** A high-level overview of the system architecture, explaining the roles of the Flutter frontend, Firebase services, and security model.
+*   **[DATA_MODEL.md](./docs/DATA_MODEL.md):** The proposed data model for the Firestore database, outlining all collections, subcollections, and document schemas.
 
 ## Getting Started
 
