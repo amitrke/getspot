@@ -42,3 +42,9 @@ This architecture uses a **"write-to-trigger"** pattern for handling sensitive o
     *   **Final Update & Real-time Sync:** The Function updates the participant document with the final status (`"Confirmed"`, `"Waitlisted"`, or `"Denied"` with a reason). Because the Flutter App is listening for real-time changes to this document, the UI updates automatically to show the user their final status.
 
 This model is highly scalable and robust. The initial write acts as a durable request queue within Firestore, and the user gets immediate feedback while the complex logic runs securely in the background.
+
+---
+
+## Firebase Resource Configuration
+
+To ensure data locality and consistent performance, all Firebase resources for this project, including Firestore and Firebase Functions, will be deployed in the **Northern Virginia (us-east4)** region.
