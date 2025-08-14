@@ -9,7 +9,7 @@ An application to streamline the organization of local badminton meetups. The ap
 For the initial version, there will be one primary user type that can perform two key roles:
 
 *   **Participant:** The default role for any user. Participants can:
-    *   Join or request to join groups.
+    *   Request to join groups.
     *   Discover and view events.
     *   Register for events and manage their attendance.
 *   **Organizer (Group Admin):** A user who creates a group automatically becomes its admin. Organizers can do everything a participant can, plus:
@@ -22,7 +22,7 @@ For the initial version, there will be one primary user type that can perform tw
 ### 3.1. Groups
 *   **Purpose:** To create a persistent community for a recurring set of players.
 *   **Creation:** Any user can create a group, becoming its default Organizer/Admin.
-*   **Membership:** Groups can be "Open" (anyone can join) or "By Approval" (the organizer must approve new members). This helps manage recurring private games.
+*   **Membership:** Membership to all groups is by approval only; the group admin must approve new members. This helps manage recurring private games.
 
 ### 3.2. Event Commitment & Fee Model
 The process is defined by a commitment deadline and a flexible, delayed fee deduction.
@@ -53,7 +53,7 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 ## 4. Key Features
 
 ### 4.1. Group Management
-*   [ ] Create a new group (name, description, open/by-approval).
+*   [ ] Create a new group (name, description).
 *   [ ] View and manage group members.
 *   [ ] Approve/deny membership requests.
 *   [ ] Set a per-participant negative balance limit for the group's virtual currency.
@@ -68,7 +68,7 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 
 ### 4.3. Participant Experience
 *   [ ] Discover public groups and events.
-*   [ ] Join groups or request to join.
+*   [ ] Request to join groups.
 *   [ ] View event details (including the Commitment Deadline).
 *   [ ] Submit a registration request for an event. The initial status will show as **"Requested"**.
 *   [ ] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.

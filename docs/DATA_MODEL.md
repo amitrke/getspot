@@ -39,7 +39,6 @@ Stores information about the groups created by organizers.
   "name": "string",
   "description": "string",
   "admin": "string", // {userId} of the group organizer
-  "isApprovalRequired": "boolean", // True if admin must approve new members
   "negativeBalanceLimit": "number", // Max negative balance allowed for members
   "createdAt": "timestamp",
   
@@ -66,7 +65,7 @@ Tracks the members of a group and their specific wallet balance for that group.
 
 #### 2.2. Join Requests Subcollection
 
-Stores pending requests for groups where `isApprovalRequired` is true.
+Stores pending requests to join the group.
 
 `/groups/{groupId}/joinRequests/{userId}`
 

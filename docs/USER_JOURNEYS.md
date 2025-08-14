@@ -35,8 +35,7 @@ This flow describes how a user creates a new community, becoming its default adm
 ```mermaid
 graph TD
     A[User navigates to 'Create Group'] --> B[Fills out Group Details form];
-    B --> C["Selects Membership Type ('Open' or 'By Approval')"];
-    C -- Clicks 'Create' --> D[New doc created in '/groups' collection];
+    B -- Clicks 'Create' --> D[New doc created in '/groups' collection];
     D -->|User is automatically added| E["New doc created in '/groups/{groupId}/members/{userId}'"];
     E --> F[User is redirected to the new Group's dashboard];
 ```
@@ -45,25 +44,16 @@ graph TD
 
 ## 3. Player Joins a Group
 
-This flow describes how a player joins a group, covering both "Open" and "By Approval" scenarios.
+This flow describes how a player joins a group.
 
 **Associated Roles:** Player
 **Prerequisite:** User is authenticated.
 
-### Flow Diagram (Open Group)
+### Flow Diagram
 
 ```mermaid
 graph TD
-    A[Player finds an 'Open' group] --> B[Clicks 'Join Group'];
-    B --> C["New doc created in '/groups/{groupId}/members/{userId}'"];
-    C --> D[Player sees group events and content immediately];
-```
-
-### Flow Diagram (By Approval Group)
-
-```mermaid
-graph TD
-    A[Player finds a 'By Approval' group] --> B[Clicks 'Request to Join'];
+    A[Player finds a group] --> B[Clicks 'Request to Join'];
     B --> C["New doc created in '/groups/{groupId}/joinRequests/{userId}'"];
     C --> D[Player sees 'Request Pending' status];
     D -->|Organizer approves request| E[Firebase Function moves user from 'joinRequests' to 'members' subcollection];
