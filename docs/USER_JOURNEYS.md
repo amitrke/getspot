@@ -36,8 +36,8 @@ This flow describes how a user creates a new community, becoming its default adm
 graph TD
     A[User navigates to 'Create Group'] --> B[Fills out Group Details form];
     B --> C["Selects Membership Type ('Open' or 'By Approval')"];
-    C -- Clicks 'Create' --> D[New doc created in `/groups` collection];
-    D -->|User is automatically added| E["New doc created in `/groups/{groupId}/members/{userId}`"];
+    C -- Clicks 'Create' --> D[New doc created in '/groups' collection];
+    D -->|User is automatically added| E["New doc created in '/groups/{groupId}/members/{userId}'"];
     E --> F[User is redirected to the new Group's dashboard];
 ```
 
@@ -55,7 +55,7 @@ This flow describes how a player joins a group, covering both "Open" and "By App
 ```mermaid
 graph TD
     A[Player finds an 'Open' group] --> B[Clicks 'Join Group'];
-    B --> C["New doc created in `/groups/{groupId}/members/{userId}`"];
+    B --> C["New doc created in '/groups/{groupId}/members/{userId}'"];
     C --> D[Player sees group events and content immediately];
 ```
 
@@ -64,7 +64,7 @@ graph TD
 ```mermaid
 graph TD
     A[Player finds a 'By Approval' group] --> B[Clicks 'Request to Join'];
-    B --> C["New doc created in `/groups/{groupId}/joinRequests/{userId}`"];
+    B --> C["New doc created in '/groups/{groupId}/joinRequests/{userId}'"];
     C --> D[Player sees 'Request Pending' status];
     D -->|Organizer approves request| E[Firebase Function moves user from 'joinRequests' to 'members' subcollection];
     E --> F[Player receives notification and can now access the group];
@@ -85,7 +85,7 @@ This flow describes how an organizer creates an event within a group they manage
 graph TD
     A[Organizer selects a group] --> B[Navigates to 'Create Event'];
     B --> C[Fills out Event Details and sets Commitment Deadline];
-    C -- Clicks 'Publish' --> D[New doc created in `/events` collection];
+    C -- Clicks 'Publish' --> D[New doc created in '/events' collection];
     D --> E[Event becomes visible to all members of the group];
 ```
 
