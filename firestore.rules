@@ -1,0 +1,72 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // By default, deny all access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    //--- COLLECTIONS ---//
+
+    // Users can create their own user document and can only read/write their own data.
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+      allow create: if request.auth.uid == userId;
+    }
+
+    // Any authenticated user can create a group. Only the admin can update/delete it.
+    // Group info is public to all authenticated users.
+    match /groups/{groupId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
+
+      //--- SUBCOLLECTIONS ---//
+
+      // Group members can be read by other members. Only the admin can add/remove members.
+      match /members/{userId} {
+        allow read: if exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+        allow create, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
+      }
+
+      // Users can create their own join request. Only the admin can see all requests.
+      // Users can read their own request to see its status.
+      match /joinRequests/{userId} {
+        allow read: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin || request.auth.uid == userId;
+        allow create: if request.auth.uid == userId;
+        allow delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
+      }
+    }
+
+    // Events can be read by members of the group. Only the group admin can create/update/delete them.
+    match /events/{eventId} {
+      allow read: if exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
+      allow create, update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.admin;
+
+      //--- SUBCOLLECTIONS ---//
+
+      // Participants list is visible to all group members.
+      // A user can only register themselves, and only with a "requested" status.
+      // A user can "withdraw" their own registration.
+      match /participants/{userId} {
+        allow read: if exists(/databases/$(database)/documents/groups/$(get(/databases/$(database)/documents/events/$(eventId)).data.groupId)/members/$(request.auth.uid));
+        
+        // Allow a user to create their own registration request
+        allow create: if request.auth.uid == userId && request.resource.data.status == 'Requested';
+        
+        // Allow a user to update their own status (e.g., to withdraw)
+        allow update: if request.auth.uid == userId;
+      }
+    }
+
+    // Transactions are write-only from a secure backend.
+    // Users can only read their own transactions.
+    match /transactions/{transactionId} {
+      allow read: if request.auth.uid == resource.data.uid;
+      // No client-side writes allowed
+      allow write: if false;
+    }
+  }
+}
