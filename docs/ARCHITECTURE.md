@@ -26,22 +26,35 @@ graph TD
     C -- "Updates doc (e.g., {status: 'Confirmed'})" --> A
 ```
 
-## Architectural Flow Explained
+## Architectural Patterns
 
-This architecture uses a **"write-to-trigger"** pattern for handling sensitive operations, providing excellent resilience and user experience.
+The application employs two primary architectural patterns for interacting with the backend, each suited for different use cases.
 
-*   **Authentication:** The user signs in via the **Flutter App**, which communicates with **Firebase Auth** to get a secure ID Token.
+### 1. Write-to-Trigger Pattern (for Event Registration)
 
-*   **Simple Reads:** For reading public data (like event details), the app queries Firestore directly.
+This architecture uses a **"write-to-trigger"** pattern for handling asynchronous, multi-step operations like event registration.
 
-*   **Sensitive Operations (e.g., Event Registration):**
-    *   **Initial Write:** The Flutter App performs a simple, fast write to Firestore to create a new document representing the user's intent (e.g., `/events/{eventId}/participants/{userId}` with a status of `"requested"`).
-    *   **Security Rules:** **Firestore Security Rules** allow this specific write operation, but only if the status is `"requested"`. The rules would deny any attempt by the client to write `"Confirmed"` or any other status directly.
-    *   **Function Trigger:** A **Firebase Function** is configured to automatically trigger whenever a new participant document is created.
-    *   **Trusted Backend Logic:** The Function executes all the complex validation logic in a secure environment: checking the user's wallet balance, verifying spot availability, and ensuring fairness (first-come, first-served).
-    *   **Final Update & Real-time Sync:** The Function updates the participant document with the final status (`"Confirmed"`, `"Waitlisted"`, or `"Denied"` with a reason). Because the Flutter App is listening for real-time changes to this document, the UI updates automatically to show the user their final status.
+*   **Initial Write:** The Flutter App performs a simple, fast write to Firestore to create a new document representing the user's intent (e.g., `/events/{eventId}/participants/{userId}` with a status of `"requested"`).
+*   **Security Rules:** **Firestore Security Rules** allow this specific write operation, but only if the status is `"requested"`. The rules deny any attempt by the client to write `"Confirmed"` directly.
+*   **Function Trigger:** An `onCreate` **Firebase Function** is triggered by the new document.
+*   **Trusted Backend Logic:** The Function executes all the complex validation logic in a secure environment: checking wallet balances, verifying spot availability, and ensuring fairness.
+*   **Final Update & Real-time Sync:** The Function updates the participant document with the final status (`"Confirmed"`, `"Waitlisted"`, etc.). The app's real-time listener automatically updates the UI.
 
 This model is highly scalable and robust. The initial write acts as a durable request queue within Firestore, and the user gets immediate feedback while the complex logic runs securely in the background.
+
+### 2. Callable Function Pattern (for Group Creation)
+
+For atomic, synchronous operations like creating a new group, the application uses a **Firebase Callable Function**. This approach centralizes logic and enhances security.
+
+*   **Client Call:** The Flutter app calls a specific function (e.g., `createGroup`) and passes the required data (name, description). The Firebase SDK automatically attaches the user's authentication token to the request.
+*   **Backend Execution:** The `createGroup` function runs in a secure environment. It performs the following steps:
+    1.  **Authentication:** Verifies the user's identity using the `context.auth` object provided by the Firebase SDK. If the user is not authenticated, the function exits immediately.
+    2.  **Generate Unique Code:** Creates a unique, shareable `groupCode`, ensuring there are no collisions with existing groups.
+    3.  **Create Documents:** Creates the new group document in the `/groups` collection and adds the creator to the `/members` subcollection in a single atomic operation.
+    4.  **Return Data:** Returns the new `groupId` and `groupCode` to the client app.
+
+This pattern is ideal for operations that need to be performed as a single, transactional step, guaranteeing data integrity and uniqueness.
+
 
 ---
 

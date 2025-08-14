@@ -39,6 +39,7 @@ Stores information about the groups created by organizers.
   "name": "string",
   "description": "string",
   "admin": "string", // {userId} of the group organizer
+  "groupCode": "string", // A unique, shareable code to find the group
   "negativeBalanceLimit": "number", // Max negative balance allowed for members
   "createdAt": "timestamp",
   

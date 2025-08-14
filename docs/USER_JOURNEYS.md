@@ -34,10 +34,19 @@ This flow describes how a user creates a new community, becoming its default adm
 
 ```mermaid
 graph TD
-    A[User navigates to 'Create Group'] --> B[Fills out Group Details form];
-    B -- Clicks 'Create' --> D[New doc created in '/groups' collection];
-    D -->|User is automatically added| E["New doc created in '/groups/{groupId}/members/{userId}'"];
-    E --> F[User is redirected to the new Group's dashboard];
+    subgraph "Client (Flutter App)"
+        A[User fills out Group Details form] -- Clicks 'Create' --> B[Calls 'createGroup' Firebase Function];
+        B -- Receives success response --> C[Redirected to the new Group's dashboard];
+        C --> D[Admin can view and share the 'groupCode'];
+    end
+
+    subgraph "Backend (Callable Function)"
+        B --> E{Function executes};
+        E --> F[1. Authenticates user];
+        F --> G[2. Generates unique groupCode];
+        G --> H[3. Creates group & member docs];
+        H --> B;
+    end
 ```
 
 ---
@@ -53,11 +62,13 @@ This flow describes how a player joins a group.
 
 ```mermaid
 graph TD
-    A[Player finds a group] --> B[Clicks 'Request to Join'];
-    B --> C["New doc created in '/groups/{groupId}/joinRequests/{userId}'"];
-    C --> D[Player sees 'Request Pending' status];
-    D -->|Organizer approves request| E[Firebase Function moves user from 'joinRequests' to 'members' subcollection];
-    E --> F[Player receives notification and can now access the group];
+    A[Player navigates to 'Find Group'] --> B[Enters the 'groupCode'];
+    B --> C{App fetches the corresponding group};
+    C --> D[Player clicks 'Request to Join'];
+    D --> E["New doc created in '/groups/{groupId}/joinRequests/{userId}'"];
+    E --> F[Player sees 'Request Pending' status];
+    F -->|Organizer approves request| G[Firebase Function moves user from 'joinRequests' to 'members' subcollection];
+    G --> H[Player receives notification and can now access the group];
 ```
 
 ---

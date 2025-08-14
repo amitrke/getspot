@@ -20,8 +20,8 @@ For the initial version, there will be one primary user type that can perform tw
 ## 3. Core Concepts
 
 ### 3.1. Groups
-*   **Purpose:** To create a persistent community for a recurring set of players.
-*   **Creation:** Any user can create a group, becoming its default Organizer/Admin.
+*   **Creation:** Any user can create a group, becoming its default Organizer/Admin. When a group is created, a unique, shareable **Group Code** is generated.
+*   **Discovery:** Users find and join groups by entering this unique Group Code.
 *   **Membership:** Membership to all groups is by approval only; the group admin must approve new members. This helps manage recurring private games.
 
 ### 3.2. Event Commitment & Fee Model
@@ -53,7 +53,8 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 ## 4. Key Features
 
 ### 4.1. Group Management
-*   [ ] Create a new group (name, description).
+*   [ ] Create a new group (name, description), which generates a unique, shareable group code.
+*   [ ] View the group code to share it with potential members.
 *   [ ] View and manage group members.
 *   [ ] Approve/deny membership requests.
 *   [ ] Set a per-participant negative balance limit for the group's virtual currency.
@@ -67,8 +68,8 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 *   [ ] Use a communication tool to send updates to all registered participants.
 
 ### 4.3. Participant Experience
-*   [ ] Discover public groups and events.
-*   [ ] Request to join groups.
+*   [ ] Find a group by entering a unique Group Code.
+*   [ ] Request to join a group after finding it.
 *   [ ] View event details (including the Commitment Deadline).
 *   [ ] Submit a registration request for an event. The initial status will show as **"Requested"**.
 *   [ ] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.
