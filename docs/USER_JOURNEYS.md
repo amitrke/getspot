@@ -42,9 +42,9 @@ graph TD
 
     subgraph "Backend (Callable Function)"
         B --> E{Function executes};
-        E --> F[1. Authenticates user];
-        F --> G[2. Generates unique groupCode];
-        G --> H[3. Creates group & member docs];
+        E --> F[Authenticates user];
+        F --> G[Generates unique groupCode];
+        G --> H[Creates group & member docs];
         H --> B;
     end
 ```
