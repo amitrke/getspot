@@ -1,0 +1,47 @@
+# This workflow will deploy your Firebase Functions when a push is made to the main branch
+# that includes changes in the 'functions' directory.
+
+name: Deploy Firebase Functions
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'functions/**'
+
+jobs:
+  deploy_functions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # Match the version in package.json
+
+      - name: Install Functions Dependencies
+        run: npm ci
+        working-directory: ./functions
+
+      - name: Build TypeScript
+        run: npm run build
+        working-directory: ./functions
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}

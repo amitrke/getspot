@@ -24,7 +24,7 @@ setGlobalOptions({maxInstances: 10});
  * Creates a new group, generates a unique group code, and adds the creator
  * as the first member.
  */
-export const createGroup = onCall(async (request) => {
+export const createGroup = onCall({region: "us-east4"}, async (request) => {
   // 1. Authentication: Ensure the user is authenticated.
   if (!request.auth) {
     throw new HttpsError(
