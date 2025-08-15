@@ -215,6 +215,50 @@ graph TD
     F --> C;
 ```
 
+---
+
+### **8. Create a New Group**
+
+This flow is initiated from the "Home / My Groups" screen.
+
+#### **8.1. Create Group Modal**
+This modal appears when the user clicks "[ Create a Group ]".
+
+```text
++-------------------------------------------+
+|                                           |
+|              Create New Group             |
+|                                           |
+|  Group Name: [_______________________]    |
+|                                           |
+|  Description: [______________________]    |
+|                                           |
+|  Negative Balance Limit: [ 50_ ]          |
+|                                           |
+|         [ Cancel ]  [ Create ]            |
+|                                           |
++-------------------------------------------+
+```
+
+#### **8.2. Group Created Confirmation**
+After successful creation, the app shows the unique, shareable group code.
+
+```text
++-------------------------------------------+
+|                                           |
+|           Group Created!                  |
+|                                           |
+|  Share this code with your members:       |
+|                                           |
+|           A3B-7Y9-K2C                     |
+|                                           |
+|           [ Copy Code ]                   |
+|                                           |
+|           [ Done ]                        |
+|                                           |
++-------------------------------------------+
+```
+
 
 ---
 
