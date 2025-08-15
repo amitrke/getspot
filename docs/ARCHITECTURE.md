@@ -55,6 +55,16 @@ For atomic, synchronous operations like creating a new group, the application us
 
 This pattern is ideal for operations that need to be performed as a single, transactional step, guaranteeing data integrity and uniqueness.
 
+---
+
+## Timezone Handling
+
+To ensure all timestamps are consistent and unambiguous, the application will adhere to the following strategy:
+
+*   **Storage in UTC:** All date and time information stored in Firestore (e.g., `eventTimestamp`, `commitmentDeadline`, `createdAt`) will be saved in **UTC (Coordinated Universal Time)**. Firestore's native `Timestamp` data type handles this automatically.
+*   **Display in Local Time:** The Flutter client is responsible for all timezone conversions. When displaying a timestamp to a user, it will be converted from UTC to the user's current device timezone. When an organizer creates an event, the app will convert their local input time to UTC before sending it to the backend.
+
+This "store in UTC, display in local" approach is a standard best practice that prevents ambiguity, correctly handles Daylight Saving Time, and future-proofs the application for users in different geographical locations.
 
 ---
 
