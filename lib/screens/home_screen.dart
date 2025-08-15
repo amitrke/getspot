@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:getspot/services/auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,13 +29,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        // TODO: Replace with a list of user's groups
-        child: Text(
-          'You are not a member of any groups yet.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ),
+      body: const _GroupList(),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -61,6 +56,111 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GroupList extends StatefulWidget {
+  const _GroupList();
+
+  @override
+  State<_GroupList> createState() => _GroupListState();
+}
+
+class _GroupListState extends State<_GroupList> {
+  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>>? _groupsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupGroupsStream();
+  }
+
+  void _setupGroupsStream() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // Handle user not logged in case
+      return;
+    }
+
+    final groupsStream = FirebaseFirestore.instance
+        .collectionGroup('members')
+        .where('uid', isEqualTo: user.uid)
+        .snapshots()
+        .asyncMap((membersSnapshot) async {
+      final groupFutures = membersSnapshot.docs.map((memberDoc) {
+        // For each membership, get the parent group document
+        return memberDoc.reference.parent.parent!.get();
+      }).toList();
+
+      final groupDocs = await Future.wait(groupFutures);
+
+      // Filter out any groups that might not exist for some reason
+      return groupDocs
+          .where((doc) => doc.exists)
+          .map((doc) =>
+              doc as QueryDocumentSnapshot<Map<String, dynamic>>)
+          .toList();
+    });
+
+    setState(() {
+      _groupsStream = groupsStream;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
+      stream: _groupsStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        final groups = snapshot.data;
+
+        if (groups == null || groups.isEmpty) {
+          return Center(
+            child: Text(
+              'You are not a member of any groups yet.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: groups.length,
+          itemBuilder: (context, index) {
+            final group = groups[index].data();
+            return _GroupListItem(group: group);
+          },
+        );
+      },
+    );
+  }
+}
+
+class _GroupListItem extends StatelessWidget {
+  const _GroupListItem({required this.group});
+
+  final Map<String, dynamic> group;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListTile(
+        title: Text(group['name'] ?? 'Unnamed Group'),
+        subtitle: Text(group['description'] ?? ''),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          // TODO: Navigate to Group Details Screen
+        },
       ),
     );
   }
