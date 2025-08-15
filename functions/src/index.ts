@@ -8,25 +8,90 @@
  */
 
 import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/https";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
+import * as admin from "firebase-admin";
+import {customAlphabet} from "nanoid";
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+// Initialize the Firebase Admin SDK
+admin.initializeApp();
+const db = admin.firestore();
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+// Set global options for all functions
+setGlobalOptions({maxInstances: 10});
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+/**
+ * Creates a new group, generates a unique group code, and adds the creator
+ * as the first member.
+ */
+export const createGroup = onCall(async (request) => {
+  // 1. Authentication: Ensure the user is authenticated.
+  if (!request.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "You must be logged in to create a group.",
+    );
+  }
+
+  const {uid, token} = request.auth;
+  const {displayName, email} = token;
+
+  // 2. Data Validation: Ensure the required data is present.
+  const {name, description, negativeBalanceLimit} = request.data;
+  if (!name || !description || typeof negativeBalanceLimit !== "number") {
+    throw new HttpsError(
+      "invalid-argument",
+      "The function must be called with " +
+      "'name', 'description', and 'negativeBalanceLimit' arguments.",
+    );
+  }
+
+  // 3. Generate Unique Group Code
+  // Using a custom alphabet to avoid ambiguous characters (e.g., 0/O, 1/I).
+  const nanoid = customAlphabet("23456789ABCDEFGHJKLMNPQRSTUVWXYZ", 9);
+  const rawCode = nanoid();
+  // Format the code for readability (e.g., ABC-DEF-GHI)
+  const groupCode = `${rawCode.slice(0, 3)}-${rawCode.slice(3, 6)}-${rawCode.slice(6, 9)}`;
+
+  // 4. Create Firestore Documents Atomically
+  const groupRef = db.collection("groups").doc();
+  const memberRef = groupRef.collection("members").doc(uid);
+
+  try {
+    const batch = db.batch();
+
+    // Create the group document
+    batch.set(groupRef, {
+      name,
+      description,
+      admin: uid,
+      groupCode,
+      negativeBalanceLimit,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Add the creator as the first member
+    batch.set(memberRef, {
+      uid,
+      displayName: displayName || email || "Group Admin",
+      walletBalance: 0, // Initial balance is always 0
+      joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+
+    logger.info(`Group created successfully by user ${uid}`, {
+      groupId: groupRef.id,
+      groupCode,
+    });
+
+    // 5. Return the group code to the client
+    return {groupCode};
+  } catch (error) {
+    logger.error("Error creating group:", error);
+    throw new HttpsError(
+      "internal",
+      "An error occurred while creating the group.",
+    );
+  }
+});
