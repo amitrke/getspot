@@ -19,15 +19,20 @@ service cloud.firestore {
     // Any authenticated user can create a group. Only the admin can update/delete it.
     // Group info is public to all authenticated users.
     match /groups/{groupId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
+      allow read, create: if request.auth != null;
       allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
 
       //--- SUBCOLLECTIONS ---//
 
-      // Group members can be read by other members. Only the admin can add/remove members.
+      // Group members can be read by other members. Users can always read their own member doc.
+      // Only the admin can add/remove members.
       match /members/{userId} {
-        allow read: if exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+        // Allow read if the requester is the same user, or if the requester is a member of the group.
+        allow read: if request.auth != null && (
+          request.auth.uid == userId ||
+          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid))
+        );
+
         allow create, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
 
