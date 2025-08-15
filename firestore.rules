@@ -8,7 +8,7 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    //--- COLLECTIONS ---//
+    //--- COLLECTIONS ----//
 
     // Users can create their own user document and can only read/write their own data.
     match /users/{userId} {
