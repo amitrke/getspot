@@ -11,7 +11,7 @@ import {setGlobalOptions} from "firebase-functions";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import {customAlphabet} from "nanoid";
+
 
 // Initialize the Firebase Admin SDK
 admin.initializeApp();
@@ -25,6 +25,7 @@ setGlobalOptions({maxInstances: 10});
  * as the first member.
  */
 export const createGroup = onCall({region: "us-east4"}, async (request) => {
+  const {customAlphabet} = await import("nanoid");
   // 1. Authentication: Ensure the user is authenticated.
   if (!request.auth) {
     throw new HttpsError(
@@ -51,7 +52,11 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
   const nanoid = customAlphabet("23456789ABCDEFGHJKLMNPQRSTUVWXYZ", 9);
   const rawCode = nanoid();
   // Format the code for readability (e.g., ABC-DEF-GHI)
-  const groupCode = `${rawCode.slice(0, 3)}-${rawCode.slice(3, 6)}-${rawCode.slice(6, 9)}`;
+  const groupCode = [
+    rawCode.slice(0, 3),
+    rawCode.slice(3, 6),
+    rawCode.slice(6, 9),
+  ].join("-");
 
   // 4. Create Firestore Documents Atomically
   const groupRef = db.collection("groups").doc();
