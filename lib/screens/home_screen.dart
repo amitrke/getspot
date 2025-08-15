@@ -1,6 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
-import 'package.flutter/services.dart';
+import 'package:flutter/services.dart';
 import 'package:getspot/services/auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
