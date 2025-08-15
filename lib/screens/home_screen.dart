@@ -98,7 +98,7 @@ class _CreateGroupModalState extends State<_CreateGroupModal> {
     });
 
     try {
-      final functions = FirebaseFunctions.instance;
+      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
       final callable = functions.httpsCallable('createGroup');
       final result = await callable.call<Map<String, dynamic>>({
         'name': _nameController.text,
