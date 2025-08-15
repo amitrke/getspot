@@ -1,1 +1,54 @@
-{"hosting":{"public":"build/web","ignore":["firebase.json","**/.*","**/node_modules/**"],"rewrites":[{"source":"**","destination":"/index.html"}]},"flutter":{"platforms":{"android":{"default":{"projectId":"getspot01","appId":"1:932396176333:android:6a7f6c73b2a9bfda95aa84","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"getspot01","configurations":{"android":"1:932396176333:android:6a7f6c73b2a9bfda95aa84","ios":"1:932396176333:ios:d450a81c59871df795aa84","web":"1:932396176333:web:7bac7bda910438e295aa84"}}}}}}
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "getspot01",
+          "appId": "1:932396176333:android:6a7f6c73b2a9bfda95aa84",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "getspot01",
+          "configurations": {
+            "android": "1:932396176333:android:6a7f6c73b2a9bfda95aa84",
+            "ios": "1:932396176333:ios:d450a81c59871df795aa84",
+            "web": "1:932396176333:web:7bac7bda910438e295aa84"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ]
+}
