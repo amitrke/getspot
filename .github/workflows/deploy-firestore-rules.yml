@@ -34,4 +34,4 @@ jobs:
         with:
           args: deploy --only firestore:rules
         env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}
+          GCP_SA_KEY: ${{ secrets.GITHUBACTIONSDEPLOY }}

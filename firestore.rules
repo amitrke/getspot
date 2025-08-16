@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // Allow collection group queries against any 'members' subcollection
-    // Only allow listing the caller's own member docs based on uid field
+    // Only allow listing the caller's own member docs based on uid field.
     match /{anyPath=**}/members/{userId} {
       allow list: if request.auth != null && resource.data.uid == request.auth.uid;
     }
