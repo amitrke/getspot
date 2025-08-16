@@ -14,6 +14,10 @@ service cloud.firestore {
       allow list: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
+    match /{anyPath=**}/joinRequests/{userId} {
+      allow list: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
     //--- COLLECTIONS ----//
 
     // Users can create their own user document and can only read/write their own data.

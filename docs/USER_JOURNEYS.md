@@ -66,7 +66,7 @@ graph TD
     B --> C{App fetches the corresponding group};
     C --> D[Player clicks 'Request to Join'];
     D --> E["New doc created in '/groups/{groupId}/joinRequests/{userId}'"];
-    E --> F[Player sees 'Request Pending' status];
+    E --> F[Player sees 'Request Pending' status on the HomeScreen];
     F -->|Organizer approves request| G[Firebase Function moves user from 'joinRequests' to 'members' subcollection];
     G --> H[Player receives notification and can now access the group];
 ```

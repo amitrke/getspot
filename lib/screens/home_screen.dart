@@ -16,6 +16,14 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _openJoinGroupModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => const _JoinGroupModal(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,9 +46,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement Join a Group
-                },
+                onPressed: () => _openJoinGroupModal(context),
                 child: const Text('Join a Group'),
               ),
             ),
@@ -70,7 +76,7 @@ class _GroupList extends StatefulWidget {
 }
 
 class _GroupListState extends State<_GroupList> {
-  Stream<List<DocumentSnapshot<Map<String, dynamic>>>>? _groupsStream;
+  Stream<List<Map<String, dynamic>>>? _groupsStream;
 
   @override
   void initState() {
@@ -78,56 +84,69 @@ class _GroupListState extends State<_GroupList> {
     _setupGroupsStream();
   }
 
-  Future<void> _setupGroupsStream() async {
-    developer.log('Setting up groups stream...', name: 'HomeScreen');
+  void _setupGroupsStream() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // Handle user not logged in case
       developer.log('User not logged in.', name: 'HomeScreen');
       return;
     }
 
-    // Auth diagnostics: ensure we have a Firebase ID token attached to requests
-    try {
-      final idToken = await user.getIdToken();
-      final tokenLen = idToken?.length ?? 0;
-      developer.log(
-        'Auth check: uid=${user.uid}, idTokenLen=$tokenLen',
-        name: 'HomeScreen',
-      );
-    } catch (e, st) {
-      developer.log('Failed to fetch ID token for user ${user.uid}', name: 'HomeScreen', error: e, stackTrace: st);
-    }
-    
-  final groupsStream = FirebaseFirestore.instance
-    .collectionGroup('members')
-    // Filter by uid field; rules allow when resource.data.uid == request.auth.uid
-    .where('uid', isEqualTo: user.uid)
-        .snapshots()
-        .asyncMap((membersSnapshot) async {
-      developer.log('Received ${membersSnapshot.docs.length} membership documents.', name: 'HomeScreen');
-      final groupFutures = membersSnapshot.docs.map((memberDoc) {
-        // For each membership, get the parent group document
-        return memberDoc.reference.parent.parent!.get();
-      }).toList();
+    final membersStream = FirebaseFirestore.instance
+        .collectionGroup('members')
+        .where('uid', isEqualTo: user.uid)
+        .snapshots();
 
-    final groupDocs = await Future.wait(groupFutures);
-      developer.log('Fetched ${groupDocs.length} group documents.', name: 'HomeScreen');
+    final requestsStream = FirebaseFirestore.instance
+        .collectionGroup('joinRequests')
+        .where('uid', isEqualTo: user.uid)
+        .snapshots();
 
-      // Filter out any groups that might not exist for some reason
-    return groupDocs
-      .where((doc) => doc.exists)
-      .toList();
+    // Using async* to combine the streams manually
+    final combinedStream = () async* {
+      await for (var membersSnapshot in membersStream) {
+        final memberGroupFutures = membersSnapshot.docs.map((doc) async {
+          final groupDoc = await doc.reference.parent.parent!.get();
+          return {'status': 'member', 'group': groupDoc.data()};
+        }).toList();
+        final memberGroups = await Future.wait(memberGroupFutures);
+        yield memberGroups;
+      }
+    }()
+        .asyncExpand((memberGroups) async* {
+      await for (var requestsSnapshot in requestsStream) {
+        final requestGroupFutures = requestsSnapshot.docs.map((doc) async {
+          final groupDoc = await doc.reference.parent.parent!.get();
+          return {'status': 'pending', 'group': groupDoc.data()};
+        }).toList();
+        final requestGroups = await Future.wait(requestGroupFutures);
+
+        // Combine and yield the final list
+        final allGroups = [...memberGroups, ...requestGroups];
+        // Remove duplicates, preferring 'member' status
+        final uniqueGroups = <String, Map<String, dynamic>>{};
+        for (var item in allGroups) {
+          final groupData = item['group'] as Map<String, dynamic>?;
+          if (groupData != null) {
+            final groupId = groupData['groupId'] as String? ?? groupData['name'];
+            if (groupId != null) {
+              if (!uniqueGroups.containsKey(groupId) || item['status'] == 'member') {
+                uniqueGroups[groupId] = item;
+              }
+            }
+          }
+        }
+        yield uniqueGroups.values.toList();
+      }
     });
 
     setState(() {
-      _groupsStream = groupsStream;
+      _groupsStream = combinedStream;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-  return StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
+    return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _groupsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -150,17 +169,19 @@ class _GroupListState extends State<_GroupList> {
         if (groups == null || groups.isEmpty) {
           return Center(
             child: Text(
-              'You are not a member of any groups yet.',
+              'You have no group memberships or pending requests.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           );
         }
 
-    return ListView.builder(
+        return ListView.builder(
           itemCount: groups.length,
           itemBuilder: (context, index) {
-      final group = groups[index].data() ?? <String, dynamic>{};
-      return _GroupListItem(group: group);
+            final item = groups[index];
+            final group = item['group'] as Map<String, dynamic>? ?? {};
+            final status = item['status'] as String? ?? 'member';
+            return _GroupListItem(group: group, status: status);
           },
         );
       },
@@ -169,9 +190,10 @@ class _GroupListState extends State<_GroupList> {
 }
 
 class _GroupListItem extends StatelessWidget {
-  const _GroupListItem({required this.group});
+  const _GroupListItem({required this.group, required this.status});
 
   final Map<String, dynamic> group;
+  final String status;
 
   @override
   Widget build(BuildContext context) {
@@ -180,10 +202,14 @@ class _GroupListItem extends StatelessWidget {
       child: ListTile(
         title: Text(group['name'] ?? 'Unnamed Group'),
         subtitle: Text(group['description'] ?? ''),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          // TODO: Navigate to Group Details Screen
-        },
+        trailing: status == 'pending'
+            ? const Chip(label: Text('Pending'))
+            : const Icon(Icons.chevron_right),
+        onTap: status == 'member'
+            ? () {
+                // TODO: Navigate to Group Details Screen
+              }
+            : null, // Disable tap for pending requests
       ),
     );
   }
@@ -277,9 +303,10 @@ class _CreateGroupModalState extends State<_CreateGroupModal> {
             const SizedBox(height: 16),
             SelectableText(
               groupCode,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -376,6 +403,220 @@ class _CreateGroupModalState extends State<_CreateGroupModal> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _JoinGroupModal extends StatefulWidget {
+  const _JoinGroupModal();
+
+  @override
+  State<_JoinGroupModal> createState() => _JoinGroupModalState();
+}
+
+class _JoinGroupModalState extends State<_JoinGroupModal> {
+  final _formKey = GlobalKey<FormState>();
+  final _codeController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
+  QueryDocumentSnapshot<Map<String, dynamic>>? _foundGroup;
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _findGroup() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _foundGroup = null;
+    });
+
+    try {
+      final enteredCode = _codeController.text.trim();
+      final groupQuery = await FirebaseFirestore.instance
+          .collection('groups')
+          .where('groupCode', isEqualTo: enteredCode)
+          .limit(1)
+          .get();
+
+      if (groupQuery.docs.isEmpty) {
+        setState(() {
+          _errorMessage = 'No group found with that code.';
+        });
+      } else {
+        setState(() {
+          _foundGroup = groupQuery.docs.first;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'An error occurred. Please try again.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _sendJoinRequest() async {
+    if (_foundGroup == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('You must be logged in to send a request.');
+      }
+
+      final groupRef = _foundGroup!.reference;
+      final requestRef = groupRef.collection('joinRequests').doc(user.uid);
+
+      await requestRef.set({
+        'uid': user.uid,
+        'displayName': user.displayName ?? 'No Name',
+        'requestedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Your request to join has been sent!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding + 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Join a Group',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 24),
+          if (_foundGroup == null)
+            _buildSearchForm()
+          else
+            _buildGroupDetails(),
+          const SizedBox(height: 24),
+          if (_errorMessage != null)
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _codeController,
+            decoration: const InputDecoration(labelText: 'Enter Group Code'),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter a code.';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(width: 8),
+              if (_isLoading)
+                const CircularProgressIndicator()
+              else
+                ElevatedButton(
+                  onPressed: _findGroup,
+                  child: const Text('Find Group'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupDetails() {
+    final groupData = _foundGroup!.data();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          groupData['name'],
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 8),
+        Text(groupData['description']),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _foundGroup = null;
+                  _codeController.clear();
+                });
+              },
+              child: const Text('Back'),
+            ),
+            const SizedBox(width: 8),
+            if (_isLoading)
+              const CircularProgressIndicator()
+            else
+              ElevatedButton(
+                onPressed: _sendJoinRequest,
+                child: const Text('Request to Join'),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
