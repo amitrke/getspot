@@ -452,10 +452,11 @@ class _JoinGroupModalState extends State<_JoinGroupModal> {
     });
 
     try {
-      final enteredCode = _codeController.text.trim();
+      // Standardize the input for a case-insensitive search
+      final enteredCode = _codeController.text.trim().toUpperCase().replaceAll("-", "");
       final groupQuery = await FirebaseFirestore.instance
           .collection('groups')
-          .where('groupCode', isEqualTo: enteredCode)
+          .where('groupCodeSearch', isEqualTo: enteredCode)
           .limit(1)
           .get();
 

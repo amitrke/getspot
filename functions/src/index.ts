@@ -72,6 +72,7 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
       description,
       admin: uid,
       groupCode,
+      groupCodeSearch: rawCode, // Standardized version for searching
       negativeBalanceLimit,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
