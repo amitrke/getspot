@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:developer' as developer;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -69,7 +70,7 @@ class _GroupList extends StatefulWidget {
 }
 
 class _GroupListState extends State<_GroupList> {
-  Stream<List<QueryDocumentSnapshot<Map<String, dynamic>>>>? _groupsStream;
+  Stream<List<DocumentSnapshot<Map<String, dynamic>>>>? _groupsStream;
 
   @override
   void initState() {
@@ -77,31 +78,46 @@ class _GroupListState extends State<_GroupList> {
     _setupGroupsStream();
   }
 
-  void _setupGroupsStream() {
+  Future<void> _setupGroupsStream() async {
+    developer.log('Setting up groups stream...', name: 'HomeScreen');
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       // Handle user not logged in case
+      developer.log('User not logged in.', name: 'HomeScreen');
       return;
     }
 
-    final groupsStream = FirebaseFirestore.instance
-        .collectionGroup('members')
-        .where('uid', isEqualTo: user.uid)
+    // Auth diagnostics: ensure we have a Firebase ID token attached to requests
+    try {
+      final idToken = await user.getIdToken();
+      final tokenLen = idToken?.length ?? 0;
+      developer.log(
+        'Auth check: uid=${user.uid}, idTokenLen=$tokenLen',
+        name: 'HomeScreen',
+      );
+    } catch (e, st) {
+      developer.log('Failed to fetch ID token for user ${user.uid}', name: 'HomeScreen', error: e, stackTrace: st);
+    }
+    
+  final groupsStream = FirebaseFirestore.instance
+    .collectionGroup('members')
+    // Filter by uid field; rules allow when resource.data.uid == request.auth.uid
+    .where('uid', isEqualTo: user.uid)
         .snapshots()
         .asyncMap((membersSnapshot) async {
+      developer.log('Received ${membersSnapshot.docs.length} membership documents.', name: 'HomeScreen');
       final groupFutures = membersSnapshot.docs.map((memberDoc) {
         // For each membership, get the parent group document
         return memberDoc.reference.parent.parent!.get();
       }).toList();
 
-      final groupDocs = await Future.wait(groupFutures);
+    final groupDocs = await Future.wait(groupFutures);
+      developer.log('Fetched ${groupDocs.length} group documents.', name: 'HomeScreen');
 
       // Filter out any groups that might not exist for some reason
-      return groupDocs
-          .where((doc) => doc.exists)
-          .map((doc) =>
-              doc as QueryDocumentSnapshot<Map<String, dynamic>>)
-          .toList();
+    return groupDocs
+      .where((doc) => doc.exists)
+      .toList();
     });
 
     setState(() {
@@ -111,7 +127,7 @@ class _GroupListState extends State<_GroupList> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
+  return StreamBuilder<List<DocumentSnapshot<Map<String, dynamic>>>>(
       stream: _groupsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -119,6 +135,13 @@ class _GroupListState extends State<_GroupList> {
         }
 
         if (snapshot.hasError) {
+          final user = FirebaseAuth.instance.currentUser;
+          developer.log(
+            'Error fetching groups stream for user ${user?.uid}.',
+            name: 'HomeScreen',
+            error: snapshot.error,
+            stackTrace: snapshot.stackTrace,
+          );
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
@@ -133,11 +156,11 @@ class _GroupListState extends State<_GroupList> {
           );
         }
 
-        return ListView.builder(
+    return ListView.builder(
           itemCount: groups.length,
           itemBuilder: (context, index) {
-            final group = groups[index].data();
-            return _GroupListItem(group: group);
+      final group = groups[index].data() ?? <String, dynamic>{};
+      return _GroupListItem(group: group);
           },
         );
       },

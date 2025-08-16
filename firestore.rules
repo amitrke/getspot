@@ -8,6 +8,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Allow collection group queries against any 'members' subcollection
+    // Only allow listing the caller's own member docs based on uid field
+    match /{anyPath=**}/members/{userId} {
+      allow list: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
     //--- COLLECTIONS ----//
 
     // Users can create their own user document and can only read/write their own data.
@@ -27,11 +33,15 @@ service cloud.firestore {
       // Group members can be read by other members. Users can always read their own member doc.
       // Only the admin can add/remove members.
       match /members/{userId} {
-        // Allow read if the requester is the same user, or if the requester is a member of the group.
-        allow read: if request.auth != null && (
+        // For single document reads, allow if same user, uid field matches, or caller is a member of the group.
+        allow get: if request.auth != null && (
           request.auth.uid == userId ||
+          resource.data.uid == request.auth.uid ||
           exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid))
         );
+
+        // For queries (list/collectionGroup), require a query-safe condition: uid field equals caller uid.
+        allow list: if request.auth != null && resource.data.uid == request.auth.uid;
 
         allow create, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
