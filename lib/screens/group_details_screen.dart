@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/screens/create_event_screen.dart';
+import 'package:intl/intl.dart';
+import 'dart:developer' as developer;
 
 class GroupDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> group;
@@ -12,8 +15,10 @@ class GroupDetailsScreen extends StatefulWidget {
   State<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
 }
 
-class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
+class _GroupDetailsScreenState extends State<GroupDetailsScreen>
+    with SingleTickerProviderStateMixin {
   bool _isAdmin = false;
+  TabController? _tabController;
 
   @override
   void initState() {
@@ -26,8 +31,15 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     if (user != null && widget.group['admin'] == user.uid) {
       setState(() {
         _isAdmin = true;
+        _tabController = TabController(length: 2, vsync: this);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,6 +47,15 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.group['name'] ?? 'Group Details'),
+        bottom: _isAdmin
+            ? TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Events'),
+                  Tab(text: 'Join Requests'),
+                ],
+              )
+            : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -52,13 +73,110 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             ),
             const SizedBox(height: 24),
             const Divider(),
-            if (_isAdmin)
-              Expanded(
-                child: _JoinRequestsList(groupId: widget.group['groupId']),
-              ),
+            // Show TabBarView for Admin, or just the EventList for members
+            Expanded(
+              child: _isAdmin
+                  ? TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _EventList(groupId: widget.group['groupId']),
+                        _JoinRequestsList(groupId: widget.group['groupId']),
+                      ],
+                    )
+                  : _EventList(groupId: widget.group['groupId']),
+            ),
           ],
         ),
       ),
+      floatingActionButton: _isAdmin
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CreateEventScreen(groupId: widget.group['groupId']),
+                  ),
+                );
+              },
+              label: const Text('Create Event'),
+              icon: const Icon(Icons.add),
+            )
+          : null,
+    );
+  }
+}
+
+class _EventList extends StatelessWidget {
+  final String groupId;
+
+  const _EventList({required this.groupId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('events')
+          .where('groupId', isEqualTo: groupId)
+          .orderBy('eventTimestamp', descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          developer.log(
+            'Error loading events',
+            name: 'EventList',
+            error: snapshot.error,
+            stackTrace: snapshot.stackTrace,
+          );
+          return const Center(child: Text('Error loading events.'));
+        }
+
+        final events = snapshot.data?.docs ?? [];
+
+        if (events.isEmpty) {
+          return const Center(child: Text('No upcoming events.'));
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Upcoming Events',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: events.length,
+                itemBuilder: (context, index) {
+                  final event = events[index].data();
+                  final eventTimestamp = event['eventTimestamp'] as Timestamp?;
+                  final formattedDate = eventTimestamp != null
+                      ? DateFormat.yMMMd().add_jm().format(eventTimestamp.toDate())
+                      : 'No date';
+
+                  return Card(
+                    child: ListTile(
+                      title: Text(event['name'] ?? 'Unnamed Event'),
+                      subtitle: Text('${event['location']}\n$formattedDate'),
+                      isThreeLine: true,
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        // TODO: Navigate to Event Details Screen
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

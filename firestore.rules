@@ -62,7 +62,8 @@ service cloud.firestore {
     // Events can be read by members of the group. Only the group admin can create/update/delete them.
     match /events/{eventId} {
       allow read: if exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
-      allow create, update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.admin;
+      allow create: if request.auth.uid == get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.admin;
+      allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.admin;
 
       //--- SUBCOLLECTIONS ---//
 
