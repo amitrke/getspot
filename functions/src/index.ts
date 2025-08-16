@@ -29,7 +29,6 @@ const per = processEventRegistration(db);
 /**
  * Creates a new group, generates a unique group code, and adds the creator
  * as the first member.
- * 
  */
 export const createGroup = onCall({region: "us-east4"}, async (request) => {
   const {customAlphabet} = await import("nanoid");
