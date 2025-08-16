@@ -11,6 +11,7 @@ import {setGlobalOptions} from "firebase-functions";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
+import {processJoinRequest} from "./processJoinRequest";
 
 
 // Initialize the Firebase Admin SDK
@@ -100,3 +101,5 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
     );
   }
 });
+
+export {processJoinRequest};

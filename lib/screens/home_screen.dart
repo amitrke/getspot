@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
+import 'package:getspot/screens/group_details_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -106,7 +107,11 @@ class _GroupListState extends State<_GroupList> {
       await for (var membersSnapshot in membersStream) {
         final memberGroupFutures = membersSnapshot.docs.map((doc) async {
           final groupDoc = await doc.reference.parent.parent!.get();
-          return {'status': 'member', 'group': groupDoc.data()};
+          final groupData = groupDoc.data();
+          return {
+            'status': 'member',
+            'group': {...?groupData, 'groupId': groupDoc.id}
+          };
         }).toList();
         final memberGroups = await Future.wait(memberGroupFutures);
         yield memberGroups;
@@ -116,7 +121,11 @@ class _GroupListState extends State<_GroupList> {
       await for (var requestsSnapshot in requestsStream) {
         final requestGroupFutures = requestsSnapshot.docs.map((doc) async {
           final groupDoc = await doc.reference.parent.parent!.get();
-          return {'status': 'pending', 'group': groupDoc.data()};
+          final groupData = groupDoc.data();
+          return {
+            'status': 'pending',
+            'group': {...?groupData, 'groupId': groupDoc.id}
+          };
         }).toList();
         final requestGroups = await Future.wait(requestGroupFutures);
 
@@ -127,9 +136,10 @@ class _GroupListState extends State<_GroupList> {
         for (var item in allGroups) {
           final groupData = item['group'] as Map<String, dynamic>?;
           if (groupData != null) {
-            final groupId = groupData['groupId'] as String? ?? groupData['name'];
+            final groupId = groupData['groupId'] as String?;
             if (groupId != null) {
-              if (!uniqueGroups.containsKey(groupId) || item['status'] == 'member') {
+              if (!uniqueGroups.containsKey(groupId) ||
+                  item['status'] == 'member') {
                 uniqueGroups[groupId] = item;
               }
             }
@@ -207,7 +217,11 @@ class _GroupListItem extends StatelessWidget {
             : const Icon(Icons.chevron_right),
         onTap: status == 'member'
             ? () {
-                // TODO: Navigate to Group Details Screen
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => GroupDetailsScreen(group: group),
+                  ),
+                );
               }
             : null, // Disable tap for pending requests
       ),
