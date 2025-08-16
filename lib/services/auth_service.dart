@@ -26,7 +26,13 @@ class AuthService {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
+      if (kIsWeb) {
+        // On web, use the Firebase popup flow so Firebase gets a valid idToken
+        final provider = GoogleAuthProvider();
+        return await _auth.signInWithPopup(provider);
+      }
+
+      // Trigger the authentication flow (mobile)
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       // Obtain the auth details from the request
