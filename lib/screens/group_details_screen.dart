@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/screens/create_event_screen.dart';
+import 'package:getspot/screens/event_details_screen.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
 
@@ -154,20 +155,26 @@ class _EventList extends StatelessWidget {
               child: ListView.builder(
                 itemCount: events.length,
                 itemBuilder: (context, index) {
-                  final event = events[index].data();
-                  final eventTimestamp = event['eventTimestamp'] as Timestamp?;
+                  final event = events[index];
+                  final eventData = event.data();
+                  final eventTimestamp = eventData['eventTimestamp'] as Timestamp?;
                   final formattedDate = eventTimestamp != null
                       ? DateFormat.yMMMd().add_jm().format(eventTimestamp.toDate())
                       : 'No date';
 
                   return Card(
                     child: ListTile(
-                      title: Text(event['name'] ?? 'Unnamed Event'),
-                      subtitle: Text('${event['location']}\n$formattedDate'),
+                      title: Text(eventData['name'] ?? 'Unnamed Event'),
+                      subtitle: Text('${eventData['location']}\n$formattedDate'),
                       isThreeLine: true,
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        // TODO: Navigate to Event Details Screen
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EventDetailsScreen(eventId: event.id),
+                          ),
+                        );
                       },
                     ),
                   );

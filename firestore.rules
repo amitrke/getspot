@@ -74,7 +74,7 @@ service cloud.firestore {
         allow read: if exists(/databases/$(database)/documents/groups/$(get(/databases/$(database)/documents/events/$(eventId)).data.groupId)/members/$(request.auth.uid));
         
         // Allow a user to create their own registration request
-        allow create: if request.auth.uid == userId && request.resource.data.status == 'Requested';
+        allow create: if request.auth.uid == userId && request.resource.data.status == 'requested';
         
         // Allow a user to update their own status (e.g., to withdraw)
         allow update: if request.auth.uid == userId;

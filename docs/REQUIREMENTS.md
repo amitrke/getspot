@@ -65,6 +65,7 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 *   [ ] **Update the event fee** at any time before the event begins.
 *   [ ] Add or remove participant spots after event creation (before the event starts).
 *   [ ] Monitor the list of registered participants and their payment status.
+*   [ ] Clear a participant's "denied" status to allow them to re-register.
 *   [ ] Use a communication tool to send updates to all registered participants.
 
 ### 4.3. Participant Experience
