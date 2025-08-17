@@ -500,6 +500,7 @@ class _JoinGroupModalState extends State<_JoinGroupModal> {
         'uid': user.uid,
         'displayName': user.displayName ?? 'No Name',
         'requestedAt': FieldValue.serverTimestamp(),
+        'status': 'pending', // Explicitly set status
       });
 
       if (mounted) {

@@ -13,6 +13,7 @@ import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import {processJoinRequest} from "./processJoinRequest";
 import {processEventRegistration} from "./processEventRegistration";
+import {manageJoinRequest} from "./manageJoinRequest";
 
 
 // Initialize the Firebase Admin SDK
@@ -108,4 +109,9 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
   }
 });
 
-export {pj as processJoinRequest, per as processEventRegistration};
+export {
+  pj as processJoinRequest,
+  per as processEventRegistration,
+  manageJoinRequest,
+};
+

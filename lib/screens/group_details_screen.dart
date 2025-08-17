@@ -16,8 +16,7 @@ class GroupDetailsScreen extends StatefulWidget {
   State<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
 }
 
-class _GroupDetailsScreenState extends State<GroupDetailsScreen>
-    with SingleTickerProviderStateMixin {
+class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTickerProviderStateMixin {
   bool _isAdmin = false;
   TabController? _tabController;
 
@@ -52,8 +51,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
             ? TabBar(
                 controller: _tabController,
                 tabs: const [
-                  Tab(text: 'Events'),
-                  Tab(text: 'Join Requests'),
+                  Tab(icon: Icon(Icons.event), text: 'Events'),
+                  Tab(
+                      icon: Icon(Icons.person_add),
+                      text: 'Admin'), // Changed tab name
                 ],
               )
             : null,
@@ -81,7 +82,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                       controller: _tabController,
                       children: [
                         _EventList(groupId: widget.group['groupId']),
-                        _JoinRequestsList(groupId: widget.group['groupId']),
+                        _AdminManagementTab(
+                            groupId: widget.group['groupId']), // New widget
                       ],
                     )
                   : _EventList(groupId: widget.group['groupId']),
@@ -157,15 +159,19 @@ class _EventList extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final event = events[index];
                   final eventData = event.data();
-                  final eventTimestamp = eventData['eventTimestamp'] as Timestamp?;
+                  final eventTimestamp =
+                      eventData['eventTimestamp'] as Timestamp?;
                   final formattedDate = eventTimestamp != null
-                      ? DateFormat.yMMMd().add_jm().format(eventTimestamp.toDate())
+                      ? DateFormat.yMMMd()
+                          .add_jm()
+                          .format(eventTimestamp.toDate())
                       : 'No date';
 
                   return Card(
                     child: ListTile(
                       title: Text(eventData['name'] ?? 'Unnamed Event'),
-                      subtitle: Text('${eventData['location']}\n$formattedDate'),
+                      subtitle:
+                          Text('${eventData['location']}\n$formattedDate'),
                       isThreeLine: true,
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
@@ -188,31 +194,60 @@ class _EventList extends StatelessWidget {
   }
 }
 
+class _AdminManagementTab extends StatelessWidget {
+  final String groupId;
+  const _AdminManagementTab({required this.groupId});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        _JoinRequestsList(
+          groupId: groupId,
+          status: 'pending',
+          title: 'Pending Requests',
+        ),
+        const SizedBox(height: 24),
+        _JoinRequestsList(
+          groupId: groupId,
+          status: 'denied',
+          title: 'Denied Requests',
+        ),
+      ],
+    );
+  }
+}
+
 class _JoinRequestsList extends StatefulWidget {
   final String groupId;
+  final String status;
+  final String title;
 
-  const _JoinRequestsList({required this.groupId});
+  const _JoinRequestsList(
+      {required this.groupId, required this.status, required this.title});
 
   @override
   State<_JoinRequestsList> createState() => _JoinRequestsListState();
 }
 
 class _JoinRequestsListState extends State<_JoinRequestsList> {
-  bool _isLoading = false;
+  // Use a map to track loading state for individual items
+  final Map<String, bool> _loadingStates = {};
 
   Future<void> _processRequest(String requestedUserId, String action) async {
     setState(() {
-      _isLoading = true;
+      _loadingStates[requestedUserId] = true;
     });
 
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
-      final callable = functions.httpsCallable('processJoinRequest');
+      final callable = functions.httpsCallable('manageJoinRequest');
       await callable.call({
         'groupId': widget.groupId,
         'requestedUserId': requestedUserId,
         'action': action,
       });
+      // No need to show a success message, the list will update automatically
     } on FirebaseFunctionsException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -234,7 +269,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _loadingStates[requestedUserId] = false;
         });
       }
     }
@@ -242,25 +277,40 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
 
   @override
   Widget build(BuildContext context) {
+    // Firestore query now filters by the 'status' field.
+    // For the initial implementation, we assume pending requests have no status field.
+    final query = widget.status == 'pending'
+        ? FirebaseFirestore.instance
+            .collection('groups')
+            .doc(widget.groupId)
+            .collection('joinRequests')
+            .where('status', isNull: true)
+        : FirebaseFirestore.instance
+            .collection('groups')
+            .doc(widget.groupId)
+            .collection('joinRequests')
+            .where('status', isEqualTo: widget.status);
+
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('groups')
-          .doc(widget.groupId)
-          .collection('joinRequests')
-          .snapshots(),
+      stream: query.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
-          return const Center(child: Text('Error loading requests.'));
+          return Center(child: Text('Error loading ${widget.title}.'));
         }
 
         final requests = snapshot.data?.docs ?? [];
 
         if (requests.isEmpty) {
-          return const Center(child: Text('No pending join requests.'));
+          return Card(
+            child: ListTile(
+              title: Text(widget.title),
+              subtitle: const Text('No requests.'),
+            ),
+          );
         }
 
         return Column(
@@ -269,44 +319,60 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
-                'Join Requests',
+                widget.title,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: requests.length,
-                itemBuilder: (context, index) {
-                  final request = requests[index];
-                  final requestData = request.data();
-                  return Card(
-                    child: ListTile(
-                      title: Text(requestData['displayName'] ?? 'No Name'),
-                      trailing: _isLoading
-                          ? const CircularProgressIndicator()
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextButton(
-                                  onPressed: () =>
-                                      _processRequest(request.id, 'approve'),
-                                  child: const Text('Approve'),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      _processRequest(request.id, 'deny'),
-                                  child: const Text('Deny'),
-                                ),
-                              ],
-                            ),
-                    ),
-                  );
-                },
-              ),
+            ListView.builder(
+              shrinkWrap: true, // Important for nested lists
+              physics:
+                  const NeverScrollableScrollPhysics(), // Disable scrolling for the inner list
+              itemCount: requests.length,
+              itemBuilder: (context, index) {
+                final request = requests[index];
+                final requestData = request.data();
+                final isLoading = _loadingStates[request.id] ?? false;
+
+                return Card(
+                  child: ListTile(
+                    title: Text(requestData['displayName'] ?? 'No Name'),
+                    trailing: isLoading
+                        ? const CircularProgressIndicator()
+                        : _buildActionButtons(request.id),
+                  ),
+                );
+              },
             ),
           ],
         );
       },
     );
   }
+
+  Widget _buildActionButtons(String requestedUserId) {
+    if (widget.status == 'pending') {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: () => _processRequest(requestedUserId, 'approve'),
+            child: const Text('Approve'),
+          ),
+          TextButton(
+            onPressed: () => _processRequest(requestedUserId, 'deny'),
+            child: const Text('Deny'),
+          ),
+        ],
+      );
+    } else {
+      // Denied status
+      return TextButton(
+        onPressed: () => _processRequest(requestedUserId, 'delete'),
+        style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error),
+        child: const Text('Delete'),
+      );
+    }
+  }
 }
+

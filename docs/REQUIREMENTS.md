@@ -53,11 +53,11 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 ## 4. Key Features
 
 ### 4.1. Group Management
-*   [ ] Create a new group (name, description), which generates a unique, shareable group code.
-*   [ ] View the group code to share it with potential members.
+*   [x] Create a new group (name, description), which generates a unique, shareable group code.
+*   [x] View the group code to share it with potential members.
 *   [ ] View and manage group members.
-*   [ ] Approve/deny membership requests.
-*   [ ] Set a per-participant negative balance limit for the group's virtual currency.
+*   [x] Approve/deny membership requests.
+*   [x] Set a per-participant negative balance limit for the group's virtual currency.
 
 ### 4.2. Event Management (for Organizers)
 *   [ ] Create an event within a group.
@@ -65,12 +65,12 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 *   [ ] **Update the event fee** at any time before the event begins.
 *   [ ] Add or remove participant spots after event creation (before the event starts).
 *   [ ] Monitor the list of registered participants and their payment status.
-*   [ ] Clear a participant's "denied" status to allow them to re-register.
+*   [x] Clear a participant's "denied" status to allow them to re-register.
 *   [ ] Use a communication tool to send updates to all registered participants.
 
 ### 4.3. Participant Experience
-*   [ ] Find a group by entering a unique Group Code.
-*   [ ] Request to join a group after finding it.
+*   [x] Find a group by entering a unique Group Code.
+*   [x] Request to join a group after finding it.
 *   [ ] View event details (including the Commitment Deadline).
 *   [ ] Submit a registration request for an event. The initial status will show as **"Requested"**.
 *   [ ] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.
