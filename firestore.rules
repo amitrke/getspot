@@ -30,31 +30,26 @@ service cloud.firestore {
     // Group info is public to all authenticated users.
     match /groups/{groupId} {
       allow read, create: if request.auth != null;
-      allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
+      allow update, delete: if request.auth.uid == resource.data.admin;
 
       //--- SUBCOLLECTIONS ---//
 
       // Group members can be read by other members. Users can always read their own member doc.
       // Only the admin can add/remove members.
       match /members/{userId} {
-        // For single document reads, allow if same user, uid field matches, or caller is a member of the group.
         allow get: if request.auth != null && (
           request.auth.uid == userId ||
-          resource.data.uid == request.auth.uid ||
           exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid))
         );
-
-        // For queries (list/collectionGroup), require a query-safe condition: uid field equals caller uid.
-        allow list: if request.auth != null && resource.data.uid == request.auth.uid;
-
+        allow list: if request.auth != null && request.auth.uid == resource.data.uid;
         allow create, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
 
-      // Users can create their own join request. Only the admin can list all requests.
-      // Users can get their own request to see its status.
+      // Users can create their own join request.
+      // Only the admin can list, update, or delete requests.
       match /joinRequests/{userId} {
         allow get: if request.auth.uid == userId;
-        allow list, update, delete: if request.auth.uid == resource.data.admin;
+        allow list, update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
         allow create: if request.auth.uid == userId;
       }
     }
