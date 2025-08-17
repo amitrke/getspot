@@ -2,11 +2,6 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
-// Initialize Firebase Admin SDK
-if (admin.apps.length === 0) {
-  admin.initializeApp();
-}
-
 const db = admin.firestore();
 
 interface ManageJoinRequestData {
