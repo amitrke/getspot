@@ -10,6 +10,8 @@ interface ManageJoinRequestData {
 
 /**
  * A callable function for group admins to approve, deny, or delete join requests.
+ * @param {admin.firestore.Firestore} db The Firestore database instance.
+ * @return {functions.https.HttpsCallable} A callable function.
  */
 export const manageJoinRequest = (db: admin.firestore.Firestore) =>
   onCall<ManageJoinRequestData>(
