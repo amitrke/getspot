@@ -54,9 +54,8 @@ service cloud.firestore {
       // Users can get their own request to see its status.
       match /joinRequests/{userId} {
         allow get: if request.auth.uid == userId;
-        allow list, update: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
+        allow list, update, delete: if request.auth.uid == resource.data.admin;
         allow create: if request.auth.uid == userId;
-        allow delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
     }
 
