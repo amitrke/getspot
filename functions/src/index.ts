@@ -25,6 +25,7 @@ setGlobalOptions({maxInstances: 10});
 
 const pj = processJoinRequest(db);
 const per = processEventRegistration(db);
+const mjr = manageJoinRequest(db);
 
 
 /**
@@ -112,6 +113,6 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
 export {
   pj as processJoinRequest,
   per as processEventRegistration,
-  manageJoinRequest,
+  mjr as manageJoinRequest,
 };
 
