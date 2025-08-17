@@ -50,10 +50,11 @@ service cloud.firestore {
         allow create, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
 
-      // Users can create their own join request. Only the admin can see all requests.
-      // Users can read their own request to see its status.
+      // Users can create their own join request. Only the admin can list all requests.
+      // Users can get their own request to see its status.
       match /joinRequests/{userId} {
-        allow read: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin || request.auth.uid == userId;
+        allow get: if request.auth.uid == userId;
+        allow list, update: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
         allow create: if request.auth.uid == userId;
         allow delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
