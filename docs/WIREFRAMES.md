@@ -63,12 +63,14 @@ After login, the user sees a list of groups they are a member of. This is the ma
 
 ### **3. Group Details / Events Screen**
 
-This screen shows the details of a specific group, including a list of upcoming events.
+This screen shows the details of a specific group, including a list of upcoming events, and surfaces the shareable group code directly beneath the title for easy copying/sharing.
 
 ```text
 +-------------------------------------------+
 | < Badminton Crew         [Admin Options]  |
 +-------------------------------------------+
+|                                           |
+|  Code: A3B-7Y9-K2C                        |
 |                                           |
 |  Upcoming Events:                         |
 |  +-------------------------------------+  |
