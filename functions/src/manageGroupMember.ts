@@ -10,6 +10,17 @@ interface ManageGroupMemberData {
   description?: string; // optional note for credit
 }
 
+interface GroupDoc {
+  admin?: string;
+  name?: string;
+}
+
+interface MemberDoc {
+  walletBalance?: number;
+  displayName?: string;
+  uid?: string;
+}
+
 /**
  * Callable to (a) remove a member or (b) credit wallet balance.
  * Constraints:
@@ -18,6 +29,14 @@ interface ManageGroupMemberData {
  *  - Cannot remove member with non-zero walletBalance.
  *  - Credit action requires positive amount.
  *  - Creates a transactions doc (planned schema) if crediting (idempotent not guaranteed yet).
+ */
+/**
+ * Callable function for managing existing group members.
+ * Supports two actions:
+ *  - remove: deletes member + userGroupMembership index (if balance is zero and not admin)
+ *  - credit: increments walletBalance and writes a transaction record
+ * @param {admin.firestore.Firestore} db Firestore database instance
+ * @return {any} HTTPS callable handler
  */
 export const manageGroupMember = (db: admin.firestore.Firestore) =>
   onCall<ManageGroupMemberData>({region: "us-east4"}, async (request) => {
@@ -42,8 +61,8 @@ export const manageGroupMember = (db: admin.firestore.Firestore) =>
       if (!groupSnap.exists) {
         throw new HttpsError("not-found", "Group not found.");
       }
-      const groupData = groupSnap.data()!;
-      if (groupData.admin !== callerUid) {
+      const groupData = groupSnap.data() as GroupDoc | undefined;
+      if (!groupData || groupData.admin !== callerUid) {
         throw new HttpsError(
           "permission-denied",
           "Only the group admin may manage members."
@@ -59,27 +78,27 @@ export const manageGroupMember = (db: admin.firestore.Firestore) =>
         }
         return await db.runTransaction(async (tx) => {
           const memberSnap = await tx.get(memberRef);
-            if (!memberSnap.exists) {
-              throw new HttpsError("not-found", "Member does not exist.");
-            }
-            const memberData = memberSnap.data() as any;
-            const balance = memberData.walletBalance || 0;
-            if (balance !== 0) {
-              throw new HttpsError(
-                "failed-precondition",
-                "Member has non-zero balance; cannot remove."
-              );
-            }
-            // Remove membership docs (group side + user index)
-            const userIndexRef = db
-              .collection("userGroupMemberships")
-              .doc(targetUserId)
-              .collection("groups")
-              .doc(groupId);
-            tx.delete(memberRef);
-            tx.delete(userIndexRef);
-            logger.info("Member removed", {groupId, targetUserId, callerUid});
-            return {status: "removed"};
+          if (!memberSnap.exists) {
+            throw new HttpsError("not-found", "Member does not exist.");
+          }
+          const memberData = memberSnap.data() as MemberDoc;
+          const balance = memberData.walletBalance ?? 0;
+          if (balance !== 0) {
+            throw new HttpsError(
+              "failed-precondition",
+              "Member has non-zero balance; cannot remove."
+            );
+          }
+          // Remove membership docs (group side + user index)
+          const userIndexRef = db
+            .collection("userGroupMemberships")
+            .doc(targetUserId)
+            .collection("groups")
+            .doc(groupId);
+          tx.delete(memberRef);
+          tx.delete(userIndexRef);
+          logger.info("Member removed", {groupId, targetUserId, callerUid});
+          return {status: "removed"};
         });
       } else if (action === "credit") {
         if (typeof amount !== "number" || amount <= 0) {
@@ -93,8 +112,8 @@ export const manageGroupMember = (db: admin.firestore.Firestore) =>
           if (!memberSnap.exists) {
             throw new HttpsError("not-found", "Member does not exist.");
           }
-          const memberData = memberSnap.data() as any;
-          const currentBalance = memberData.walletBalance || 0;
+          const memberData = memberSnap.data() as MemberDoc;
+          const currentBalance = memberData.walletBalance ?? 0;
           const newBalance = currentBalance + amount;
           tx.update(memberRef, {walletBalance: newBalance});
           // Basic transaction record (if transactions collection used later)
