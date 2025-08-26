@@ -46,7 +46,9 @@ class AuthService {
       );
 
       // Once signed in, return the UserCredential
-      return await _auth.signInWithCredential(credential);
+      final userCredential = await _auth.signInWithCredential(credential);
+      await FirebaseAuth.instance.currentUser?.reload();
+      return userCredential;
     } catch (e) {
       // Handle error
       print(e);

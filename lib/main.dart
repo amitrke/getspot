@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:getspot/firebase_options.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/screens/login_screen.dart';
+import 'dart:developer' as developer;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,10 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        developer.log(
+          'Auth state changed: ${snapshot.connectionState}',
+          name: 'AuthWrapper',
+        );
         // User is logged in
         if (snapshot.hasData) {
           return const HomeScreen();

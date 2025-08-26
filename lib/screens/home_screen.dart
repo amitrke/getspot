@@ -27,6 +27,10 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    developer.log(
+      'HomeScreen build method executed. Logging should be working.',
+      name: 'HomeScreen',
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Groups'),
@@ -77,7 +81,7 @@ class _GroupList extends StatefulWidget {
 }
 
 class _GroupListState extends State<_GroupList> {
-  Stream<List<Map<String, dynamic>>>? _groupsStream;
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _groupsStream;
 
   @override
   void initState() {
@@ -92,71 +96,21 @@ class _GroupListState extends State<_GroupList> {
       return;
     }
 
-    final membersStream = FirebaseFirestore.instance
-        .collectionGroup('members')
-        .where('uid', isEqualTo: user.uid)
+    // New, simpler query to get the user's groups
+    final stream = FirebaseFirestore.instance
+        .collection('userGroupMemberships')
+        .doc(user.uid)
+        .collection('groups')
         .snapshots();
-
-    final requestsStream = FirebaseFirestore.instance
-        .collectionGroup('joinRequests')
-        .where('uid', isEqualTo: user.uid)
-        .snapshots();
-
-    // Using async* to combine the streams manually
-    final combinedStream = () async* {
-      await for (var membersSnapshot in membersStream) {
-        final memberGroupFutures = membersSnapshot.docs.map((doc) async {
-          final groupDoc = await doc.reference.parent.parent!.get();
-          final groupData = groupDoc.data();
-          return {
-            'status': 'member',
-            'group': {...?groupData, 'groupId': groupDoc.id}
-          };
-        }).toList();
-        final memberGroups = await Future.wait(memberGroupFutures);
-        yield memberGroups;
-      }
-    }()
-        .asyncExpand((memberGroups) async* {
-      await for (var requestsSnapshot in requestsStream) {
-        final requestGroupFutures = requestsSnapshot.docs.map((doc) async {
-          final groupDoc = await doc.reference.parent.parent!.get();
-          final groupData = groupDoc.data();
-          return {
-            'status': 'pending',
-            'group': {...?groupData, 'groupId': groupDoc.id}
-          };
-        }).toList();
-        final requestGroups = await Future.wait(requestGroupFutures);
-
-        // Combine and yield the final list
-        final allGroups = [...memberGroups, ...requestGroups];
-        // Remove duplicates, preferring 'member' status
-        final uniqueGroups = <String, Map<String, dynamic>>{};
-        for (var item in allGroups) {
-          final groupData = item['group'] as Map<String, dynamic>?;
-          if (groupData != null) {
-            final groupId = groupData['groupId'] as String?;
-            if (groupId != null) {
-              if (!uniqueGroups.containsKey(groupId) ||
-                  item['status'] == 'member') {
-                uniqueGroups[groupId] = item;
-              }
-            }
-          }
-        }
-        yield uniqueGroups.values.toList();
-      }
-    });
 
     setState(() {
-      _groupsStream = combinedStream;
+      _groupsStream = stream;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Map<String, dynamic>>>(
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _groupsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -174,12 +128,12 @@ class _GroupListState extends State<_GroupList> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
-        final groups = snapshot.data;
+        final groups = snapshot.data?.docs;
 
         if (groups == null || groups.isEmpty) {
           return Center(
             child: Text(
-              'You have no group memberships or pending requests.',
+              'You are not a member of any groups yet.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           );
@@ -188,12 +142,52 @@ class _GroupListState extends State<_GroupList> {
         return ListView.builder(
           itemCount: groups.length,
           itemBuilder: (context, index) {
-            final item = groups[index];
-            final group = item['group'] as Map<String, dynamic>? ?? {};
-            final status = item['status'] as String? ?? 'member';
-            return _GroupListItem(group: group, status: status);
+            final groupMembership = groups[index].data();
+            // We need to fetch the full group details now
+            return _FullGroupListItem(
+              groupId: groupMembership['groupId'] ?? '',
+            );
           },
         );
+      },
+    );
+  }
+}
+
+// New widget to fetch and display full group details
+class _FullGroupListItem extends StatelessWidget {
+  final String groupId;
+  const _FullGroupListItem({required this.groupId});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future:
+          FirebaseFirestore.instance.collection('groups').doc(groupId).get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Card(
+            child: ListTile(
+              title: Text('Loading group...'),
+              subtitle: LinearProgressIndicator(),
+            ),
+          );
+        }
+
+        final groupData = snapshot.data?.data();
+        if (groupData == null) {
+          return const Card(
+            child: ListTile(
+              title: Text('Group not found'),
+              leading: Icon(Icons.error),
+            ),
+          );
+        }
+
+        // Add the groupId to the map for navigation
+        final group = {...groupData, 'groupId': groupId};
+
+        return _GroupListItem(group: group, status: 'member');
       },
     );
   }

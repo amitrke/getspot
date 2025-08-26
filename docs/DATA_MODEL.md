@@ -8,6 +8,7 @@ This document outlines the proposed Firestore collection and document structure 
 *   `/groups`
 *   `/events`
 *   `/transactions`
+*   `/userGroupMemberships`
 
 ---
 
@@ -143,5 +144,23 @@ Stores a log of all financial activities (fees and penalties) for auditing and h
     "amount": "number", // The value of the transaction (can be negative)
     "description": "string", // e.g., "Fee for 'Friday Night Badminton'"
     "createdAt": "timestamp"
+}
+```
+
+---
+
+### 5. User Group Memberships Collection
+
+This collection is a top-level collection designed for highly efficient lookups of a user's group memberships. Instead of performing expensive collection group queries across all groups, the application can simply query a user's document in this collection to get a list of all their groups.
+
+This model significantly improves performance and scalability.
+
+`/userGroupMemberships/{userId}/groups/{groupId}`
+
+```json
+{
+  "groupId": "string",      // The ID of the group
+  "groupName": "string",    // Denormalized group name for display
+  "isAdmin": "boolean"      // Whether the user is an admin of this group
 }
 ```

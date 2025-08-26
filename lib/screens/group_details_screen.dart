@@ -16,7 +16,8 @@ class GroupDetailsScreen extends StatefulWidget {
   State<GroupDetailsScreen> createState() => _GroupDetailsScreenState();
 }
 
-class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTickerProviderStateMixin {
+class _GroupDetailsScreenState extends State<GroupDetailsScreen>
+    with SingleTickerProviderStateMixin {
   bool _isAdmin = false;
   TabController? _tabController;
 
@@ -28,11 +29,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
 
   void _checkAdminStatus() {
     final user = FirebaseAuth.instance.currentUser;
+    developer.log(
+      'Checking admin status. Current User UID: ${user?.uid}, Group Admin UID: ${widget.group['admin']}',
+      name: 'GroupDetailsScreen',
+    );
     if (user != null && widget.group['admin'] == user.uid) {
+      developer.log('Admin status CONFIRMED.', name: 'GroupDetailsScreen');
       setState(() {
         _isAdmin = true;
         _tabController = TabController(length: 2, vsync: this);
       });
+    } else {
+      developer.log('Admin status DENIED.', name: 'GroupDetailsScreen');
     }
   }
 
@@ -44,6 +52,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    developer.log('Building GroupDetailsScreen.', name: 'GroupDetailsScreen');
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.group['name'] ?? 'Group Details'),
@@ -162,7 +171,7 @@ class _EventList extends StatelessWidget {
                   final eventTimestamp =
                       eventData['eventTimestamp'] as Timestamp?;
                   final formattedDate = eventTimestamp != null
-                      ? DateFormat.yMMMd()
+                      ? DateFormat.yMMMd() 
                           .add_jm()
                           .format(eventTimestamp.toDate())
                       : 'No date';
@@ -200,6 +209,10 @@ class _AdminManagementTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    developer.log(
+      'Building _AdminManagementTab with groupId: "$groupId"',
+      name: 'GroupDetailsScreen',
+    );
     return ListView(
       children: [
         _JoinRequestsList(
@@ -233,6 +246,15 @@ class _JoinRequestsList extends StatefulWidget {
 class _JoinRequestsListState extends State<_JoinRequestsList> {
   // Use a map to track loading state for individual items
   final Map<String, bool> _loadingStates = {};
+
+  @override
+  void initState() {
+    super.initState();
+    developer.log(
+      'Initializing _JoinRequestsListState for status "${widget.status}"',
+      name: 'GroupDetailsScreen',
+    );
+  }
 
   Future<void> _processRequest(String requestedUserId, String action) async {
     setState(() {
@@ -277,19 +299,11 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
 
   @override
   Widget build(BuildContext context) {
-    // Firestore query now filters by the 'status' field.
-    // For the initial implementation, we assume pending requests have no status field.
-    final query = widget.status == 'pending'
-        ? FirebaseFirestore.instance
-            .collection('groups')
-            .doc(widget.groupId)
-            .collection('joinRequests')
-            .where('status', isNull: true)
-        : FirebaseFirestore.instance
-            .collection('groups')
-            .doc(widget.groupId)
-            .collection('joinRequests')
-            .where('status', isEqualTo: widget.status);
+    final query = FirebaseFirestore.instance
+        .collection('groups')
+        .doc(widget.groupId)
+        .collection('joinRequests')
+        .where('status', isEqualTo: widget.status);
 
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: query.snapshots(),
@@ -299,7 +313,15 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Error loading ${widget.title}.'));
+          developer.log(
+            'Error fetching join requests for status "${widget.status}"',
+            name: 'GroupDetailsScreen',
+            error: snapshot.error,
+            stackTrace: snapshot.stackTrace,
+          );
+          return Center(
+              child: Text(
+                  'Error loading ${widget.title}.\nCheck console for details.'));
         }
 
         final requests = snapshot.data?.docs ?? [];
@@ -375,4 +397,5 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
     }
   }
 }
+
 

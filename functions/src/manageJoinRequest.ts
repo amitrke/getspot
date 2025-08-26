@@ -69,12 +69,26 @@ export const manageJoinRequest = (db: admin.firestore.Firestore) =>
 
           // Create a new member and delete the request atomically
           await db.runTransaction(async (transaction) => {
+            const groupData = (await transaction.get(groupRef)).data();
+            const userGroupMembershipRef = db
+              .collection("userGroupMemberships")
+              .doc(requestedUserId)
+              .collection("groups")
+              .doc(groupId);
+
             transaction.set(memberRef, {
               uid: requestedUserId,
               displayName: requestData.displayName,
               walletBalance: 0, // Initial wallet balance
               joinedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
+
+            transaction.set(userGroupMembershipRef, {
+              groupId: groupId,
+              groupName: groupData?.name ?? "Unnamed Group",
+              isAdmin: false,
+            });
+
             transaction.delete(requestRef);
           });
 

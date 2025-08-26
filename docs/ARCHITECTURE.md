@@ -1,6 +1,6 @@
 # GetSpot High-Level Architecture
 
-This document outlines the "write-to-trigger" architectural model for the GetSpot application, detailing the flow of data and control between the client, database, and backend logic.
+This document outlines the architectural model for the GetSpot application, detailing the flow of data and control between the client, database, and backend logic.
 
 ```mermaid
 graph TD
@@ -24,11 +24,14 @@ graph TD
     C -- "onCreate event triggers Function" --> E
     E -- "Performs trusted logic (checks, etc.)" --> C
     C -- "Updates doc (e.g., {status: 'Confirmed'})" --> A
+
+    A -- "Calls Callable Function (e.g., createGroup)" --> E
+    E -- "Performs atomic logic & writes to" --> C
 ```
 
 ## Architectural Patterns
 
-The application employs two primary architectural patterns for interacting with the backend, each suited for different use cases.
+The application employs three primary architectural patterns for interacting with the backend, each suited for different use cases.
 
 ### 1. Write-to-Trigger Pattern (for Event Registration)
 
@@ -50,10 +53,20 @@ For atomic, synchronous operations like creating a new group, the application us
 *   **Backend Execution:** The `createGroup` function runs in a secure environment. It performs the following steps:
     1.  **Authentication:** Verifies the user's identity using the `context.auth` object provided by the Firebase SDK. If the user is not authenticated, the function exits immediately.
     2.  **Generate Unique Code:** Creates a unique, shareable `groupCode`, ensuring there are no collisions with existing groups.
-    3.  **Create Documents:** Creates the new group document in the `/groups` collection and adds the creator to the `/members` subcollection in a single atomic operation.
+    3.  **Create Documents:** Creates the new group document in the `/groups` collection, adds the creator to the `/members` subcollection, and adds an entry to the `/userGroupMemberships/{userId}/groups` collection for efficient lookup. All writes are performed in a single atomic operation.
     4.  **Return Data:** Returns the new `groupId` and `groupCode` to the client app.
 
 This pattern is ideal for operations that need to be performed as a single, transactional step, guaranteeing data integrity and uniqueness.
+
+### 3. Efficient Data Fetching for User Memberships
+
+To retrieve a list of all groups a user belongs to, the application avoids slow and costly collection group queries. Instead, it relies on a denormalized data structure for highly efficient lookups.
+
+*   **Dedicated Collection:** A top-level collection, `/userGroupMemberships`, stores a subcollection for each user.
+*   **Direct Lookup:** Inside `/userGroupMemberships/{userId}/groups`, each document represents a group the user is a member of. This allows the app to fetch all of a user's groups with a simple and fast collection query directed at a single user's path.
+*   **Backend Maintained:** The Firebase Functions (`createGroup`, `manageJoinRequest`) are responsible for keeping this data consistent. When a user creates a group or is accepted into one, the function atomically adds an entry to this collection.
+
+This pattern ensures that the primary read operation—loading the user's home screen—remains fast and scalable, regardless of how many groups exist in the database.
 
 ---
 

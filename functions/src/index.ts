@@ -69,6 +69,11 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
   // 4. Create Firestore Documents Atomically
   const groupRef = db.collection("groups").doc();
   const memberRef = groupRef.collection("members").doc(uid);
+  const userGroupMembershipRef = db
+    .collection("userGroupMemberships")
+    .doc(uid)
+    .collection("groups")
+    .doc(groupRef.id);
 
   try {
     const batch = db.batch();
@@ -90,6 +95,13 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
       displayName: displayName || email || "Group Admin",
       walletBalance: 0, // Initial balance is always 0
       joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Add to the user's group membership list for easy lookup
+    batch.set(userGroupMembershipRef, {
+      groupId: groupRef.id,
+      groupName: name,
+      isAdmin: true,
     });
 
     await batch.commit();

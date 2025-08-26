@@ -8,18 +8,16 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Allow collection group queries for a user to find their groups and requests.
-    match /{path=**}/members/{userId} {
-      allow list: if request.auth != null && request.auth.uid == userId;
-    }
-    match /{path=**}/joinRequests/{userId} {
-      allow list: if request.auth != null && request.auth.uid == userId;
-    }
-
     //--- COLLECTIONS ----//
 
     match /users/{userId} {
       allow read, update, create: if request.auth.uid == userId;
+    }
+
+    // New collection for simplified group lookups.
+    // A user can only read their own list of groups.
+    match /userGroupMemberships/{userId}/groups/{groupId} {
+      allow read: if request.auth.uid == userId;
     }
 
     match /groups/{groupId} {
@@ -31,8 +29,6 @@ service cloud.firestore {
       // Any member of a group can see the list of other members.
       match /members/{userId} {
         allow get, list: if exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
-        // Admin can add/remove members (handled by functions).
-        allow create, delete: if request.auth.uid == resource.data.admin;
       }
 
       // Users can create their own join request.
