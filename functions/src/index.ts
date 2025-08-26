@@ -14,6 +14,7 @@ import * as admin from "firebase-admin";
 import {processJoinRequest} from "./processJoinRequest";
 import {processEventRegistration} from "./processEventRegistration";
 import {manageJoinRequest} from "./manageJoinRequest";
+import {manageGroupMember} from "./manageGroupMember";
 
 
 // Initialize the Firebase Admin SDK
@@ -26,6 +27,7 @@ setGlobalOptions({maxInstances: 10});
 const pj = processJoinRequest(db);
 const per = processEventRegistration(db);
 const mjr = manageJoinRequest(db);
+const mgm = manageGroupMember(db);
 
 
 /**
@@ -126,5 +128,6 @@ export {
   pj as processJoinRequest,
   per as processEventRegistration,
   mjr as manageJoinRequest,
+  mgm as manageGroupMember,
 };
 

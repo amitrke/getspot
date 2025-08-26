@@ -55,7 +55,9 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 ### 4.1. Group Management
 *   [x] Create a new group (name, description), which generates a unique, shareable group code.
 *   [x] View the group code to share it with potential members.
-*   [ ] View and manage group members.
+*   [x] View and manage group members.
+    *   [ ] Show a confirmation dialog before removing a member (dialog includes member name and warning about irreversible action if balance is zero).
+    *   [ ] Reject removal when member wallet balance is non-zero (surface inline error message explaining required balance = 0).
 *   [x] Approve/deny membership requests.
 *   [x] Set a per-participant negative balance limit for the group's virtual currency.
 
@@ -74,7 +76,9 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 *   [x] View event details (including the Commitment Deadline).
 *   [x] Submit a registration request for an event. The initial status will show as **"Requested"**.
 *   [ ] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.
-*   [ ] Withdraw from an event (understanding the penalty if after the deadline).
+*   [ ] Withdraw from an event (understanding the penalty if after the commitment deadline).
+    *   [ ] If withdrawal is attempted after the commitment deadline, the user must confirm their understanding of the penalty.
+    *   [ ] There should be a popup confirmation dialog to confirm the withdrawal.
 *   [ ] Join a waitlist if all spots are filled when the request is processed.
 *   [ ] Receive push notifications for status updates, event changes, and commitment deadlines.
 *   [ ] View their registration history.
@@ -82,6 +86,9 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 ### 4.4. Wallet & Currency
 *   [ ] **Organizer:** Interface to add/credit virtual currency to a participant's wallet.
 *   [ ] **Participant:** View current wallet balance and transaction history.
+*   [ ] Show a confirmation dialog before applying a wallet credit (display target member, amount, and optional description).
+*   [ ] Enforce numeric precision: currency amounts must be valid numbers with at most two decimal places; reject invalid input with clear validation message.
+*   [ ] Display all wallet balances formatted to two decimal places (e.g., 12.50) across UI.
 
 ## 5. Technical Stack
 
