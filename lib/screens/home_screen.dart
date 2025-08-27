@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/screens/group_details_screen.dart';
+import 'package:getspot/screens/member_profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -38,7 +39,11 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              // TODO: Navigate to Profile Screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const MemberProfileScreen(),
+                ),
+              );
             },
           ),
         ],

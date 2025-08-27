@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:getspot/screens/create_event_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/screens/group_members_screen.dart';
 import 'dart:developer' as developer;
 
 class GroupDetailsScreen extends StatefulWidget {
@@ -82,8 +83,34 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
               widget.group['description'] ?? '',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Group Code: ${widget.group['groupCode'] ?? ''}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 24),
             const Divider(),
+            if (_isAdmin) ...[
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => GroupMembersScreen(
+                            groupId: widget.group['groupId'],
+                            adminUid: widget.group['admin'],
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.group),
+                    label: const Text('Members'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
             // Show TabBarView for Admin, or just the EventList for members
             Expanded(
               child: _isAdmin
