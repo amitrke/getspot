@@ -48,3 +48,4 @@ app.*.map.json
 .firebase/
 github-actions-deploy-key.json
 err.txt
+GoogleService-Info.plist
