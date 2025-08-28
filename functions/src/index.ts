@@ -33,6 +33,23 @@ const mgm = manageGroupMember(db);
 /**
  * Creates a new group, generates a unique group code, and adds the creator
  * as the first member.
+ *
+ * This function is callable directly by an authenticated client. It performs
+ * validation to ensure the user is logged in and provides the necessary data.
+ * It atomically creates the group document, the initial member document for the
+ * creator, and an entry in the user's group membership list.
+ *
+ * @param {onCall.Request} request - The request object from the client.
+ * @param {object} request.auth - The authentication information for the user.
+ * @param {object} request.data - The data sent from the client.
+ * @param {string} request.data.name - The desired name for the new group.
+ * @param {string} request.data.description - A description of the group.
+ * @param {number} request.data.negativeBalanceLimit - The allowed negative
+ * balance for members.
+ * @returns {Promise<{groupCode: string}>} A promise that resolves with the
+ * newly generated group code.
+ * @throws {HttpsError} Throws an error if the user is not authenticated, if
+ * the data is invalid, or if an internal error occurs.
  */
 export const createGroup = onCall({region: "us-east4"}, async (request) => {
   const {customAlphabet} = await import("nanoid");

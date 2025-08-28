@@ -2,6 +2,27 @@ import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
+/**
+ * Returns a Firestore trigger function that processes new event participant documents.
+ *
+ * This function is triggered when a new document is created in the `participants`
+ * subcollection for an event. It only acts on participants with a status of
+ * 'requested'.
+ *
+ * The function performs the following steps in a transaction:
+ * 1. Validates the existence of the corresponding event, group, and member.
+ * 2. Checks if the member's wallet balance (plus the group's negative balance
+ *    limit) is sufficient to cover the event fee.
+ * 3. If funds are insufficient, the participant's status is updated to 'denied'.
+ * 4. If funds are sufficient, it checks for available spots in the event.
+ * 5. If spots are available, the status is changed to 'confirmed' and the event's
+ *    `confirmedCount` is incremented.
+ * 6. If the event is full, the status is changed to 'waitlisted' and the event's
+ *    `waitlistCount` is incremented.
+ *
+ * @param {admin.firestore.Firestore} db - The Firestore database instance.
+ * @returns {CloudFunction<DocumentSnapshot>} A Firestore trigger function.
+ */
 export const processEventRegistration = (db: admin.firestore.Firestore) =>
   onDocumentCreated(
     {

@@ -22,21 +22,24 @@ interface MemberDoc {
 }
 
 /**
- * Callable to (a) remove a member or (b) credit wallet balance.
- * Constraints:
- *  - Single admin model: only group.admin may invoke.
- *  - Cannot remove admin (owner) account.
- *  - Cannot remove member with non-zero walletBalance.
- *  - Credit action requires positive amount.
- *  - Creates a transactions doc (planned schema) if crediting (idempotent not guaranteed yet).
- */
-/**
- * Callable function for managing existing group members.
- * Supports two actions:
- *  - remove: deletes member + userGroupMembership index (if balance is zero and not admin)
- *  - credit: increments walletBalance and writes a transaction record
- * @param {admin.firestore.Firestore} db Firestore database instance
- * @return {any} HTTPS callable handler
+ * Returns a callable function for managing existing group members.
+ *
+ * This function supports two primary actions, determined by the `action` parameter
+ * in the request data:
+ *  - `remove`: Deletes a member from a group and removes their corresponding
+ *    entry from the `userGroupMemberships` collection. This action has
+ *    preconditions: the member cannot be the group admin and must have a
+ *    wallet balance of zero.
+ *  - `credit`: Adds a specified amount to a member's wallet balance and creates
+ *    a corresponding transaction record in the `transactions` collection.
+ *
+ * @param {admin.firestore.Firestore} db - The Firestore database instance.
+ * @returns {onCall<ManageGroupMemberData>} An HTTPS callable function that can be
+ * invoked from the client.
+ * @throws {HttpsError} Throws various HTTPS errors for unauthenticated requests,
+ * invalid arguments, permission denied (not an admin), not found (group or
+ * member), and failed preconditions (e.g., trying to remove an admin or a
+ * member with a non-zero balance).
  */
 export const manageGroupMember = (db: admin.firestore.Firestore) =>
   onCall<ManageGroupMemberData>({region: "us-east4"}, async (request) => {

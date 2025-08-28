@@ -2,6 +2,21 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
+/**
+ * Returns a callable function for admins to process join requests.
+ *
+ * This function allows a group admin to either approve or deny a join request.
+ * - On 'approve', it creates a new member document with a zero balance.
+ * - On both 'approve' and 'deny', it deletes the original join request document.
+ *
+ * Note: This function appears to be an alternative or older version of the logic
+ * found in `manageJoinRequest.ts`.
+ *
+ * @param {admin.firestore.Firestore} db - The Firestore database instance.
+ * @returns {onCall<any>} An HTTPS callable function.
+ * @throws {HttpsError} Throws for unauthenticated requests, invalid arguments,
+ * permission denied (not an admin), or if the group/request is not found.
+ */
 export const processJoinRequest = (db: admin.firestore.Firestore) =>
   onCall(
     {region: "us-east4"},

@@ -9,9 +9,20 @@ interface ManageJoinRequestData {
 }
 
 /**
- * A callable function for group admins to approve, deny, or delete join requests.
- * @param {admin.firestore.Firestore} db The Firestore database instance.
- * @return {functions.https.HttpsCallable} A callable function.
+ * Returns a callable function for group admins to manage join requests.
+ *
+ * This function allows an admin to perform one of three actions on a join request:
+ *  - `approve`: Adds the requesting user as a member of the group, initializes
+ *    their wallet, creates a `userGroupMemberships` entry, and deletes the
+ *    original join request. This is performed as an atomic transaction.
+ *  - `deny`: Updates the status of the join request to 'denied', leaving the
+ *    request in place for the user to see the result.
+ *  - `delete`: Removes the join request document entirely.
+ *
+ * @param {admin.firestore.Firestore} db - The Firestore database instance.
+ * @returns {onCall<ManageJoinRequestData>} An HTTPS callable function.
+ * @throws {HttpsError} Throws for unauthenticated requests, invalid arguments,
+ * permission denied (not an admin), or if the request document is not found.
  */
 export const manageJoinRequest = (db: admin.firestore.Firestore) =>
   onCall<ManageJoinRequestData>(
