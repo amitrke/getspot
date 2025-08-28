@@ -50,6 +50,7 @@ class GroupMembersScreen extends StatelessWidget {
                   trailing: isAdmin ? _AdminActions(
                     groupId: groupId,
                     targetUid: uid,
+                    name: name,
                     isOwner: isOwner,
                     balance: double.tryParse(balance) ?? 0,
                   ) : null,
@@ -65,19 +66,36 @@ class GroupMembersScreen extends StatelessWidget {
 class _AdminActions extends StatefulWidget {
   final String groupId;
   final String targetUid;
+  final String name;
   final bool isOwner;
   final double balance;
-  const _AdminActions({required this.groupId, required this.targetUid, required this.isOwner, required this.balance});
+  const _AdminActions({required this.groupId, required this.targetUid, required this.name, required this.isOwner, required this.balance});
 
   @override
   State<_AdminActions> createState() => _AdminActionsState();
 }
 
 class _AdminActionsState extends State<_AdminActions> {
+  final _formKey = GlobalKey<FormState>();
   bool _busy = false;
 
   Future<void> _remove() async {
     if (widget.isOwner) return; // cannot remove owner
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Remove ${widget.name}?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Remove')),
+        ],
+      ),
+    ) ?? false;
+
+    if (!confirmed) return;
+
     setState(() => _busy = true);
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
@@ -99,34 +117,67 @@ class _AdminActionsState extends State<_AdminActions> {
   Future<void> _credit() async {
     final amountController = TextEditingController();
     final noteController = TextEditingController();
-    final amount = await showDialog<double?>(
+
+    final result = await showDialog<Map<String, dynamic>?>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Credits'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Amount'),
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text('Credit ${widget.name}'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: amountController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: 'Amount'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an amount';
+                    }
+                    final amount = double.tryParse(value);
+                    if (amount == null) {
+                      return 'Please enter a valid number';
+                    }
+                    if (amount <= 0) {
+                      return 'Amount must be positive';
+                    }
+                    if (value.split('.').length > 1 && value.split('.')[1].length > 2) {
+                      return 'Please enter up to two decimal places';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: noteController,
+                  decoration: const InputDecoration(labelText: 'Description (optional)'),
+                ),
+              ],
             ),
-            TextField(
-              controller: noteController,
-              decoration: const InputDecoration(labelText: 'Description (optional)'),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () {
+                if (_formKey.currentState?.validate() ?? false) {
+                  Navigator.pop(ctx, {
+                    'amount': double.parse(amountController.text.trim()),
+                    'description': noteController.text.trim(),
+                  });
+                }
+              },
+              child: const Text('Confirm'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Cancel')),
-          TextButton(onPressed: () {
-            final a = double.tryParse(amountController.text.trim());
-            Navigator.pop(ctx, a);
-          }, child: const Text('Confirm')),
-        ],
-      ),
+        );
+      },
     );
-    if (amount == null || amount <= 0) return;
+
+    if (result == null) return;
+    final amount = result['amount'];
+    final description = result['description'];
+
     setState(() => _busy = true);
     try {
       final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
@@ -136,6 +187,7 @@ class _AdminActionsState extends State<_AdminActions> {
         'targetUserId': widget.targetUid,
         'action': 'credit',
         'amount': amount,
+        'description': description,
       });
     } on FirebaseFunctionsException catch (e) {
       if (mounted) _showSnack(e.message ?? 'Error');
@@ -153,30 +205,33 @@ class _AdminActionsState extends State<_AdminActions> {
   @override
   Widget build(BuildContext context) {
     if (_busy) {
-      return const SizedBox(width: 56, height: 24, child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
+      return const SizedBox(width: 80, child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))));
     }
-    // Prevent remove button if owner or balance non-zero
+
     final canRemove = !widget.isOwner && widget.balance == 0;
-    return PopupMenuButton<String>(
-      onSelected: (value) {
-        switch (value) {
-          case 'credit':
-            _credit();
-            break;
-          case 'remove':
-            _remove();
-            break;
-        }
-      },
-      itemBuilder: (ctx) => [
-        const PopupMenuItem(value: 'credit', child: Text('Add Credits')),
-        PopupMenuItem(
-          value: 'remove',
-          enabled: canRemove,
-          child: Text(canRemove ? 'Remove Member' : 'Remove (disabled)'),
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+          onPressed: _credit,
+          tooltip: 'Add Credits',
+        ),
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'remove') _remove();
+          },
+          itemBuilder: (ctx) => [
+            PopupMenuItem(
+              value: 'remove',
+              enabled: canRemove,
+              child: Text(canRemove ? 'Remove Member' : 'Remove (balance > 0)'),
+            ),
+          ],
+          icon: const Icon(Icons.more_vert),
         ),
       ],
-      icon: const Icon(Icons.more_vert),
     );
   }
 }

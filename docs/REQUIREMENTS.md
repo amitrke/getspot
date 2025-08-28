@@ -84,10 +84,10 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 *   [ ] View their registration history.
 
 ### 4.4. Wallet & Currency
-*   [ ] **Organizer:** Interface to add/credit virtual currency to a participant's wallet.
+*   [x] **Organizer:** Interface to add/credit virtual currency to a participant's wallet.
 *   [ ] **Participant:** View current wallet balance and transaction history.
-*   [ ] Show a confirmation dialog before applying a wallet credit (display target member, amount, and optional description).
-*   [ ] Enforce numeric precision: currency amounts must be valid numbers with at most two decimal places; reject invalid input with clear validation message.
+*   [x] Show a confirmation dialog before applying a wallet credit (display target member, amount, and optional description).
+*   [x] Enforce numeric precision: currency amounts must be valid numbers with at most two decimal places; reject invalid input with clear validation message.
 *   [ ] Display all wallet balances formatted to two decimal places (e.g., 12.50) across UI.
 
 ## 5. Technical Stack
