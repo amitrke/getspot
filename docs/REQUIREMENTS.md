@@ -98,3 +98,7 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
     *   **Database:** Cloud Firestore.
     *   **Authentication:** Firebase Authentication.
     *   **Notifications:** Firebase Cloud Messaging (for push notifications).
+
+## 6. Non-Functional Requirements
+
+*   [ ] Implement separate `dev` and `prod` environments for Firebase and Flutter builds, as detailed in `docs/ENVIRONMENTS.md`.
