@@ -20,7 +20,7 @@ interface ManageJoinRequestData {
  *  - `delete`: Removes the join request document entirely.
  *
  * @param {admin.firestore.Firestore} db - The Firestore database instance.
- * @returns {onCall<ManageJoinRequestData>} An HTTPS callable function.
+ * @return {onCall<ManageJoinRequestData>} An HTTPS callable function.
  * @throws {HttpsError} Throws for unauthenticated requests, invalid arguments,
  * permission denied (not an admin), or if the request document is not found.
  */

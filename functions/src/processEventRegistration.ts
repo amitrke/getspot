@@ -21,7 +21,7 @@ import * as logger from "firebase-functions/logger";
  *    `waitlistCount` is incremented.
  *
  * @param {admin.firestore.Firestore} db - The Firestore database instance.
- * @returns {CloudFunction<DocumentSnapshot>} A Firestore trigger function.
+ * @return {CloudFunction<DocumentSnapshot>} A Firestore trigger function.
  */
 export const processEventRegistration = (db: admin.firestore.Firestore) =>
   onDocumentCreated(

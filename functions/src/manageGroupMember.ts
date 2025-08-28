@@ -34,7 +34,7 @@ interface MemberDoc {
  *    a corresponding transaction record in the `transactions` collection.
  *
  * @param {admin.firestore.Firestore} db - The Firestore database instance.
- * @returns {onCall<ManageGroupMemberData>} An HTTPS callable function that can be
+ * @return {onCall<ManageGroupMemberData>} An HTTPS callable function that can be
  * invoked from the client.
  * @throws {HttpsError} Throws various HTTPS errors for unauthenticated requests,
  * invalid arguments, permission denied (not an admin), not found (group or
