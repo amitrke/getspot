@@ -25,18 +25,19 @@ For the initial version, there will be one primary user type that can perform tw
 *   **Membership:** Membership to all groups is by approval only; the group admin must approve new members. This helps manage recurring private games.
 
 ### 3.2. Event Commitment & Fee Model
-The process is defined by a commitment deadline and a flexible, delayed fee deduction.
+This model ensures that event spots are paid for, giving organizers the confidence to manage and expand events.
 
-*   **Registration & Withdrawal:**
-    *   **Balance Check:** A participant can only submit a registration request if their current group wallet balance, plus the group's negative balance limit, is greater than or equal to the event fee.
-    *   Participants can register for an event without an immediate fee deduction.
-    *   Participants can withdraw freely *before* the Commitment Deadline without penalty.
-*   **Fee Finalization & Deduction:**
-    *   Once the Commitment Deadline passes, all **"Confirmed"** participants are considered **"Committed."**
-    *   The system will then attempt to deduct the event fee (as it is at that moment) from each committed participant's group wallet.
-*   **Conditional Penalty Rule:**
-    *   A **Confirmed** participant withdrawing *after* the deadline will only be penalized if their spot is **not** subsequently filled by a user from the waitlist.
-    *   The penalty will be equal to the event fee at the time of withdrawal and is charged immediately. If the spot is later filled, this penalty can be reversed (optional feature for later).
+*   **Upfront Fee Deduction:**
+    *   To register for an event, a participant must have a sufficient wallet balance (`walletBalance + negativeBalanceLimit >= fee`).
+    *   The event fee is deducted from the participant's wallet **immediately upon registration**.
+    *   If a spot is available, the participant becomes **"Confirmed"**.
+    *   If the event is full, the participant is added to the **"Waitlist"** but has already paid the fee, guaranteeing their spot if one opens up.
+
+*   **Withdrawal & Refunds:**
+    *   **Confirmed Participants** can withdraw before the **Commitment Deadline** for a full refund.
+    *   Withdrawing after the deadline results in a forfeiture of the fee, unless the spot is filled by a waitlisted user.
+    *   **Waitlisted Participants** can withdraw at any time for a full refund.
+    *   If a waitlisted participant never gets a spot, their fee will be automatically refunded by a scheduled process after the event has ended.
 
 ### 3.3. Virtual Currency
 *   **Purpose:** To handle event fees without integrating real-world payment gateways.
@@ -46,9 +47,9 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
     *   Participants use this currency to pay for event registration fees.
 
 ### 3.4. Waitlist
-*   If an event is full, interested participants can join a waitlist.
-*   **Automatic Promotion:** If a spot becomes available (due to a withdrawal or an increase in spots), the first user on the waitlist is automatically promoted to **"Confirmed"** status. The user will be notified of their new status.
-*   **Penalty-Free Withdrawal:** A **Waitlisted** user can withdraw their request at any time without any penalty.
+*   If an event is full, interested participants who have paid the event fee can join a waitlist.
+*   **Automatic Promotion:** If a spot becomes available, the first user on the waitlist is automatically promoted to **"Confirmed"** status. No further payment is needed as the fee was collected upfront.
+*   **Withdrawal & Refunds:** A waitlisted user can withdraw their request at any time for a full refund. If they remain on the waitlist and the event ends, they will be refunded automatically.
 
 ## 4. Key Features
 
@@ -56,8 +57,8 @@ The process is defined by a commitment deadline and a flexible, delayed fee dedu
 *   [x] Create a new group (name, description), which generates a unique, shareable group code.
 *   [x] View the group code to share it with potential members.
 *   [x] View and manage group members.
-    *   [ ] Show a confirmation dialog before removing a member (dialog includes member name and warning about irreversible action if balance is zero).
-    *   [ ] Reject removal when member wallet balance is non-zero (surface inline error message explaining required balance = 0).
+    *   [x] Show a confirmation dialog before removing a member (dialog includes member name and warning about irreversible action if balance is zero).
+    *   [x] Reject removal when member wallet balance is non-zero (surface inline error message explaining required balance = 0).
 *   [x] Approve/deny membership requests.
 *   [x] Set a per-participant negative balance limit for the group's virtual currency.
 

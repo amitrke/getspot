@@ -130,20 +130,19 @@ Tracks every user who has registered for an event, including their status. The d
 
 ### 4. Transactions Collection
 
-Stores a log of all financial activities (fees and penalties) for auditing and history.
+Stores a log of all financial activities for auditing and user history. The document ID is the unique ID for the transaction.
 
 `/transactions/{transactionId}`
 
 ```json
 {
-    "transactionId": "string",
-    "uid": "string", // The user involved
-    "groupId": "string",
-    "eventId": "string", // Optional, if related to an event
-    "type": "string", // "EventFee", "Penalty", "Credit"
-    "amount": "number", // The value of the transaction (can be negative)
-    "description": "string", // e.g., "Fee for 'Friday Night Badminton'"
-    "createdAt": "timestamp"
+  "uid": "string",          // The user involved
+  "groupId": "string",      // The group in which the transaction occurred
+  "eventId": "string",      // Optional: The event that triggered the transaction
+  "type": "string",         // 'credit' or 'debit'
+  "amount": "number",       // The absolute, positive value of the transaction
+  "description": "string",  // e.g., "Fee for 'Friday Night Badminton'" or "Admin credit"
+  "createdAt": "timestamp"  // The server timestamp of the transaction
 }
 ```
 

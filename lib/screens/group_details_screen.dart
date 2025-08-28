@@ -6,6 +6,7 @@ import 'package:getspot/screens/create_event_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
+import 'package:getspot/screens/wallet_screen.dart';
 import 'dart:developer' as developer;
 
 class GroupDetailsScreen extends StatefulWidget {
@@ -106,6 +107,24 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                     },
                     icon: const Icon(Icons.group),
                     label: const Text('Members'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => WalletScreen(
+                              groupId: widget.group['groupId'],
+                              userId: user.uid,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.wallet),
+                    label: const Text('My Wallet'),
                   ),
                 ],
               ),

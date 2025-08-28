@@ -122,11 +122,11 @@ export const manageGroupMember = (db: admin.firestore.Firestore) =>
           // Basic transaction record (if transactions collection used later)
           const txRef = db.collection("transactions").doc();
           tx.set(txRef, {
-            type: "credit_manual",
+            type: "credit",
             amount,
-            userId: targetUserId,
+            uid: targetUserId,
             groupId,
-            description: description || null,
+            description: description || "Admin credit",
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
           logger.info("Member credited", {groupId, targetUserId, amount});

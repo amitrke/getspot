@@ -14,6 +14,8 @@ import * as admin from "firebase-admin";
 import {processEventRegistration} from "./processEventRegistration";
 import {manageJoinRequest} from "./manageJoinRequest";
 import {manageGroupMember} from "./manageGroupMember";
+import {withdrawFromEvent} from "./withdrawFromEvent";
+import {cleanupEndedEvents} from "./cleanupEndedEvents";
 
 
 // Initialize the Firebase Admin SDK
@@ -26,6 +28,8 @@ setGlobalOptions({maxInstances: 10});
 const per = processEventRegistration(db);
 const mjr = manageJoinRequest(db);
 const mgm = manageGroupMember(db);
+const wfe = withdrawFromEvent(db);
+const cee = cleanupEndedEvents(db);
 
 
 /**
@@ -143,5 +147,7 @@ export {
   per as processEventRegistration,
   mjr as manageJoinRequest,
   mgm as manageGroupMember,
+  wfe as withdrawFromEvent,
+  cee as cleanupEndedEvents,
 };
 

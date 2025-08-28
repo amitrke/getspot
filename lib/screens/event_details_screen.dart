@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +16,7 @@ class EventDetailsScreen extends StatefulWidget {
 
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isRegistering = false;
+  bool _isWithdrawing = false;
 
   Future<void> _registerForEvent() async {
     setState(() {
@@ -70,6 +72,98 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         });
       }
     }
+  }
+
+  Future<void> _withdrawFromEvent() async {
+    setState(() {
+      _isWithdrawing = true;
+    });
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
+      final callable = functions.httpsCallable('withdrawFromEvent');
+      final result = await callable.call({'eventId': widget.eventId});
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.data['message'] ?? 'Withdrawal successful.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseFunctionsException catch (e, st) {
+      developer.log(
+        'Error withdrawing from event',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'An unknown error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (e, st) {
+      developer.log(
+        'Generic error withdrawing from event',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('An unexpected error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isWithdrawing = false;
+        });
+      }
+    }
+  }
+
+  void _showWithdrawConfirmationDialog(Map<String, dynamic> eventData) {
+    final deadlineTimestamp = eventData['commitmentDeadline'] as Timestamp?;
+    bool isAfterDeadline = false;
+    if (deadlineTimestamp != null) {
+      isAfterDeadline = DateTime.now().isAfter(deadlineTimestamp.toDate());
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Withdrawal'),
+          content: Text(isAfterDeadline
+              ? 'The commitment deadline has passed. If you withdraw now, your fee may be forfeited unless someone from the waitlist takes your spot. Are you sure you want to withdraw?'
+              : 'Are you sure you want to withdraw from this event?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Withdraw'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _withdrawFromEvent();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -154,7 +248,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     ],
                   ),
                 ),
-                _buildRegistrationButton(),
+                _buildActionButton(event),
               ],
             ),
           );
@@ -211,7 +305,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildRegistrationButton() {
+  Widget _buildActionButton(Map<String, dynamic> eventData) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const SizedBox.shrink();
@@ -233,7 +327,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         final status = registrationData?.data()?['status'] as String?;
 
         Widget button;
-        if (status != null) {
+        if (status == 'confirmed' || status == 'waitlisted') {
+          button = ElevatedButton(
+            onPressed: _isWithdrawing
+                ? null
+                : () => _showWithdrawConfirmationDialog(eventData),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: _isWithdrawing
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('Withdraw'),
+          );
+        } else if (status != null) {
           button = ElevatedButton(
             onPressed: null,
             style: ElevatedButton.styleFrom(

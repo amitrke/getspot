@@ -85,35 +85,49 @@ export const processEventRegistration = (db: admin.firestore.Firestore) =>
           const negativeBalanceLimit = groupData?.negativeBalanceLimit ?? 0;
           const walletBalance = memberData?.walletBalance ?? 0;
 
-          // 1. Check wallet balance
+          // 1. Check wallet balance first. This is the gatekeeper.
           if (walletBalance + negativeBalanceLimit < fee) {
             transaction.update(participantRef, {
               status: "denied",
               denialReason: "Insufficient funds",
             });
-            logger.log(`User ${userId} denied for event ${eventId} due to ` +
-            "insufficient funds.");
+            logger.log(`User ${userId} denied for event ${eventId} due to insufficient funds.`);
             return;
           }
 
-          // 2. Check for available spots
+          // 2. Balance is sufficient, so deduct fee and log transaction immediately.
+          transaction.update(memberRef, {
+            walletBalance: admin.firestore.FieldValue.increment(-fee),
+          });
+          const txRef = db.collection("transactions").doc();
+          transaction.set(txRef, {
+            uid: userId,
+            groupId: groupId,
+            eventId: eventId,
+            type: "debit",
+            amount: fee,
+            description: `Fee for event '${eventData?.name ?? "Unnamed Event"}'`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          // 3. Now, check for available spots to determine status.
           const confirmedCount = eventData?.confirmedCount ?? 0;
           const maxParticipants = eventData?.maxParticipants ?? 0;
 
           if (confirmedCount < maxParticipants) {
-          // Promote to confirmed
+            // Promote to confirmed
             transaction.update(participantRef, {status: "confirmed"});
             transaction.update(eventRef, {
               confirmedCount: admin.firestore.FieldValue.increment(1),
             });
-            logger.log(`User ${userId} confirmed for event ${eventId}.`);
+            logger.log(`User ${userId} confirmed for event ${eventId} and charged ${fee}.`);
           } else {
-          // Add to waitlist
+            // Add to waitlist
             transaction.update(participantRef, {status: "waitlisted"});
             transaction.update(eventRef, {
               waitlistCount: admin.firestore.FieldValue.increment(1),
             });
-            logger.log(`User ${userId} waitlisted for event ${eventId}.`);
+            logger.log(`User ${userId} waitlisted for event ${eventId} and charged ${fee}.`);
           }
         });
       } catch (error) {
