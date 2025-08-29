@@ -4,8 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
+import 'package:getspot/models/group_view_model.dart';
 import 'package:getspot/screens/group_details_screen.dart';
 import 'package:getspot/screens/member_profile_screen.dart';
+import 'package:getspot/widgets/group_list_item.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -86,7 +88,7 @@ class _GroupList extends StatefulWidget {
 }
 
 class _GroupListState extends State<_GroupList> {
-  Stream<QuerySnapshot<Map<String, dynamic>>>? _groupsStream;
+  Stream<List<GroupViewModel>>? _groupsViewModelStream;
 
   @override
   void initState() {
@@ -101,22 +103,89 @@ class _GroupListState extends State<_GroupList> {
       return;
     }
 
-    // New, simpler query to get the user's groups
-    final stream = FirebaseFirestore.instance
+    final groupMembershipsStream = FirebaseFirestore.instance
         .collection('userGroupMemberships')
         .doc(user.uid)
         .collection('groups')
         .snapshots();
 
-    setState(() {
-      _groupsStream = stream;
+    _groupsViewModelStream = groupMembershipsStream.asyncMap((memberships) async {
+      if (memberships.docs.isEmpty) {
+        return [];
+      }
+
+      final groupIds = memberships.docs.map((doc) => doc.id).toList();
+
+      final groupsFuture = FirebaseFirestore.instance
+          .collection('groups')
+          .where(FieldPath.documentId, whereIn: groupIds)
+          .get();
+
+      final eventsFuture = FirebaseFirestore.instance
+          .collection('events')
+          .where('groupId', whereIn: groupIds)
+          .where('eventTimestamp', isGreaterThan: Timestamp.now())
+          .orderBy('eventTimestamp')
+          .get();
+
+      final membersFuture = FirebaseFirestore.instance
+          .collectionGroup('members')
+          .where('uid', isEqualTo: user.uid)
+          .get();
+
+      final results = await Future.wait([groupsFuture, eventsFuture, membersFuture]);
+      final groups = results[0] as QuerySnapshot<Map<String, dynamic>>;
+      final events = results[1] as QuerySnapshot<Map<String, dynamic>>;
+      final members = results[2] as QuerySnapshot<Map<String, dynamic>>;
+
+      final groupDocs = {for (var doc in groups.docs) doc.id: doc};
+      final memberDocs = {for (var doc in members.docs) doc.reference.parent.parent!.id: doc};
+
+      final nextEvents = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{
+        for (var event in events.docs) ...{
+          event.data()['groupId'] as String: event
+        }
+      };
+
+      final participantFutures = <Future<DocumentSnapshot<Map<String, dynamic>>?>>[];
+      for (var event in nextEvents.values) {
+        participantFutures.add(FirebaseFirestore.instance
+            .collection('events')
+            .doc(event.id)
+            .collection('participants')
+            .doc(user.uid)
+            .get());
+      }
+
+      final participants = await Future.wait(participantFutures);
+      final participantDocs = {
+        for (var doc in participants)
+          if (doc != null && doc.exists) doc.reference.parent.parent!.id: doc
+      };
+
+      final viewModels = <GroupViewModel>[];
+      for (var membership in memberships.docs) {
+        final groupId = membership.id;
+        final group = groupDocs[groupId];
+        final member = memberDocs[groupId];
+        if (group != null && member != null) {
+          final nextEvent = nextEvents[groupId];
+          final participant = nextEvent != null ? participantDocs[nextEvent.id] : null;
+          viewModels.add(GroupViewModel.fromGroupMembership(
+              membership, group, member, nextEvent, participant));
+        }
+      }
+
+      return viewModels;
     });
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _groupsStream,
+    return StreamBuilder<List<GroupViewModel>>(
+      stream: _groupsViewModelStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -133,9 +202,9 @@ class _GroupListState extends State<_GroupList> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
-        final groups = snapshot.data?.docs;
+        final viewModels = snapshot.data;
 
-        if (groups == null || groups.isEmpty) {
+        if (viewModels == null || viewModels.isEmpty) {
           return Center(
             child: Text(
               'You are not a member of any groups yet.',
@@ -145,85 +214,12 @@ class _GroupListState extends State<_GroupList> {
         }
 
         return ListView.builder(
-          itemCount: groups.length,
+          itemCount: viewModels.length,
           itemBuilder: (context, index) {
-            final groupMembership = groups[index].data();
-            // We need to fetch the full group details now
-            return _FullGroupListItem(
-              groupId: groupMembership['groupId'] ?? '',
-            );
+            return GroupListItem(viewModel: viewModels[index]);
           },
         );
       },
-    );
-  }
-}
-
-// New widget to fetch and display full group details
-class _FullGroupListItem extends StatelessWidget {
-  final String groupId;
-  const _FullGroupListItem({required this.groupId});
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future:
-          FirebaseFirestore.instance.collection('groups').doc(groupId).get(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Card(
-            child: ListTile(
-              title: Text('Loading group...'),
-              subtitle: LinearProgressIndicator(),
-            ),
-          );
-        }
-
-        final groupData = snapshot.data?.data();
-        if (groupData == null) {
-          return const Card(
-            child: ListTile(
-              title: Text('Group not found'),
-              leading: Icon(Icons.error),
-            ),
-          );
-        }
-
-        // Add the groupId to the map for navigation
-        final group = {...groupData, 'groupId': groupId};
-
-        return _GroupListItem(group: group, status: 'member');
-      },
-    );
-  }
-}
-
-class _GroupListItem extends StatelessWidget {
-  const _GroupListItem({required this.group, required this.status});
-
-  final Map<String, dynamic> group;
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        title: Text(group['name'] ?? 'Unnamed Group'),
-        subtitle: Text(group['description'] ?? ''),
-        trailing: status == 'pending'
-            ? const Chip(label: Text('Pending'))
-            : const Icon(Icons.chevron_right),
-        onTap: status == 'member'
-            ? () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => GroupDetailsScreen(group: group),
-                  ),
-                );
-              }
-            : null, // Disable tap for pending requests
-      ),
     );
   }
 }

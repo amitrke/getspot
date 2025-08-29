@@ -43,9 +43,9 @@ Recent issue: CollectionGroup query originally failed (permission-denied) becaus
 
 ### 6. Current UI Flow Highlights
 HomeScreen `_GroupList`:
-- Sets up real-time stream: collectionGroup('members').where('uid', isEqualTo: user.uid)
-- For each membership doc, fetches parent group doc (extra round trips). Returns list of groups.
-Potential improvement: Replace with single query to `/userGroupMemberships/{uid}/groups` once population logic exists.
+- Sets up real-time stream on `userGroupMemberships` to get the user's groups.
+- For each group, it fetches the group details, the next event, and the user's participation status for that event.
+- It then displays this information in a list, with icons and colors to indicate the user's status and wallet balance.
 
 ### 7. Data Model Gaps vs Implementation
 Documented but not yet enforced/implemented:
