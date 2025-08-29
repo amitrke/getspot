@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:getspot/services/auth_service.dart';
+import 'package:getspot/widgets/app_logo.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -11,11 +12,16 @@ class LoginScreen extends StatelessWidget {
         title: const Text('Login'),
       ),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            AuthService().signInWithGoogle();
-          },
-          child: const Text('Sign in with Google'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const AppLogo(size: 120),
+            const SizedBox(height: 48),
+            ElevatedButton(
+              onPressed: () => AuthService().signInWithGoogle(),
+              child: const Text('Sign in with Google'),
+            ),
+          ],
         ),
       ),
     );

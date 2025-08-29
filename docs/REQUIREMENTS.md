@@ -66,6 +66,7 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [x] Create an event within a group.
 *   [x] Set event details: date, time, location, max participants, initial fee, and a **Commitment Deadline**.
 *   [ ] **Update the event fee** at any time before the commitment deadline.
+*   [ ] **Cancel an event**, which should notify all registered participants.
 *   [ ] Add or remove participant spots after event creation (before the event starts).
 *   [ ] Monitor the list of registered participants and their payment status.
 *   [ ] Clear a participant's "denied" status to allow them to re-register.

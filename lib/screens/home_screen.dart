@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/models/group_view_model.dart';
-import 'package:getspot/screens/group_details_screen.dart';
+
 import 'package:getspot/screens/member_profile_screen.dart';
 import 'package:getspot/widgets/group_list_item.dart';
 
@@ -128,18 +128,24 @@ class _GroupListState extends State<_GroupList> {
           .orderBy('eventTimestamp')
           .get();
 
-      final membersFuture = FirebaseFirestore.instance
-          .collectionGroup('members')
-          .where('uid', isEqualTo: user.uid)
-          .get();
+      final members = await FirebaseFirestore.instance
+          .collection('groups')
+          .where(FieldPath.documentId, whereIn: groupIds)
+          .get()
+          .then((snapshot) => snapshot.docs
+              .map((doc) => doc.reference.collection('members').doc(user.uid).get())
+              .toList())
+          .then((futures) => Future.wait(futures));
 
-      final results = await Future.wait([groupsFuture, eventsFuture, membersFuture]);
-      final groups = results[0] as QuerySnapshot<Map<String, dynamic>>;
-      final events = results[1] as QuerySnapshot<Map<String, dynamic>>;
-      final members = results[2] as QuerySnapshot<Map<String, dynamic>>;
+      final results = await Future.wait([groupsFuture, eventsFuture]);
+      final groups = results[0];
+      final events = results[1];
 
       final groupDocs = {for (var doc in groups.docs) doc.id: doc};
-      final memberDocs = {for (var doc in members.docs) doc.reference.parent.parent!.id: doc};
+      final memberDocs = {
+        for (var doc in members)
+          if (doc.exists) doc.reference.parent.parent!.id: doc
+      };
 
       final nextEvents = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{
         for (var event in events.docs) ...{
