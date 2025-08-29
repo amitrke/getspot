@@ -14,7 +14,7 @@ interface WithdrawFromEventData {
  * @return {*} HTTPS callable handler
  */
 export const withdrawFromEvent = (db: admin.firestore.Firestore) =>
-  onCall<WithdrawFromEventData>({region: "us-east4"}, async (request) => {
+  onCall<WithdrawFromEventData>(async (request) => {
     // 1. Authentication & Validation
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required.");

@@ -26,7 +26,6 @@ interface ManageJoinRequestData {
  */
 export const manageJoinRequest = (db: admin.firestore.Firestore) =>
   onCall<ManageJoinRequestData>(
-    {region: "us-east4"},
     async (request) => {
       // 1. Authentication & Authorization
       if (!request.auth) {

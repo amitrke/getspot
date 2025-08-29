@@ -9,7 +9,7 @@ import * as logger from "firebase-functions/logger";
  * @return {*} Cloud Scheduler handler
  */
 export const cleanupEndedEvents = (db: admin.firestore.Firestore) =>
-  onSchedule({schedule: "every 6 hours", region: "us-east4"}, async (event) => {
+  onSchedule({schedule: "every 6 hours"}, async (event) => {
     logger.info("Running cleanupEndedEvents scheduled job.", event);
 
     const now = admin.firestore.Timestamp.now();

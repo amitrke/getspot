@@ -42,7 +42,7 @@ interface MemberDoc {
  * member with a non-zero balance).
  */
 export const manageGroupMember = (db: admin.firestore.Firestore) =>
-  onCall<ManageGroupMemberData>({region: "us-east4"}, async (request) => {
+  onCall<ManageGroupMemberData>(async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Authentication required.");
     }

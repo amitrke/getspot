@@ -11,11 +11,11 @@ import {setGlobalOptions} from "firebase-functions";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import {processEventRegistration} from "./processEventRegistration";
-import {manageJoinRequest} from "./manageJoinRequest";
-import {manageGroupMember} from "./manageGroupMember";
-import {withdrawFromEvent} from "./withdrawFromEvent";
-import {cleanupEndedEvents} from "./cleanupEndedEvents";
+import {processEventRegistration as processEventRegistrationHandler} from "./processEventRegistration";
+import {manageJoinRequest as manageJoinRequestHandler} from "./manageJoinRequest";
+import {manageGroupMember as manageGroupMemberHandler} from "./manageGroupMember";
+import {withdrawFromEvent as withdrawFromEventHandler} from "./withdrawFromEvent";
+import {cleanupEndedEvents as cleanupEndedEventsHandler} from "./cleanupEndedEvents";
 
 
 // Initialize the Firebase Admin SDK
@@ -23,13 +23,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 // Set global options for all functions
-setGlobalOptions({maxInstances: 10});
-
-const per = processEventRegistration(db);
-const mjr = manageJoinRequest(db);
-const mgm = manageGroupMember(db);
-const wfe = withdrawFromEvent(db);
-const cee = cleanupEndedEvents(db);
+setGlobalOptions({maxInstances: 10, region: "us-east4"});
 
 
 /**
@@ -53,7 +47,7 @@ const cee = cleanupEndedEvents(db);
  * @throws {HttpsError} Throws an error if the user is not authenticated, if
  * the data is invalid, or if an internal error occurs.
  */
-export const createGroup = onCall({region: "us-east4"}, async (request) => {
+export const createGroup = onCall(async (request) => {
   const {customAlphabet} = await import("nanoid");
   // 1. Authentication: Ensure the user is authenticated.
   if (!request.auth) {
@@ -143,11 +137,9 @@ export const createGroup = onCall({region: "us-east4"}, async (request) => {
   }
 });
 
-export {
-  per as processEventRegistration,
-  mjr as manageJoinRequest,
-  mgm as manageGroupMember,
-  wfe as withdrawFromEvent,
-  cee as cleanupEndedEvents,
-};
+export const processEventRegistration = processEventRegistrationHandler(db);
+export const manageJoinRequest = manageJoinRequestHandler(db);
+export const manageGroupMember = manageGroupMemberHandler(db);
+export const withdrawFromEvent = withdrawFromEventHandler(db);
+export const cleanupEndedEvents = cleanupEndedEventsHandler(db);
 

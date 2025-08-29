@@ -27,7 +27,6 @@ export const processEventRegistration = (db: admin.firestore.Firestore) =>
   onDocumentCreated(
     {
       document: "events/{eventId}/participants/{userId}",
-      region: "us-east4",
     },
     async (event) => {
       const participantSnap = event.data;
