@@ -104,3 +104,20 @@ This model ensures that event spots are paid for, giving organizers the confiden
 ## 6. Non-Functional Requirements
 
 *   [ ] Implement separate `dev` and `prod` environments for Firebase and Flutter builds, as detailed in `docs/ENVIRONMENTS.md`.
+
+## 7. Legal and Compliance
+
+To protect both the users and the service provider, the application must include clear legal documentation.
+
+*   [ ] **Terms of Service (ToS):** An agreement that users must accept during sign-up. It will define:
+    *   Acceptable user conduct.
+    *   Rules and clarifications for the virtual wallet (e.g., no cash value).
+    *   A disclaimer limiting liability for injuries sustained during physical activities organized through the app.
+    *   A "Disclaimer of Warranties" stating the app is provided "as is".
+    *   The service's right to terminate user accounts for violations.
+
+*   [ ] **Privacy Policy:** A document explaining what user data is collected, how it is used, and how it is protected. This is a legal requirement in many jurisdictions.
+
+*   [ ] **In-App Implementation:**
+    *   During the sign-up process, users must explicitly agree to the Terms of Service and Privacy Policy via a checkbox before they can create an account.
+    *   Links to both documents must be easily accessible from within the app's settings or "About" section.
