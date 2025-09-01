@@ -214,38 +214,120 @@ class _EventList extends StatelessWidget {
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   final event = events[index];
-                  final eventData = event.data();
-                  final eventTimestamp =
-                      eventData['eventTimestamp'] as Timestamp?;
-                  final formattedDate = eventTimestamp != null
-                      ? DateFormat.yMMMd() 
-                          .add_jm()
-                          .format(eventTimestamp.toDate())
-                      : 'No date';
-
-                  return Card(
-                    child: ListTile(
-                      title: Text(eventData['name'] ?? 'Unnamed Event'),
-                      subtitle:
-                          Text('${eventData['location']}\n$formattedDate'),
-                      isThreeLine: true,
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                EventDetailsScreen(eventId: event.id),
-                          ),
-                        );
-                      },
-                    ),
-                  );
+                  return _EventListItem(event: event);
                 },
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _EventListItem extends StatefulWidget {
+  final QueryDocumentSnapshot<Map<String, dynamic>> event;
+
+  const _EventListItem({required this.event});
+
+  @override
+  State<_EventListItem> createState() => _EventListItemState();
+}
+
+class _EventListItemState extends State<_EventListItem> {
+  Stream<DocumentSnapshot<Map<String, dynamic>>>? _participantStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _participantStream = FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.event.id)
+          .collection('participants')
+          .doc(user.uid)
+          .snapshots();
+    }
+  }
+
+  Widget _getStatusIcon(String? status) {
+    switch (status) {
+      case 'confirmed':
+        return const Icon(Icons.check_circle, color: Colors.green, size: 16);
+      case 'waitlisted':
+        return const Icon(Icons.pending, color: Colors.orange, size: 16);
+      default:
+        return const Icon(Icons.help_outline, color: Colors.grey, size: 16);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final eventData = widget.event.data();
+    final eventTimestamp = eventData['eventTimestamp'] as Timestamp?;
+    final formattedDate = eventTimestamp != null
+        ? DateFormat.yMMMEd().add_jm().format(eventTimestamp.toDate())
+        : 'No date';
+
+    return Card(
+      child: ListTile(
+        title: Text(eventData['name'] ?? 'Unnamed Event'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.location_on, size: 16),
+                const SizedBox(width: 4),
+                Text(eventData['location'] ?? 'No location'),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 16),
+                const SizedBox(width: 4),
+                Text(formattedDate),
+              ],
+            ),
+            const SizedBox(height: 4),
+            StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              stream: _participantStream,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return const Row(
+                    children: [
+                      Icon(Icons.help_outline, color: Colors.grey, size: 16),
+                      SizedBox(width: 4),
+                      Text('Not Registered'),
+                    ],
+                  );
+                }
+                final status = snapshot.data!.data()?['status'] as String?;
+                return Row(
+                  children: [
+                    _getStatusIcon(status),
+                    const SizedBox(width: 4),
+                    Text(status != null
+                        ? '${status[0].toUpperCase()}${status.substring(1)}'
+                        : 'Not Registered'),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => EventDetailsScreen(eventId: widget.event.id),
+            ),
+          );
+        },
+      ),
     );
   }
 }

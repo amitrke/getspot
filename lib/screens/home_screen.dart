@@ -147,11 +147,13 @@ class _GroupListState extends State<_GroupList> {
           if (doc.exists) doc.reference.parent.parent!.id: doc
       };
 
-      final nextEvents = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{
-        for (var event in events.docs) ...{
-          event.data()['groupId'] as String: event
+      final nextEvents = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+      for (var event in events.docs) {
+        final groupId = event.data()['groupId'] as String;
+        if (!nextEvents.containsKey(groupId)) {
+          nextEvents[groupId] = event;
         }
-      };
+      }
 
       final participantFutures = <Future<DocumentSnapshot<Map<String, dynamic>>?>>[];
       for (var event in nextEvents.values) {

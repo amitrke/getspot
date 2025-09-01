@@ -337,20 +337,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 ? const CircularProgressIndicator(color: Colors.white)
                 : const Text('Withdraw'),
           );
-        } else if (status != null) {
+        } else if (status == null || status == 'withdrawn') {
+          button = ElevatedButton(
+            onPressed: _isRegistering ? null : _registerForEvent,
+            child: _isRegistering
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('Register'),
+          );
+        } else { // Handles withdrawn_penalty, requested, etc.
           button = ElevatedButton(
             onPressed: null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
             ),
             child: Text('Your status: ${status[0].toUpperCase()}${status.substring(1)}'),
-          );
-        } else {
-          button = ElevatedButton(
-            onPressed: _isRegistering ? null : _registerForEvent,
-            child: _isRegistering
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Register'),
           );
         }
 

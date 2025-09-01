@@ -1,4 +1,4 @@
-import {onDocumentCreated} from "firebase-functions/v2/firestore";
+import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
@@ -24,30 +24,27 @@ import * as logger from "firebase-functions/logger";
  * @return {CloudFunction<DocumentSnapshot>} A Firestore trigger function.
  */
 export const processEventRegistration = (db: admin.firestore.Firestore) =>
-  onDocumentCreated(
+  onDocumentWritten(
     {
       document: "events/{eventId}/participants/{userId}",
     },
     async (event) => {
-      const participantSnap = event.data;
-      if (!participantSnap) {
-        logger.log("No data associated with the event.");
+      // Get the new data and the old data
+      const beforeData = event.data?.before.data();
+      const afterData = event.data?.after.data();
+
+      // If the document was deleted or the status wasn't changed to 'requested', do nothing.
+      if (!afterData || afterData.status !== "requested" || (beforeData && beforeData.status === "requested")) {
+        logger.log("No action needed. Status is not 'requested' or was already 'requested'.");
         return;
       }
 
-
-      const participantData = participantSnap.data();
       const {eventId, userId} = event.params;
-
-      // Only process documents with 'requested' status
-      if (participantData.status !== "requested") {
-        return;
-      }
-
-      const eventRef = db.collection("events").doc(eventId);
       const participantRef = db
         .collection("events").doc(eventId)
         .collection("participants").doc(userId);
+
+      const eventRef = db.collection("events").doc(eventId);
 
       try {
         await db.runTransaction(async (transaction) => {
