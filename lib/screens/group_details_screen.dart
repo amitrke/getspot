@@ -175,6 +175,7 @@ class _EventList extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('events')
           .where('groupId', isEqualTo: groupId)
+          .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
           .orderBy('eventTimestamp', descending: false)
           .snapshots(),
       builder: (context, snapshot) {

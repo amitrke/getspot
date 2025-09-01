@@ -28,8 +28,9 @@ export const withdrawFromEvent = (db: admin.firestore.Firestore) =>
 
     logger.info(`User ${userId} attempting to withdraw from event ${eventId}.`);
 
+    let result;
     try {
-      return await db.runTransaction(async (transaction) => {
+      result = await db.runTransaction(async (transaction) => {
         const eventRef = db.collection("events").doc(eventId);
         const participantRef = eventRef.collection("participants").doc(userId);
 
@@ -90,7 +91,7 @@ export const withdrawFromEvent = (db: admin.firestore.Firestore) =>
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
           });
           logger.info(`User ${userId} withdrew from waitlist for event ${eventId}. Refunded ${fee}.`);
-          return {status: "success", message: "Successfully withdrew from waitlist and received a refund."};
+          return {status: "success", message: "Successfully withdrew from waitlist and received a refund.", processWaitlist: false};
         }
 
         // Case 2: User is confirmed.
@@ -122,21 +123,30 @@ export const withdrawFromEvent = (db: admin.firestore.Firestore) =>
               createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
             // Promote the next user from the waitlist if a spot opened up
-            await processWaitlist(db, transaction, eventId);
+            // We will call this *after* the transaction commits.
             logger.info(`User ${userId} withdrew from event ${eventId}. Refunded ${fee}.`);
-            return {status: "success", message: "Successfully withdrew and received a refund."};
+            return {status: "success", message: "Successfully withdrew and received a refund.", processWaitlist: true};
           } else {
             // After deadline and no one on the waitlist to take the spot. Fee is forfeited.
             transaction.update(participantRef, {status: "withdrawn_penalty"}); // A more descriptive status
             transaction.update(eventRef, {confirmedCount: admin.firestore.FieldValue.increment(-1)});
             // No refund is issued.
             logger.info(`User ${userId} withdrew from event ${eventId} after deadline. Fee of ${fee} forfeited.`);
-            return {status: "success", message: "Successfully withdrew. The fee was forfeited as per the commitment deadline."};
+            return {status: "success", message: "Successfully withdrew. The fee was forfeited as per the commitment deadline.", processWaitlist: false};
           }
         }
 
         throw new HttpsError("failed-precondition", `Cannot withdraw with current status: ${userStatus}`);
       });
+
+      // If the transaction was successful and a waitlist promotion is needed, do it now.
+      if (result && result.processWaitlist) {
+        await db.runTransaction(async (transaction) => {
+          await processWaitlist(db, transaction, eventId);
+        });
+      }
+
+      return {status: result?.status, message: result?.message};
     } catch (err) {
       logger.error("Error withdrawing from event:", err);
       if (err instanceof HttpsError) {

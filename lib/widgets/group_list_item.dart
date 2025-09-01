@@ -26,7 +26,7 @@ class GroupListItem extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   viewModel.nextEventDate != null
-                      ? DateFormat.yMd().add_jm().format(viewModel.nextEventDate!)
+                      ? DateFormat.yMMMEd().add_jm().format(viewModel.nextEventDate!)
                       : 'No upcoming events',
                 ),
               ],
