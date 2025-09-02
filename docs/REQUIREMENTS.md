@@ -65,7 +65,7 @@ This model ensures that event spots are paid for, giving organizers the confiden
 ### 4.2. Event Management (for Organizers)
 *   [x] Create an event within a group.
 *   [x] Set event details: date, time, location, max participants, initial fee, and a **Commitment Deadline**.
-*   [ ] **Update the event fee** at any time before the commitment deadline.
+*   [ ] Create recurring events (e.g., weekly, bi-weekly) to automate event creation.
 *   [ ] **Cancel an event**, which should notify all registered participants.
 *   [ ] Add or remove participant spots after event creation (before the event starts).
 *   [ ] Monitor the list of registered participants and their payment status.
@@ -77,20 +77,27 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [x] Request to join a group after finding it.
 *   [x] View event details (including the Commitment Deadline).
 *   [x] Submit a registration request for an event. The initial status will show as **"Requested"**.
-*   [ ] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.
-*   [ ] Withdraw from an event (understanding the penalty if after the commitment deadline).
+*   [x] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.
+*   [x] Withdraw from an event (understanding the penalty if after the commitment deadline).
     *   [ ] If withdrawal is attempted after the commitment deadline, the user must confirm their understanding of the penalty.
     *   [ ] There should be a popup confirmation dialog to confirm the withdrawal.
-*   [ ] Join a waitlist if all spots are filled when the request is processed.
+*   [x] Join a waitlist if all spots are filled when the request is processed.
 *   [ ] Receive push notifications for status updates, event changes, and commitment deadlines.
 *   [ ] View their registration history.
 
 ### 4.4. Wallet & Currency
 *   [x] **Organizer:** Interface to add/credit virtual currency to a participant's wallet.
-*   [ ] **Participant:** View current wallet balance and transaction history.
+*   [x] **Participant:** View current wallet balance and transaction history.
 *   [x] Show a confirmation dialog before applying a wallet credit (display target member, amount, and optional description).
 *   [x] Enforce numeric precision: currency amounts must be valid numbers with at most two decimal places; reject invalid input with clear validation message.
-*   [ ] Display all wallet balances formatted to two decimal places (e.g., 12.50) across UI.
+*   [x] Display all wallet balances formatted to two decimal places (e.g., 12.50) across UI.
+
+### 4.5. Group Communication
+*   [ ] **Organizer:** Post announcements that are visible to all group members.
+
+### 4.6. User Profiles
+*   [ ] Display the user's Google Account profile picture (if available) next to their name.
+*   [ ] Allow users to upload a custom profile picture from their device's gallery to override their Google photo.
 
 ## 5. Technical Stack
 
