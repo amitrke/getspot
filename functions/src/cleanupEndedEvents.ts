@@ -18,7 +18,6 @@ export const cleanupEndedEvents = (db: admin.firestore.Firestore) =>
       // 1. Find events that have ended and haven't been cleaned up yet.
       const eventsToCleanQuery = db.collection("events")
         .where("eventTimestamp", "<", now)
-        .where("isCleanedUp", "!=", true) // New field to mark as processed
         .limit(50); // Process in batches
 
       const eventsToCleanSnap = await eventsToCleanQuery.get();
@@ -31,6 +30,12 @@ export const cleanupEndedEvents = (db: admin.firestore.Firestore) =>
       for (const eventDoc of eventsToCleanSnap.docs) {
         const eventId = eventDoc.id;
         const eventData = eventDoc.data();
+
+        // Skip events that have already been cleaned up.
+        if (eventData.isCleanedUp === true) {
+          continue;
+        }
+
         const groupId = eventData.groupId;
         const fee = eventData.fee ?? 0;
 

@@ -114,6 +114,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         'confirmedCount': 0,
         'waitlistCount': 0,
         'createdAt': FieldValue.serverTimestamp(),
+        'isCleanedUp': false,
       });
 
       if (mounted) {
