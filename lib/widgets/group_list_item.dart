@@ -74,10 +74,12 @@ class GroupListItem extends StatelessWidget {
 
   Widget _getStatusIcon(String? status) {
     switch (status) {
-      case 'registered':
+      case 'confirmed':
         return const Icon(Icons.check_circle, color: Colors.green, size: 16);
       case 'waitlisted':
         return const Icon(Icons.pending, color: Colors.orange, size: 16);
+      case 'denied':
+        return const Icon(Icons.cancel, color: Colors.red, size: 16);
       default:
         return const Icon(Icons.help_outline, color: Colors.grey, size: 16);
     }
