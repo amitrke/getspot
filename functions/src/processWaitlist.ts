@@ -25,9 +25,7 @@ export const processWaitlist = async (
   }
 
   const eventData = eventDoc.data();
-  const fee = eventData?.fee ?? 0;
   const groupId = eventData?.groupId;
-  const negativeBalanceLimit = eventData?.negativeBalanceLimit ?? 0; // Assuming this is stored on event or group
 
   if (!groupId) {
     logger.error(`Event ${eventId} is missing groupId.`);
@@ -60,38 +58,13 @@ export const processWaitlist = async (
     return; // Cannot process if member doc is missing.
   }
 
-  const memberData = memberDoc.data();
-  const walletBalance = memberData?.walletBalance ?? 0;
+  // Since the fee was already collected at registration, we can directly promote the user.
+  transaction.update(nextWaitlistedDoc.ref, {status: "confirmed"});
+  transaction.update(eventRef, {
+    confirmedCount: admin.firestore.FieldValue.increment(1),
+    waitlistCount: admin.firestore.FieldValue.increment(-1),
+  });
 
-  // Check if user has sufficient funds
-  if (walletBalance + negativeBalanceLimit >= fee) {
-    // Promote user
-    transaction.update(nextWaitlistedDoc.ref, {status: "confirmed"});
-    transaction.update(eventRef, {
-      confirmedCount: admin.firestore.FieldValue.increment(1),
-      waitlistCount: admin.firestore.FieldValue.increment(-1),
-    });
-    // Deduct fee
-    transaction.update(memberRef, {walletBalance: admin.firestore.FieldValue.increment(-fee)});
-    // Log debit transaction
-    const txRef = db.collection("transactions").doc();
-    transaction.set(txRef, {
-      uid: nextWaitlistedUserId,
-      groupId: groupId,
-      eventId: eventId,
-      type: "debit",
-      amount: fee,
-      description: `Fee for event '${eventData?.name ?? "Unnamed Event"}' (promoted from waitlist)`,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    logger.info(`User ${nextWaitlistedUserId} promoted to confirmed for event ${eventId}. Charged ${fee}.`);
-  } else {
-    // User does not have sufficient funds, skip and try next (if any)
-    transaction.update(nextWaitlistedDoc.ref, {status: "denied", denialReason: "Insufficient funds at promotion"});
-    transaction.update(eventRef, {waitlistCount: admin.firestore.FieldValue.increment(-1)}); // Decrement waitlist count
-    logger.info(`User ${nextWaitlistedUserId} denied promotion for event ${eventId} due to insufficient funds.`);
-    // Recursively call processWaitlist to check the next person, if needed
-    // This is tricky in a transaction, often better to let a scheduled job re-trigger or handle outside.
-    // For now, we'll just process one at a time.
-  }
+  // No fee deduction or transaction log is needed here as it was handled during the initial registration.
+  logger.info(`User ${nextWaitlistedUserId} promoted to confirmed for event ${eventId}. Fee was collected at registration.`);
 };
