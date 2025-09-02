@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/models/group_view_model.dart';
 
+import 'package:getspot/services/group_service.dart';
 import 'package:getspot/screens/member_profile_screen.dart';
 import 'package:getspot/widgets/group_list_item.dart';
 
@@ -88,106 +89,13 @@ class _GroupList extends StatefulWidget {
 }
 
 class _GroupListState extends State<_GroupList> {
-  Stream<List<GroupViewModel>>? _groupsViewModelStream;
+  late final Stream<List<GroupViewModel>> _groupsViewModelStream;
+  final GroupService _groupService = GroupService();
 
   @override
   void initState() {
     super.initState();
-    _setupGroupsStream();
-  }
-
-  void _setupGroupsStream() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      developer.log('User not logged in.', name: 'HomeScreen');
-      return;
-    }
-
-    final groupMembershipsStream = FirebaseFirestore.instance
-        .collection('userGroupMemberships')
-        .doc(user.uid)
-        .collection('groups')
-        .snapshots();
-
-    _groupsViewModelStream = groupMembershipsStream.asyncMap((memberships) async {
-      if (memberships.docs.isEmpty) {
-        return [];
-      }
-
-      final groupIds = memberships.docs.map((doc) => doc.id).toList();
-
-      final groupsFuture = FirebaseFirestore.instance
-          .collection('groups')
-          .where(FieldPath.documentId, whereIn: groupIds)
-          .get();
-
-      final eventsFuture = FirebaseFirestore.instance
-          .collection('events')
-          .where('groupId', whereIn: groupIds)
-          .where('eventTimestamp', isGreaterThan: Timestamp.now())
-          .orderBy('eventTimestamp')
-          .get();
-
-      final members = await FirebaseFirestore.instance
-          .collection('groups')
-          .where(FieldPath.documentId, whereIn: groupIds)
-          .get()
-          .then((snapshot) => snapshot.docs
-              .map((doc) => doc.reference.collection('members').doc(user.uid).get())
-              .toList())
-          .then((futures) => Future.wait(futures));
-
-      final results = await Future.wait([groupsFuture, eventsFuture]);
-      final groups = results[0];
-      final events = results[1];
-
-      final groupDocs = {for (var doc in groups.docs) doc.id: doc};
-      final memberDocs = {
-        for (var doc in members)
-          if (doc.exists) doc.reference.parent.parent!.id: doc
-      };
-
-      final nextEvents = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
-      for (var event in events.docs) {
-        final groupId = event.data()['groupId'] as String;
-        if (!nextEvents.containsKey(groupId)) {
-          nextEvents[groupId] = event;
-        }
-      }
-
-      final participantFutures = <Future<DocumentSnapshot<Map<String, dynamic>>?>>[];
-      for (var event in nextEvents.values) {
-        participantFutures.add(FirebaseFirestore.instance
-            .collection('events')
-            .doc(event.id)
-            .collection('participants')
-            .doc(user.uid)
-            .get());
-      }
-
-      final participants = await Future.wait(participantFutures);
-      final participantDocs = {
-        for (var doc in participants)
-          if (doc != null && doc.exists) doc.reference.parent.parent!.id: doc
-      };
-
-      final viewModels = <GroupViewModel>[];
-      for (var membership in memberships.docs) {
-        final groupId = membership.id;
-        final group = groupDocs[groupId];
-        final member = memberDocs[groupId];
-        if (group != null && member != null) {
-          final nextEvent = nextEvents[groupId];
-          final participant = nextEvent != null ? participantDocs[nextEvent.id] : null;
-          viewModels.add(GroupViewModel.fromGroupMembership(
-              membership, group, member, nextEvent, participant));
-        }
-      }
-
-      return viewModels;
-    });
-
-    setState(() {});
+    _groupsViewModelStream = _groupService.getGroupViewModelsStream();
   }
 
   @override
