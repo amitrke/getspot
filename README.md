@@ -37,21 +37,16 @@ userGroupMemberships/{uid}/groups/{groupId} (planned index to replace collection
 - List membership query currently uses collectionGroup filtered by uid (will migrate to per‑user index)
 - Security rules must remain query-safe (list conditions cannot rely on additional document lookups)
 
-## Immediate Roadmap (High Leverage)
-1. Membership index Cloud Function (mirror member create/delete -> userGroupMemberships)
-2. Refactor home screen to use index (remove N+1 parent fetches)
-3. Join request approval callable (atomic: approve -> add member -> index -> update request)
-4. Event participant trigger (capacity + waitlist logic)
-5. Transactions + wallet balance pipeline (replace inline walletBalance field)
-6. Test harness (Functions emulator + basic widget tests) integrated into CI
-7. Security rules simplification after index adoption
+## Project Status & Next Steps
 
-## Technical Debt / Gaps
-- No denormalized membership index yet (performance & rule simplicity)
-- Wallet / transactions not implemented (risk of inconsistent balances)
-- Event waitlist + promotion logic absent
-- Limited automated tests
-- Rules contain dual member match blocks (can simplify post-index)
+The core features for group creation, event management, registration, waitlists, and withdrawals (including refunds/penalties) are **fully implemented and functional**. The home screen uses an efficient, denormalized query for fast performance.
+
+### Potential Future Enhancements
+- **Push Notifications:** Notify users of event reminders, join request approvals, or promotion from a waitlist.
+- **Advanced Penalty Rules:** Implement more complex penalty logic for withdrawals (e.g., scaling penalties closer to the event date).
+- **Admin Dashboard:** A dedicated UI for admins to view group statistics and manage settings.
+- **User-to-User Transfers:** Allow members to transfer funds between their wallets.
+- **Improved Testing:** Expand the test harness with more comprehensive widget and integration tests.
 
 ## Contributing Notes
 - Prefer Cloud Function triggers for invariants (membership index, participant capacity)

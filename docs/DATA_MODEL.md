@@ -76,7 +76,8 @@ Stores pending requests to join the group.
 {
   "uid": "string",
   "displayName": "string",
-  "requestedAt": "timestamp"
+  "requestedAt": "timestamp",
+  "status": "string" // "pending", "denied"
 }
 ```
 

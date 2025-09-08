@@ -122,9 +122,26 @@ class _GroupListState extends State<_GroupList> {
 
         if (viewModels == null || viewModels.isEmpty) {
           return Center(
-            child: Text(
-              'You are not a member of any groups yet.',
-              style: Theme.of(context).textTheme.bodyMedium,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Welcome to GetSpot!',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'This is your space to manage sports groups and events. '
+                    'Get started by creating a new group or joining an existing one with a code.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           );
         }
