@@ -23,7 +23,8 @@ Stores information about individual users.
   "uid": "string",          // Firebase Auth User ID
   "displayName": "string",  // User's public display name
   "email": "string",        // User's email address
-  "createdAt": "timestamp"  // Account creation timestamp
+  "createdAt": "timestamp", // Account creation timestamp
+  "fcmTokens": ["string"]   // Array of FCM device tokens for push notifications
 }
 ```
 

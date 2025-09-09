@@ -78,8 +78,12 @@ export const manageJoinRequest = (db: admin.firestore.Firestore) =>
           }
 
           // Create a new member and delete the request atomically
+          let groupName = "Unnamed Group";
           await db.runTransaction(async (transaction) => {
-            const groupData = (await transaction.get(groupRef)).data();
+            const groupSnapshot = await transaction.get(groupRef);
+            const groupData = groupSnapshot.data();
+            groupName = groupData?.name ?? "Unnamed Group";
+
             const userGroupMembershipRef = db
               .collection("userGroupMemberships")
               .doc(requestedUserId)
@@ -95,12 +99,28 @@ export const manageJoinRequest = (db: admin.firestore.Firestore) =>
 
             transaction.set(userGroupMembershipRef, {
               groupId: groupId,
-              groupName: groupData?.name ?? "Unnamed Group",
+              groupName: groupName,
               isAdmin: false,
             });
 
             transaction.delete(requestRef);
           });
+
+          // Send notification after the transaction is successful
+          const userDoc = await db.collection("users").doc(requestedUserId).get();
+          const fcmTokens = userDoc.data()?.fcmTokens;
+
+          if (fcmTokens && fcmTokens.length > 0) {
+            const message = {
+              notification: {
+                title: "Request Approved",
+                body: `Your request to join '${groupName}' has been approved!`,
+              },
+              tokens: fcmTokens,
+            };
+            await admin.messaging().sendEachForMulticast(message);
+            logger.info(`Sent join approval notification to ${requestedUserId}`);
+          }
 
           return {status: "success", message: "User approved successfully."};
         }

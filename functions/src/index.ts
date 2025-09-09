@@ -16,6 +16,7 @@ import {manageJoinRequest as manageJoinRequestHandler} from "./manageJoinRequest
 import {manageGroupMember as manageGroupMemberHandler} from "./manageGroupMember";
 import {withdrawFromEvent as withdrawFromEventHandler} from "./withdrawFromEvent";
 import {cleanupEndedEvents as cleanupEndedEventsHandler} from "./cleanupEndedEvents";
+import {updateFcmToken as updateFcmTokenHandler} from "./updateFcmToken";
 
 
 // Initialize the Firebase Admin SDK
@@ -142,4 +143,5 @@ export const manageJoinRequest = manageJoinRequestHandler(db);
 export const manageGroupMember = manageGroupMemberHandler(db);
 export const withdrawFromEvent = withdrawFromEventHandler(db);
 export const cleanupEndedEvents = cleanupEndedEventsHandler(db);
+export const updateFcmToken = updateFcmTokenHandler(db);
 
