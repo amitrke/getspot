@@ -49,3 +49,7 @@ app.*.map.json
 github-actions-deploy-key.json
 err.txt
 GoogleService-Info.plist
+
+# Signing files
+key.properties
+*.jks

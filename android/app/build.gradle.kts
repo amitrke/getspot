@@ -23,19 +23,19 @@ android {
     ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     signingConfigs {
         create("release") {
             keyAlias = keyProperties["keyAlias"] as String?
             keyPassword = keyProperties["keyPassword"] as String?
-            storeFile = if (keyProperties["storeFile"] != null) file(keyProperties["storeFile"] as String) else null
+            storeFile = if (keyProperties["storeFile"] != null) rootProject.file(keyProperties["storeFile"] as String) else null
             storePassword = keyProperties["storePassword"] as String?
         }
     }
