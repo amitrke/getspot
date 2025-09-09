@@ -1,7 +1,10 @@
-def keyPropertiesFile = rootProject.file("key.properties")
-def keyProperties = new Properties()
+import java.util.Properties
+import java.io.FileInputStream
+
+val keyPropertiesFile = rootProject.file("key.properties")
+val keyProperties = Properties()
 if (keyPropertiesFile.exists()) {
-    keyProperties.load(new FileInputStream(keyPropertiesFile))
+    keyProperties.load(FileInputStream(keyPropertiesFile))
 }
 
 plugins {
@@ -32,7 +35,7 @@ android {
         create("release") {
             keyAlias = keyProperties["keyAlias"] as String?
             keyPassword = keyProperties["keyPassword"] as String?
-            storeFile = if (keyProperties["storeFile"] != null) file(keyProperties["storeFile"]) else null
+            storeFile = if (keyProperties["storeFile"] != null) file(keyProperties["storeFile"] as String) else null
             storePassword = keyProperties["storePassword"] as String?
         }
     }
