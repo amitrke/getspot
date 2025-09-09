@@ -175,6 +175,7 @@ class _EventList extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('events')
           .where('groupId', isEqualTo: groupId)
+          .where('status', isNotEqualTo: 'cancelled')
           .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
           .orderBy('eventTimestamp', descending: false)
           .snapshots(),
@@ -214,7 +215,7 @@ class _EventList extends StatelessWidget {
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   final event = events[index];
-                  return _EventListItem(event: event);
+                  return _EventListItem(key: ValueKey(event.id), event: event);
                 },
               ),
             ),
@@ -228,7 +229,7 @@ class _EventList extends StatelessWidget {
 class _EventListItem extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> event;
 
-  const _EventListItem({required this.event});
+  const _EventListItem({super.key, required this.event});
 
   @override
   State<_EventListItem> createState() => _EventListItemState();

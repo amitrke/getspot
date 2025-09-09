@@ -39,6 +39,7 @@ class GroupService {
         final eventsFuture = _firestore
             .collection('events')
             .where('groupId', whereIn: groupIds)
+            .where('status', isNotEqualTo: 'cancelled')
             .where('eventTimestamp', isGreaterThan: Timestamp.now())
             .orderBy('eventTimestamp')
             .get();
@@ -50,15 +51,9 @@ class GroupService {
             .doc(user.uid)
             .get());
 
-        final results = await Future.wait([
-          groupsFuture,
-          eventsFuture,
-          Future.wait(membersFutures),
-        ]);
-
-        final groupsSnapshot = results[0] as QuerySnapshot<Map<String, dynamic>>;
-        final eventsSnapshot = results[1] as QuerySnapshot<Map<String, dynamic>>;
-        final membersSnapshots = results[2] as List<DocumentSnapshot<Map<String, dynamic>>>;
+        final groupsSnapshot = await groupsFuture;
+        final eventsSnapshot = await eventsFuture;
+        final membersSnapshots = await Future.wait<DocumentSnapshot<Map<String, dynamic>>>(membersFutures);
 
         final groupDocs = {for (var doc in groupsSnapshot.docs) doc.id: doc};
         final memberDocs = {

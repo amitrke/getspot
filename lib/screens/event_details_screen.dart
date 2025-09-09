@@ -17,6 +17,48 @@ class EventDetailsScreen extends StatefulWidget {
 class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isRegistering = false;
   bool _isWithdrawing = false;
+  bool _isCancelling = false;
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchGroupAdminStatus();
+  }
+
+  Future<void> _fetchGroupAdminStatus() async {
+    try {
+      final eventSnapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.eventId)
+          .get();
+
+      if (!eventSnapshot.exists) return;
+
+      final eventData = eventSnapshot.data()!;
+      final groupId = eventData['groupId'];
+      if (groupId == null) return;
+
+      final groupSnapshot = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .get();
+
+      if (mounted && groupSnapshot.exists) {
+        final groupData = groupSnapshot.data()!;
+        final currentUser = FirebaseAuth.instance.currentUser;
+        setState(() {
+          _isAdmin = currentUser?.uid == groupData['admin'];
+        });
+      }
+    } catch (e) {
+      developer.log(
+        'Error fetching admin status',
+        name: 'EventDetailsScreen',
+        error: e,
+      );
+    }
+  }
 
   Future<void> _registerForEvent() async {
     setState(() {
@@ -131,6 +173,91 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
+  Future<void> _cancelEvent() async {
+    setState(() {
+      _isCancelling = true;
+    });
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
+      final callable = functions.httpsCallable('cancelEvent');
+      final result = await callable.call({'eventId': widget.eventId});
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.data['message'] ?? 'Event cancelled successfully.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseFunctionsException catch (e, st) {
+      developer.log(
+        'Error cancelling event',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'An unknown error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (e, st) {
+      developer.log(
+        'Generic error cancelling event',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('An unexpected error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCancelling = false;
+        });
+      }
+    }
+  }
+
+  void _showCancelConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Cancellation'),
+          content: const Text(
+              'Are you sure you want to cancel this event? This action is irreversible and will refund all registered participants.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Nevermind'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Confirm Cancellation'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _cancelEvent();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showWithdrawConfirmationDialog(Map<String, dynamic> eventData) {
     final deadlineTimestamp = eventData['commitmentDeadline'] as Timestamp?;
     bool isAfterDeadline = false;
@@ -191,12 +318,32 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           final event = snapshot.data!.data()!;
           final eventTimestamp = event['eventTimestamp'] as Timestamp?;
           final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
+          final isCancelled = event['status'] == 'cancelled';
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (isCancelled)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withAlpha((255 * 0.1).round()),
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(color: Colors.red),
+                    ),
+                    child: const Text(
+                      'Event Cancelled',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                if (isCancelled) const SizedBox(height: 16),
                 Text(
                   event['name'] ?? 'Unnamed Event',
                   style: Theme.of(context).textTheme.headlineSmall,
@@ -310,55 +457,90 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     if (user == null) {
       return const SizedBox.shrink();
     }
+    final isCancelled = eventData['status'] == 'cancelled';
 
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('events')
-          .doc(widget.eventId)
-          .collection('participants')
-          .doc(user.uid)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    List<Widget> buttons = [];
 
-        final registrationData = snapshot.data;
-        final status = registrationData?.data()?['status'] as String?;
+    if (_isAdmin && !isCancelled) {
+      buttons.add(
+        ElevatedButton(
+          onPressed: _isCancelling ? null : _showCancelConfirmationDialog,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+          child: _isCancelling
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Cancel Event'),
+        ),
+      );
+    }
 
-        Widget button;
-        if (status == 'confirmed' || status == 'waitlisted') {
-          button = ElevatedButton(
-            onPressed: _isWithdrawing
-                ? null
-                : () => _showWithdrawConfirmationDialog(eventData),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: _isWithdrawing
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Withdraw'),
-          );
-        } else if (status == null || status == 'withdrawn') {
-          button = ElevatedButton(
-            onPressed: _isRegistering ? null : _registerForEvent,
-            child: _isRegistering
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Register'),
-          );
-        } else { // Handles withdrawn_penalty, requested, etc.
-          button = ElevatedButton(
-            onPressed: null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
-            ),
-            child: Text('Your status: ${status[0].toUpperCase()}${status.substring(1)}'),
-          );
-        }
+    if (isCancelled) {
+      buttons.add(
+        const ElevatedButton(
+          onPressed: null,
+          style: ButtonStyle(
+            backgroundColor: WidgetStatePropertyAll(Colors.grey),
+          ),
+          child: Text('Event Cancelled'),
+        ),
+      );
+    } else {
+      buttons.add(
+        StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('events')
+              .doc(widget.eventId)
+              .collection('participants')
+              .doc(user.uid)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        return SizedBox(
-          width: double.infinity,
-          child: button,
-        );
-      },
+            final registrationData = snapshot.data;
+            final status = registrationData?.data()?['status'] as String?;
+
+            Widget button;
+            if (status == 'confirmed' || status == 'waitlisted') {
+              button = ElevatedButton(
+                onPressed: _isWithdrawing
+                    ? null
+                    : () => _showWithdrawConfirmationDialog(eventData),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: _isWithdrawing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Withdraw'),
+              );
+            } else if (status == null || status == 'withdrawn') {
+              button = ElevatedButton(
+                onPressed: _isRegistering ? null : _registerForEvent,
+                child: _isRegistering
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Register'),
+              );
+            } else { // Handles withdrawn_penalty, requested, etc.
+              button = ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey,
+                ),
+                child: Text('Your status: ${status[0].toUpperCase()}${status.substring(1)}'),
+              );
+            }
+            return button;
+          },
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: buttons
+            .map((b) => Padding(padding: const EdgeInsets.only(top: 8.0), child: b))
+            .toList(),
+      ),
     );
   }
 

@@ -27,7 +27,11 @@ A new HTTPS Callable Function named `cancelEvent` will be created.
         - **Log Transaction:** Create a new document in the `transactions` collection with `type: 'credit'`, the refunded `amount`, and a clear `description` (e.g., "Refund for cancelled event: [Event Name]").
     - **Update Event Status:**
         - Update the event document itself. Instead of deleting it, set a new field `status: 'cancelled'`. This preserves the event history and prevents it from appearing in "upcoming event" queries.
-4.  **Return Value:**
+4.  **Send Notifications (Post-Transaction):**
+    - After the transaction successfully commits, retrieve the FCM tokens for all affected participants (this may require fetching their documents from the `users` collection).
+    - Construct a notification payload (e.g., title: "Event Cancelled", body: "The event '[Event Name]' has been cancelled. Your wallet has been refunded.").
+    - Use Firebase Cloud Messaging (FCM) to send a push notification to all registered participants.
+5.  **Return Value:**
     - On success, return `{ status: 'success', message: 'Event cancelled and all participants refunded.' }`.
     - On failure, throw an appropriate `HttpsError`.
 
