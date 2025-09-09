@@ -17,6 +17,7 @@ import {manageGroupMember as manageGroupMemberHandler} from "./manageGroupMember
 import {withdrawFromEvent as withdrawFromEventHandler} from "./withdrawFromEvent";
 import {cleanupEndedEvents as cleanupEndedEventsHandler} from "./cleanupEndedEvents";
 import {updateFcmToken as updateFcmTokenHandler} from "./updateFcmToken";
+import {cancelEvent as cancelEventHandler} from "./cancelEvent";
 
 
 // Initialize the Firebase Admin SDK
@@ -144,4 +145,5 @@ export const manageGroupMember = manageGroupMemberHandler(db);
 export const withdrawFromEvent = withdrawFromEventHandler(db);
 export const cleanupEndedEvents = cleanupEndedEventsHandler(db);
 export const updateFcmToken = updateFcmTokenHandler(db);
+export const cancelEvent = cancelEventHandler(db);
 
