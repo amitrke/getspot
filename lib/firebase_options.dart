@@ -71,6 +71,6 @@ class DefaultFirebaseOptions {
     projectId: 'getspot01',
     storageBucket: 'getspot01.firebasestorage.app',
     iosClientId: '932396176333-7gc9tuv0jk5egk30tngdapkb0ln2d0qd.apps.googleusercontent.com',
-    iosBundleId: 'com.example.getspot',
+    iosBundleId: 'org.getspot',
   );
 }

@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:932396176333:android:6a7f6c73b2a9bfda95aa84",
         "android_client_info": {
-          "package_name": "com.example.getspot"
+          "package_name": "org.getspot"
         }
       },
       "oauth_client": [
