@@ -36,6 +36,14 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      - name: Update Version Code
+        run: |
+          line=$(grep "version:" pubspec.yaml)
+          versionName=$(echo "$line" | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          newVersionString="version: $versionName+${{ github.run_number }}"
+          sed -i "s/$line/$newVersionString/" pubspec.yaml
+          echo "Updated version to $newVersionString"
+
       - name: Build Android App Bundle
         run: flutter build appbundle
 
