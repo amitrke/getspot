@@ -27,6 +27,42 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _prefillFromPreviousEvent();
+  }
+
+  Future<void> _prefillFromPreviousEvent() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .where('groupId', isEqualTo: widget.groupId)
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final lastEvent = querySnapshot.docs.first.data();
+        if (mounted) {
+          setState(() {
+            _nameController.text = lastEvent['name'] ?? '';
+            _locationController.text = lastEvent['location'] ?? '';
+            _feeController.text = (lastEvent['fee'] ?? 0).toString();
+          });
+        }
+      }
+    } catch (e, st) {
+      developer.log(
+        'Error prefilling event data',
+        name: 'CreateEventScreen',
+        error: e,
+        stackTrace: st,
+      );
+      // Don't show a snackbar, just fail gracefully
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _locationController.dispose();
@@ -115,6 +151,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         'waitlistCount': 0,
         'createdAt': FieldValue.serverTimestamp(),
         'isCleanedUp': false,
+        'status': 'active', // Add default status
       });
 
       if (mounted) {
@@ -135,7 +172,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           ),
         );
       }
-    } finally {
+    }
+    finally {
       if (mounted) {
         setState(() {
           _isLoading = false;

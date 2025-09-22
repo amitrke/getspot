@@ -142,13 +142,17 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                     ? [
                         _EventList(groupId: widget.group['groupId']),
                         _AnnouncementsTab(
-                            groupId: widget.group['groupId'], isAdmin: _isAdmin),
+                          groupId: widget.group['groupId'],
+                          isAdmin: _isAdmin,
+                        ),
                         _AdminManagementTab(groupId: widget.group['groupId']),
                       ]
                     : [
                         _EventList(groupId: widget.group['groupId']),
                         _AnnouncementsTab(
-                            groupId: widget.group['groupId'], isAdmin: _isAdmin),
+                          groupId: widget.group['groupId'],
+                          isAdmin: _isAdmin,
+                        ),
                       ],
               ),
             ),
@@ -207,11 +211,11 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
           .doc(widget.groupId)
           .collection('announcements')
           .add({
-        'content': _announcementController.text.trim(),
-        'authorId': user.uid,
-        'authorName': user.displayName ?? 'Admin',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+            'content': _announcementController.text.trim(),
+            'authorId': user.uid,
+            'authorName': user.displayName ?? 'Admin',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
 
       _announcementController.clear();
     } catch (e) {
@@ -274,7 +278,9 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return const Center(child: Text('Error loading announcements.'));
+                return const Center(
+                  child: Text('Error loading announcements.'),
+                );
               }
               final announcements = snapshot.data?.docs ?? [];
               if (announcements.isEmpty) {
@@ -284,10 +290,13 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                 itemCount: announcements.length,
                 itemBuilder: (context, index) {
                   final announcement = announcements[index].data();
-                  final createdAt =
-                      (announcement['createdAt'] as Timestamp?)?.toDate();
+                  final createdAt = (announcement['createdAt'] as Timestamp?)
+                      ?.toDate();
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 0,
+                    ),
                     child: ListTile(
                       title: Text(announcement['content'] ?? ''),
                       subtitle: Text(
@@ -316,7 +325,7 @@ class _EventList extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('events')
           .where('groupId', isEqualTo: groupId)
-          .where('status', isNotEqualTo: 'cancelled')
+          .where('status', isEqualTo: 'active')
           .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
           .orderBy('eventTimestamp', descending: false)
           .snapshots(),
@@ -452,9 +461,11 @@ class _EventListItemState extends State<_EventListItem> {
                   children: [
                     _getStatusIcon(status),
                     const SizedBox(width: 4),
-                    Text(status != null
-                        ? '${status[0].toUpperCase()}${status.substring(1)}'
-                        : 'Not Registered'),
+                    Text(
+                      status != null
+                          ? '${status[0].toUpperCase()}${status.substring(1)}'
+                          : 'Not Registered',
+                    ),
                   ],
                 );
               },
@@ -465,7 +476,8 @@ class _EventListItemState extends State<_EventListItem> {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => EventDetailsScreen(eventId: widget.event.id),
+              builder: (context) =>
+                  EventDetailsScreen(eventId: widget.event.id),
             ),
           );
         },
@@ -507,8 +519,11 @@ class _JoinRequestsList extends StatefulWidget {
   final String status;
   final String title;
 
-  const _JoinRequestsList(
-      {required this.groupId, required this.status, required this.title});
+  const _JoinRequestsList({
+    required this.groupId,
+    required this.status,
+    required this.title,
+  });
 
   @override
   State<_JoinRequestsList> createState() => _JoinRequestsListState();
@@ -591,8 +606,10 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
             stackTrace: snapshot.stackTrace,
           );
           return Center(
-              child: Text(
-                  'Error loading ${widget.title}.\nCheck console for details.'));
+            child: Text(
+              'Error loading ${widget.title}.\nCheck console for details.',
+            ),
+          );
         }
 
         final requests = snapshot.data?.docs ?? [];
@@ -662,11 +679,10 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
       return TextButton(
         onPressed: () => _processRequest(requestedUserId, 'delete'),
         style: TextButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.error),
+          foregroundColor: Theme.of(context).colorScheme.error,
+        ),
         child: const Text('Delete'),
       );
     }
   }
 }
-
-

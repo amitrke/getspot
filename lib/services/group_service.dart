@@ -39,7 +39,7 @@ class GroupService {
         final eventsFuture = _firestore
             .collection('events')
             .where('groupId', whereIn: groupIds)
-            .where('status', isNotEqualTo: 'cancelled')
+            .where('status', isEqualTo: 'active')
             .where('eventTimestamp', isGreaterThan: Timestamp.now())
             .orderBy('eventTimestamp')
             .get();
