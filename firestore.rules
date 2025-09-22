@@ -11,7 +11,8 @@ service cloud.firestore {
     //--- COLLECTIONS ----//
 
     match /users/{userId} {
-      allow read, update, create: if request.auth.uid == userId;
+      allow read, create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId && request.resource.data.keys().hasOnly(['fcmTokens', 'displayName', 'photoURL']);
     }
 
     // New collection for simplified group lookups.
