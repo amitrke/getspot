@@ -66,22 +66,32 @@ We retain your personal information for as long as your account is active or as 
 
 ### 6. Your Rights
 
-You have the right to access, update, or delete your personal information. You can manage most of your information directly within the app. If you wish to delete your account and associated data, please contact us.
+You have the right to access, update, or delete your personal information. You can manage most of your information directly within the app.
 
 ---
 
-### 7. Children's Privacy
+### 7. Data Deletion Request
+
+You can request the deletion of your account and all associated data. To do so, please use the following link to open a data deletion request.
+
+**[Request Data Deletion](https://github.com/amitrke/getspot/issues/new?title=Data+Deletion+Request)**
+
+We will process your request after verifying your identity to protect your account from fraudulent deletion requests.
+
+---
+
+### 8. Children's Privacy
 
 Our Services are not directed to individuals under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided us with personal information, we will take steps to delete such information.
 
 ---
 
-### 8. Changes to This Policy
+### 9. Changes to This Policy
 
 We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
 
 ---
 
-### 9. Contact Us
+### 10. Contact Us
 
 If you have any questions about this Privacy Policy, please [open an issue on our GitHub repository](https://github.com/amitrke/getspot/issues/new).
