@@ -39,10 +39,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       developer.log('Admin status CONFIRMED.', name: 'GroupDetailsScreen');
       setState(() {
         _isAdmin = true;
-        _tabController = TabController(length: 2, vsync: this);
+        _tabController = TabController(length: 3, vsync: this);
       });
     } else {
       developer.log('Admin status DENIED.', name: 'GroupDetailsScreen');
+      setState(() {
+        _tabController = TabController(length: 2, vsync: this);
+      });
     }
   }
 
@@ -58,17 +61,19 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.group['name'] ?? 'Group Details'),
-        bottom: _isAdmin
-            ? TabBar(
-                controller: _tabController,
-                tabs: const [
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: _isAdmin
+              ? const [
                   Tab(icon: Icon(Icons.event), text: 'Events'),
-                  Tab(
-                      icon: Icon(Icons.person_add),
-                      text: 'Admin'), // Changed tab name
+                  Tab(icon: Icon(Icons.announcement), text: 'Announcements'),
+                  Tab(icon: Icon(Icons.person_add), text: 'Admin'),
+                ]
+              : const [
+                  Tab(icon: Icon(Icons.event), text: 'Events'),
+                  Tab(icon: Icon(Icons.announcement), text: 'Announcements'),
                 ],
-              )
-            : null,
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -130,18 +135,22 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
               ),
               const SizedBox(height: 12),
             ],
-            // Show TabBarView for Admin, or just the EventList for members
             Expanded(
-              child: _isAdmin
-                  ? TabBarView(
-                      controller: _tabController,
-                      children: [
+              child: TabBarView(
+                controller: _tabController,
+                children: _isAdmin
+                    ? [
                         _EventList(groupId: widget.group['groupId']),
-                        _AdminManagementTab(
-                            groupId: widget.group['groupId']), // New widget
+                        _AnnouncementsTab(
+                            groupId: widget.group['groupId'], isAdmin: _isAdmin),
+                        _AdminManagementTab(groupId: widget.group['groupId']),
+                      ]
+                    : [
+                        _EventList(groupId: widget.group['groupId']),
+                        _AnnouncementsTab(
+                            groupId: widget.group['groupId'], isAdmin: _isAdmin),
                       ],
-                    )
-                  : _EventList(groupId: widget.group['groupId']),
+              ),
             ),
           ],
         ),
@@ -160,6 +169,138 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
               icon: const Icon(Icons.add),
             )
           : null,
+    );
+  }
+}
+
+class _AnnouncementsTab extends StatefulWidget {
+  final String groupId;
+  final bool isAdmin;
+
+  const _AnnouncementsTab({required this.groupId, required this.isAdmin});
+
+  @override
+  __AnnouncementsTabState createState() => __AnnouncementsTabState();
+}
+
+class __AnnouncementsTabState extends State<_AnnouncementsTab> {
+  final _announcementController = TextEditingController();
+  bool _isPosting = false;
+
+  Future<void> _postAnnouncement() async {
+    if (_announcementController.text.trim().isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _isPosting = true;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('You must be logged in to post an announcement.');
+      }
+
+      await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .collection('announcements')
+          .add({
+        'content': _announcementController.text.trim(),
+        'authorId': user.uid,
+        'authorName': user.displayName ?? 'Admin',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      _announcementController.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error posting announcement: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPosting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (widget.isAdmin)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _announcementController,
+                    decoration: const InputDecoration(
+                      labelText: 'New Announcement',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _isPosting
+                    ? const CircularProgressIndicator()
+                    : IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: _postAnnouncement,
+                      ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: FirebaseFirestore.instance
+                .collection('groups')
+                .doc(widget.groupId)
+                .collection('announcements')
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return const Center(child: Text('Error loading announcements.'));
+              }
+              final announcements = snapshot.data?.docs ?? [];
+              if (announcements.isEmpty) {
+                return const Center(child: Text('No announcements yet.'));
+              }
+              return ListView.builder(
+                itemCount: announcements.length,
+                itemBuilder: (context, index) {
+                  final announcement = announcements[index].data();
+                  final createdAt =
+                      (announcement['createdAt'] as Timestamp?)?.toDate();
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+                    child: ListTile(
+                      title: Text(announcement['content'] ?? ''),
+                      subtitle: Text(
+                        'Posted by ${announcement['authorName'] ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

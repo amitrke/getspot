@@ -38,6 +38,12 @@ service cloud.firestore {
         allow create: if request.auth.uid == userId;
         allow list, update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
+
+      // Group members can read announcements. Only the admin can create/delete them.
+      match /announcements/{announcementId} {
+        allow get, list: if exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+        allow create, update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
+      }
     }
 
     match /events/{eventId} {

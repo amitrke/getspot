@@ -66,7 +66,7 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [x] Create an event within a group.
 *   [x] Set event details: date, time, location, max participants, initial fee, and a **Commitment Deadline**.
 *   [ ] Create recurring events (e.g., weekly, bi-weekly) to automate event creation.
-*   [ ] **Cancel an event**, which should notify all registered participants.
+*   [x] **Cancel an event**, which should notify all registered participants.
 *   [ ] Add or remove participant spots after event creation (before the event starts).
 *   [ ] Monitor the list of registered participants and their payment status.
 *   [ ] Clear a participant's "denied" status to allow them to re-register.
@@ -79,8 +79,8 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [x] Submit a registration request for an event. The initial status will show as **"Requested"**.
 *   [x] The system will process requests on a **first-come, first-served basis** and provide a status update (e.g., **"Confirmed"**, **"Waitlisted"**, or **"Denied"**) reasonably quickly.
 *   [x] Withdraw from an event (understanding the penalty if after the commitment deadline).
-    *   [ ] If withdrawal is attempted after the commitment deadline, the user must confirm their understanding of the penalty.
-    *   [ ] There should be a popup confirmation dialog to confirm the withdrawal.
+    *   [x] If withdrawal is attempted after the commitment deadline, the user must confirm their understanding of the penalty.
+    *   [x] There should be a popup confirmation dialog to confirm the withdrawal.
 *   [x] Join a waitlist if all spots are filled when the request is processed.
 *   [ ] Receive push notifications for status updates, event changes, and commitment deadlines.
 *   [ ] View their registration history.
@@ -93,7 +93,7 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [x] Display all wallet balances formatted to two decimal places (e.g., 12.50) across UI.
 
 ### 4.5. Group Communication
-*   [ ] **Organizer:** Post announcements that are visible to all group members.
+*   [x] **Organizer:** Post announcements that are visible to all group members.
 
 ### 4.6. User Profiles
 *   [ ] Display the user's Google Account profile picture (if available) next to their name.

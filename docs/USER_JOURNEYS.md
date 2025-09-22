@@ -115,3 +115,32 @@ graph TD
         E --> F[Updates participant doc with final status];
     end
 ```
+
+---
+
+## 6. Group Announcements
+
+This flow describes how admins post announcements and how members view them.
+
+**Associated Roles:** Organizer, Player
+**Prerequisite:** User is a member of the group.
+
+### 6.1. Admin Posts an Announcement
+
+```mermaid
+graph TD
+    subgraph "Admin's Device (Flutter App)"
+        A[Admin navigates to Announcements tab] --> B[Enters text into the announcement field];
+        B -- Clicks 'Post' --> C["New doc created in '/groups/{groupId}/announcements'"];
+        C --> D[UI updates to show the new announcement in the list];
+    end
+```
+
+### 6.2. Member Views Announcements
+
+```mermaid
+graph TD
+    A[Member navigates to Group Details] --> B[Selects the 'Announcements' tab];
+    B --> C{App fetches announcements from Firestore};
+    C --> D[Member views a list of all announcements];
+```

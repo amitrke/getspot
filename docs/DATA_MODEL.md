@@ -49,6 +49,7 @@ Stores information about the groups created by organizers.
   // Subcollections:
   // /members
   // /joinRequests
+  // /announcements
 }
 ```
 
@@ -79,6 +80,21 @@ Stores pending requests to join the group.
   "displayName": "string",
   "requestedAt": "timestamp",
   "status": "string" // "pending", "denied"
+}
+```
+
+#### 2.3. Announcements Subcollection
+
+Stores announcements posted by the group admin.
+
+`/groups/{groupId}/announcements/{announcementId}`
+
+```json
+{
+  "content": "string",      // The body of the announcement
+  "authorId": "string",     // The UID of the admin who posted it
+  "authorName": "string",   // The display name of the admin
+  "createdAt": "timestamp"  // The time the announcement was posted
 }
 ```
 
