@@ -96,9 +96,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
             ),
             const SizedBox(height: 24),
             const Divider(),
-            if (_isAdmin) ...[
-              Row(
-                children: [
+            Row(
+              children: [
+                if (_isAdmin) ...[
                   ElevatedButton.icon(
                     onPressed: () {
                       Navigator.of(context).push(
@@ -114,27 +114,27 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                     label: const Text('Members'),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user != null) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => WalletScreen(
-                              groupId: widget.group['groupId'],
-                              userId: user.uid,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.wallet),
-                    label: const Text('My Wallet'),
-                  ),
                 ],
-              ),
-              const SizedBox(height: 12),
-            ],
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user != null) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => WalletScreen(
+                            groupId: widget.group['groupId'],
+                            userId: user.uid,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.wallet),
+                  label: const Text('My Wallet'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
