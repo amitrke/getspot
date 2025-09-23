@@ -18,6 +18,8 @@ import {withdrawFromEvent as withdrawFromEventHandler} from "./withdrawFromEvent
 import {cleanupEndedEvents as cleanupEndedEventsHandler} from "./cleanupEndedEvents";
 import {updateFcmToken as updateFcmTokenHandler} from "./updateFcmToken";
 import {cancelEvent as cancelEventHandler} from "./cancelEvent";
+import {notifyOnNewEvent as notifyOnNewEventHandler} from "./notifyOnNewEvent";
+import {sendEventReminders as sendEventRemindersHandler} from "./sendEventReminders";
 
 
 // Initialize the Firebase Admin SDK
@@ -146,4 +148,6 @@ export const withdrawFromEvent = withdrawFromEventHandler(db);
 export const cleanupEndedEvents = cleanupEndedEventsHandler(db);
 export const updateFcmToken = updateFcmTokenHandler(db);
 export const cancelEvent = cancelEventHandler(db);
+export const notifyOnNewEvent = notifyOnNewEventHandler(db);
+export const sendEventReminders = sendEventRemindersHandler(db);
 

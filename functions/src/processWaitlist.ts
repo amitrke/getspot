@@ -13,7 +13,7 @@ export const processWaitlist = async (
   db: admin.firestore.Firestore,
   transaction: admin.firestore.Transaction,
   eventId: string,
-) => {
+): Promise<string | null> => {
   logger.info(`Processing waitlist for event ${eventId}.`);
 
   const eventRef = db.collection("events").doc(eventId);
@@ -21,7 +21,7 @@ export const processWaitlist = async (
 
   if (!eventDoc.exists) {
     logger.warn(`Event ${eventId} not found during waitlist processing.`);
-    return; // Event doesn't exist, nothing to do.
+    return null; // Event doesn't exist, nothing to do.
   }
 
   const eventData = eventDoc.data();
@@ -29,7 +29,7 @@ export const processWaitlist = async (
 
   if (!groupId) {
     logger.error(`Event ${eventId} is missing groupId.`);
-    return; // Cannot process without group ID.
+    return null; // Cannot process without group ID.
   }
 
   // Find the next waitlisted user
@@ -42,7 +42,7 @@ export const processWaitlist = async (
 
   if (waitlistSnap.empty) {
     logger.info(`No waitlisted users for event ${eventId}.`);
-    return; // No one on waitlist.
+    return null; // No one on waitlist.
   }
 
   const nextWaitlistedDoc = waitlistSnap.docs[0];
@@ -55,7 +55,7 @@ export const processWaitlist = async (
     logger.warn(`Waitlisted user ${nextWaitlistedUserId} member doc not found for event ${eventId}. Skipping.`);
     // Optionally, mark participant as denied due to missing member doc
     transaction.update(nextWaitlistedDoc.ref, {status: "denied", denialReason: "Member profile missing"});
-    return; // Cannot process if member doc is missing.
+    return null; // Cannot process if member doc is missing.
   }
 
   // Since the fee was already collected at registration, we can directly promote the user.
@@ -67,4 +67,5 @@ export const processWaitlist = async (
 
   // No fee deduction or transaction log is needed here as it was handled during the initial registration.
   logger.info(`User ${nextWaitlistedUserId} promoted to confirmed for event ${eventId}. Fee was collected at registration.`);
+  return nextWaitlistedUserId;
 };

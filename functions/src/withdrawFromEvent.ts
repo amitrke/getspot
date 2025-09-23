@@ -141,9 +141,29 @@ export const withdrawFromEvent = (db: admin.firestore.Firestore) =>
 
       // If the transaction was successful and a waitlist promotion is needed, do it now.
       if (result && result.processWaitlist) {
-        await db.runTransaction(async (transaction) => {
-          await processWaitlist(db, transaction, eventId);
+        const promotedUserId = await db.runTransaction(async (transaction) => {
+          return await processWaitlist(db, transaction, eventId);
         });
+
+        // Send notification if a user was promoted
+        if (promotedUserId) {
+          const userDoc = await db.collection("users").doc(promotedUserId).get();
+          const fcmTokens = userDoc.data()?.fcmTokens;
+          const eventDoc = await db.collection("events").doc(eventId).get();
+          const eventName = eventDoc.data()?.name ?? "an event";
+
+          if (fcmTokens && fcmTokens.length > 0) {
+            const message = {
+              notification: {
+                title: "You're In!",
+                body: `A spot has opened up for '${eventName}'. You are now confirmed.`,
+              },
+              tokens: fcmTokens,
+            };
+            await admin.messaging().sendEachForMulticast(message);
+            logger.info(`Sent waitlist promotion notification to ${promotedUserId}`);
+          }
+        }
       }
 
       return {status: result?.status, message: result?.message};
