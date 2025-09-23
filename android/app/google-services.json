@@ -9,10 +9,18 @@
       "client_info": {
         "mobilesdk_app_id": "1:932396176333:android:6a7f6c73b2a9bfda95aa84",
         "android_client_info": {
-          "package_name": "org.getspot"
+          "package_name": "com.example.getspot"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "932396176333-chgjkg2o9fn86n8o5jfktpruqf5g6fto.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.getspot",
+            "certificate_hash": "e17050c60e96c616ca5e6bc18cc29651c546a9d0"
+          }
+        },
         {
           "client_id": "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
           "client_type": 3
@@ -29,6 +37,57 @@
             {
               "client_id": "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "932396176333-7gc9tuv0jk5egk30tngdapkb0ln2d0qd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.getspot"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932396176333:android:7197db72c248a7a495aa84",
+        "android_client_info": {
+          "package_name": "org.getspot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "932396176333-olr0qq4c5uda3jd6phbapsdmo8i0ffba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.getspot",
+            "certificate_hash": "e17050c60e96c616ca5e6bc18cc29651c546a9d0"
+          }
+        },
+        {
+          "client_id": "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDv4e7YSOf80uaVDcUy03esDJK0_sduOp8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "932396176333-7gc9tuv0jk5egk30tngdapkb0ln2d0qd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.getspot"
+              }
             }
           ]
         }
