@@ -51,40 +51,30 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: const _GroupList(),
-        ),
-      ),
+      body: const _GroupList(),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _openJoinGroupModal(context),
-                    child: const Text('Join a Group'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _openCreateGroupModal(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Create a Group'),
-                  ),
-                ),
-              ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _openJoinGroupModal(context),
+                child: const Text('Join a Group'),
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _openCreateGroupModal(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Create a Group'),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -285,79 +275,74 @@ class _CreateGroupModalState extends State<_CreateGroupModal> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding + 16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding + 16),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Create New Group',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Group Name'),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a group name.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(labelText: 'Description'),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a description.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _limitController,
+              decoration: const InputDecoration(
+                labelText: 'Negative Balance Limit',
+                helperText: 'Max negative balance a member can have.',
+              ),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || int.tryParse(value) == null) {
+                  return 'Please enter a valid number.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'Create New Group',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
                 ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Group Name'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a group name.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a description.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _limitController,
-                  decoration: const InputDecoration(
-                    labelText: 'Negative Balance Limit',
-                    helperText: 'Max negative balance a member can have.',
+                const SizedBox(width: 8),
+                if (_isCreating)
+                  const CircularProgressIndicator()
+                else
+                  ElevatedButton(
+                    onPressed: _submitCreateGroup,
+                    child: const Text('Create'),
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || int.tryParse(value) == null) {
-                      return 'Please enter a valid number.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 8),
-                    if (_isCreating)
-                      const CircularProgressIndicator()
-                    else
-                      ElevatedButton(
-                        onPressed: _submitCreateGroup,
-                        child: const Text('Create'),
-                      ),
-                  ],
-                ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -477,33 +462,28 @@ class _JoinGroupModalState extends State<_JoinGroupModal> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 600),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding + 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Join a Group',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 24),
-              if (_foundGroup == null)
-                _buildSearchForm()
-              else
-                _buildGroupDetails(),
-              const SizedBox(height: 24),
-              if (_errorMessage != null)
-                Text(
-                  _errorMessage!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-            ],
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding + 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Join a Group',
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
-        ),
+          const SizedBox(height: 24),
+          if (_foundGroup == null)
+            _buildSearchForm()
+          else
+            _buildGroupDetails(),
+          const SizedBox(height: 24),
+          if (_errorMessage != null)
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+        ],
       ),
     );
   }
