@@ -1,6 +1,25 @@
 #!/bin/bash
 set -euo pipefail
 
+# Recreate GoogleService-Info.plist from the environment variable
+echo "Recreating GoogleService-Info.plist from environment variable..."
+PLIST_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../Runner/GoogleService-Info.plist"
+
+if [ -z "$GOOGLE_SERVICE_INFO_PLIST_BASE64" ]; then
+  echo "Error: GOOGLE_SERVICE_INFO_PLIST_BASE64 environment variable is not set."
+  exit 1
+fi
+
+echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > "$PLIST_PATH"
+
+if [ -f "$PLIST_PATH" ]; then
+  echo "Successfully created GoogleService-Info.plist"
+else
+  echo "Error: Failed to create GoogleService-Info.plist"
+  exit 1
+fi
+# --- End of GoogleService-Info.plist creation ---
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ -f "$SCRIPT_DIR/../pubspec.yaml" ]]; then
