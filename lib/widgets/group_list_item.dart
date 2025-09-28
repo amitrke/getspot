@@ -11,7 +11,10 @@ class GroupListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Semantics(
+        label: 'group_item_${viewModel.groupId}',
+        child: Card(
+      key: ValueKey('group_item_${viewModel.groupId}'),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         title: Text(viewModel.name),
@@ -69,6 +72,7 @@ class GroupListItem extends StatelessWidget {
           );
         },
       ),
+    )
     );
   }
 

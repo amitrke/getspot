@@ -1,0 +1,33 @@
+appId: org.getspot
+---
+- launchApp:
+    clearState: true
+
+# First, tap the button to reveal the email/password form
+- tapOn: "Sign in with Email"
+- takeScreenshot: screenshots/login_screen
+
+# Now, fill in the credentials
+- tapOn: "Email"
+- inputText: "${MAESTRO_TEST_EMAIL}"
+- tapOn: "Password"
+- inputText: "${MAESTRO_TEST_PASSWORD}"
+
+# Tap the final Sign In button
+- tapOn: "Sign In"
+
+# Wait for the group list to load by asserting that the "No groups found." text is not visible.
+- assertVisible: "My Groups"
+- assertNotVisible: "No groups found."
+- assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
+
+# Take a screenshot of the home screen with groups.
+- takeScreenshot: screenshots/home_screen_with_groups
+
+- tapOn: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- assertVisible: "Sunridge Saturday"
+
+- takeScreenshot: screenshots/group_details_screen
+
+# Stop the app
+- stopApp
