@@ -40,7 +40,7 @@ if [[ ! -d "$FLUTTER_ROOT" ]]; then
 fi
 export PATH="$FLUTTER_ROOT/bin:$PATH"
 
-flutter doctor -v
+#flutter doctor -v
 flutter pub get
 flutter build ios --release --no-codesign
 
