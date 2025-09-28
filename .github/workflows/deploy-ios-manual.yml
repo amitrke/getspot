@@ -1,4 +1,4 @@
-# .github/workflows/deploy-ios-manual.yml
+# .github/workflows/deploy-ios-testflight.yml
 name: Manual iOS TestFlight Deployment
 
 on:
@@ -50,24 +50,22 @@ jobs:
       - name: Flutter Pub Get
         run: flutter pub get
 
-      # 6. Build the IPA
+      # 6. Build the IPA without signing
       - name: Build Flutter IPA
-        run: flutter build ipa --release --export-method=app-store
+        run: flutter build ipa --release --no-codesign
 
       # 7. Install Fastlane
       - name: Install Fastlane
         run: |
           sudo gem install fastlane -NV
 
-      # 8. Upload IPA to TestFlight via Fastlane
-      - name: Upload IPA to TestFlight
+      # 8. Prepare Fastlane App Store Connect API key
+      - name: Prepare Fastlane API key
         env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
-          APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
         run: |
-          # Configure Fastlane API key for App Store Connect
           mkdir -p fastlane
           cat <<EOF > fastlane/AppStoreConnectAPIKey.json
           {
@@ -78,7 +76,11 @@ jobs:
           }
           EOF
 
-          # Use Fastlane to upload IPA
+      # 9. Upload IPA to TestFlight via Fastlane
+      - name: Upload IPA to TestFlight
+        env:
+          APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
+        run: |
           fastlane pilot upload \
             --api_key_path fastlane/AppStoreConnectAPIKey.json \
             --ipa build/ios/ipa/Runner.ipa \
