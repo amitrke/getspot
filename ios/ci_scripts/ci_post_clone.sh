@@ -14,6 +14,7 @@ echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > "$PLIST_PATH"
 
 if [ -f "$PLIST_PATH" ]; then
   echo "Successfully created GoogleService-Info.plist"
+  cat "$PLIST_PATH"
 else
   echo "Error: Failed to create GoogleService-Info.plist"
   exit 1
