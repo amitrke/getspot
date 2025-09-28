@@ -14,10 +14,12 @@ jobs:
     runs-on: macos-14
     steps:
       # 1. Checkout repository
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       # 2. Set up Flutter
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
@@ -45,18 +47,40 @@ jobs:
           echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
 
       # 5. Get dependencies
-      - run: flutter pub get
+      - name: Flutter Pub Get
+        run: flutter pub get
 
       # 6. Build the IPA
       - name: Build Flutter IPA
         run: flutter build ipa --release --export-method=app-store
 
-      # 7. Upload to TestFlight
+      # 7. Install Fastlane
+      - name: Install Fastlane
+        run: |
+          sudo gem install fastlane -NV
+
+      # 8. Upload IPA to TestFlight via Fastlane
       - name: Upload IPA to TestFlight
-        uses: apple-actions/upload-testflight-ipa@v2
-        with:
-          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          api-issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
-          app-apple-id: ${{ secrets.APP_APPLE_ID }}
-          ipa-path: "build/ios/ipa/Runner.ipa"
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+          APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
+        run: |
+          # Configure Fastlane API key for App Store Connect
+          mkdir -p fastlane
+          cat <<EOF > fastlane/AppStoreConnectAPIKey.json
+          {
+            "key_id": "$APP_STORE_CONNECT_API_KEY_ID",
+            "issuer_id": "$APP_STORE_CONNECT_API_ISSUER_ID",
+            "key": "$APP_STORE_CONNECT_API_KEY",
+            "in_house": false
+          }
+          EOF
+
+          # Use Fastlane to upload IPA
+          fastlane pilot upload \
+            --api_key_path fastlane/AppStoreConnectAPIKey.json \
+            --ipa build/ios/ipa/Runner.ipa \
+            --skip_submission true \
+            --skip_waiting_for_build_processing true
