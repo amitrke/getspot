@@ -28,7 +28,7 @@ if [[ -f "$SCRIPT_DIR/../pubspec.yaml" ]]; then
 elif [[ -f "$SCRIPT_DIR/../../pubspec.yaml" ]]; then
 	REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 else
-	echo "Unable to locate Flutter project root" >&2
+	echo "Unable to locate Flutter project root." >&2
 	exit 1
 fi
 
