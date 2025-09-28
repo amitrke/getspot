@@ -50,10 +50,11 @@ jobs:
       - name: Flutter Pub Get
         run: flutter pub get
 
-      # 6. Clean Flutter build and CocoaPods
+      # 6. Clean Flutter build and CocoaPods, regenerate xcconfig
       - name: Clean Flutter and CocoaPods
         run: |
           flutter clean
+          flutter pub get
           cd ios
           rm -rf Pods Podfile.lock
           pod repo update
@@ -112,4 +113,4 @@ jobs:
             --api_key_path fastlane/AppStoreConnectAPIKey.json \
             --ipa build/ios/ipa/Runner.ipa \
             --skip_submission true \
-            --skip_waiting_for_buil_
+            --skip_waiting_for_build_processing true
