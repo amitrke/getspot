@@ -1,0 +1,62 @@
+# .github/workflows/deploy-ios-manual.yml
+name: Manual iOS TestFlight Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseVersion:
+        description: 'Base App Version (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-14
+    steps:
+      # 1. Checkout repository
+      - uses: actions/checkout@v4
+
+      # 2. Set up Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 3. Cache Flutter dependencies
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            ${{ env.FLUTTER_HOME }}/bin/cache
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.lock') }}
+
+      # 4. Set version dynamically
+      - name: Set version
+        id: versioning
+        run: |
+          BASE_VERSION="${{ github.event.inputs.baseVersion }}"
+          BUILD_NUMBER=${{ github.run_number }}
+          FULL_VERSION="$BASE_VERSION+$BUILD_NUMBER"
+
+          echo "Using version: $FULL_VERSION"
+          sed -i.bak "s/^version: .*/version: $FULL_VERSION/" pubspec.yaml
+          rm pubspec.yaml.bak
+
+          echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
+
+      # 5. Get dependencies
+      - run: flutter pub get
+
+      # 6. Build the IPA
+      - name: Build Flutter IPA
+        run: flutter build ipa --release --export-method=app-store
+
+      # 7. Upload to TestFlight
+      - name: Upload IPA to TestFlight
+        uses: apple-actions/upload-testflight-ipa@v2
+        with:
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+          app-apple-id: ${{ secrets.APP_APPLE_ID }}
+          ipa-path: "build/ios/ipa/Runner.ipa"
