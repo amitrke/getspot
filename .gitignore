@@ -53,3 +53,8 @@ GoogleService-Info.plist
 # Signing files
 key.properties
 *.jks
+""  
+"# Environment variables"  
+.env
+
+screenshots/
