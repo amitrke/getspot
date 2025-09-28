@@ -50,16 +50,43 @@ jobs:
       - name: Flutter Pub Get
         run: flutter pub get
 
-      # 6. Build the IPA without signing
+      # 6. Clean Flutter build and CocoaPods
+      - name: Clean Flutter and CocoaPods
+        run: |
+          flutter clean
+          cd ios
+          rm -rf Pods Podfile.lock
+          pod repo update
+          pod install --repo-update
+          cd ..
+
+      # 7. Ensure Swift version for all pods
+      - name: Set Swift version for CocoaPods
+        run: |
+          cd ios
+          ruby -e "
+          require 'xcodeproj'
+          project_path = 'Pods/Pods.xcodeproj'
+          project = Xcodeproj::Project.open(project_path)
+          project.targets.each do |target|
+            target.build_configurations.each do |config|
+              config.build_settings['SWIFT_VERSION'] = '5.9'
+            end
+          end
+          project.save
+          "
+          cd ..
+
+      # 8. Build the IPA without signing
       - name: Build Flutter IPA
         run: flutter build ipa --release --no-codesign
 
-      # 7. Install Fastlane
+      # 9. Install Fastlane
       - name: Install Fastlane
         run: |
           sudo gem install fastlane -NV
 
-      # 8. Prepare Fastlane App Store Connect API key
+      # 10. Prepare Fastlane App Store Connect API key
       - name: Prepare Fastlane API key
         env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
@@ -76,7 +103,7 @@ jobs:
           }
           EOF
 
-      # 9. Upload IPA to TestFlight via Fastlane
+      # 11. Upload IPA to TestFlight via Fastlane
       - name: Upload IPA to TestFlight
         env:
           APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
@@ -85,4 +112,4 @@ jobs:
             --api_key_path fastlane/AppStoreConnectAPIKey.json \
             --ipa build/ios/ipa/Runner.ipa \
             --skip_submission true \
-            --skip_waiting_for_build_processing true
+            --skip_waiting_for_buil_
