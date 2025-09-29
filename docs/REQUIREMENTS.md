@@ -82,7 +82,7 @@ This model ensures that event spots are paid for, giving organizers the confiden
     *   [x] If withdrawal is attempted after the commitment deadline, the user must confirm their understanding of the penalty.
     *   [x] There should be a popup confirmation dialog to confirm the withdrawal.
 *   [x] Join a waitlist if all spots are filled when the request is processed.
-*   [ ] Receive push notifications for status updates, event changes, and commitment deadlines.
+*   [x] Receive push notifications for status updates, event changes, and commitment deadlines.
 *   [ ] View their registration history.
 
 ### 4.4. Wallet & Currency
