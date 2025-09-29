@@ -96,9 +96,9 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [x] **Organizer:** Post announcements that are visible to all group members.
 
 ### 4.6. User Profiles
-*   [ ] Display the user's Google Account profile picture (if available) next to their name.
+*   [x] Display the user's Google Account profile picture (if available) next to their name.
 *   [ ] Allow users to upload a custom profile picture from their device's gallery to override their Google photo.
-*   [ ] Logout functionality.
+*   [x] Logout functionality.
 
 ## 5. Technical Stack
 
