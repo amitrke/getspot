@@ -65,12 +65,12 @@ This model ensures that event spots are paid for, giving organizers the confiden
 ### 4.2. Event Management (for Organizers)
 *   [x] Create an event within a group.
 *   [x] Set event details: date, time, location, max participants, initial fee, and a **Commitment Deadline**.
-*   [ ] Create recurring events (e.g., weekly, bi-weekly) to automate event creation.
 *   [x] **Cancel an event**, which should notify all registered participants.
 *   [ ] Add or remove participant spots after event creation (before the event starts).
-*   [ ] Monitor the list of registered participants and their payment status.
+*   [x] Monitor the list of registered participants and their payment status.
 *   [ ] Clear a participant's "denied" status to allow them to re-register.
-*   [ ] Use a communication tool to send updates to all registered participants.
+*   [x] Use a communication tool to send updates to all registered participants.
+*   [ ] Create recurring events (e.g., weekly, bi-weekly) to automate event creation.
 
 ### 4.3. Participant Experience
 *   [x] Find a group by entering a unique Group Code.
@@ -98,6 +98,7 @@ This model ensures that event spots are paid for, giving organizers the confiden
 ### 4.6. User Profiles
 *   [ ] Display the user's Google Account profile picture (if available) next to their name.
 *   [ ] Allow users to upload a custom profile picture from their device's gallery to override their Google photo.
+*   [ ] Logout functionality.
 
 ## 5. Technical Stack
 
