@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:getspot/screens/create_event_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
 import 'package:intl/intl.dart';
@@ -55,6 +56,21 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     super.dispose();
   }
 
+  void _copyGroupCode() {
+    final code = widget.group['groupCode'] as String?;
+    if (code == null || code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Group code not available.')),
+      );
+      return;
+    }
+
+    Clipboard.setData(ClipboardData(text: code));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Group code "$code" copied to clipboard.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     developer.log('Building GroupDetailsScreen.', name: 'GroupDetailsScreen');
@@ -80,20 +96,40 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.group['name'] ?? 'Unnamed Group',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+            // Text(
+            //   widget.group['name'] ?? 'Unnamed Group',
+            //   style: Theme.of(context).textTheme.headlineSmall,
+            // ),
             const SizedBox(height: 8),
             Text(
               widget.group['description'] ?? '',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 8),
-            Text(
-              'Group Code: ${widget.group['groupCode'] ?? ''}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            if ((widget.group['groupCode'] as String?)?.isNotEmpty ?? false)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Group Code: ${widget.group['groupCode']}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      tooltip: 'Copy group code',
+                      onPressed: _copyGroupCode,
+                      icon: const Icon(Icons.copy),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Text(
+                'Group Code unavailable',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             const SizedBox(height: 24),
             const Divider(),
             Row(
