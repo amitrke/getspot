@@ -43,6 +43,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   cloud_functions: ^5.6.2
   cloud_firestore: ^5.1.0
+  url_launcher: ^6.3.0
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:
