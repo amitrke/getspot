@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/models/group_view_model.dart';
 
+import 'package:getspot/screens/faq_screen.dart';
 import 'package:getspot/services/group_service.dart';
 import 'package:getspot/screens/member_profile_screen.dart';
 import 'package:getspot/widgets/group_list_item.dart';
@@ -39,6 +40,14 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My Groups'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FaqScreen()),
+              );
+            },
+          ),
           Semantics(
             label: 'user_profile_button',
             child: IconButton(
