@@ -9,7 +9,7 @@ const ARCHIVE_BUCKET_NAME = "getspot01.firebasestorage.app";
  * It archives old data from Firestore to Cloud Storage.
  */
 export const runDataLifecycleManagement = onSchedule(
-  "every 24 hours",
+  {schedule: "every 24 hours", region: "us-east4"},
   async () => {
     functions.logger.info("Starting data lifecycle management job.");
 
