@@ -30,6 +30,8 @@ High-signal context for the GetSpot project. Summarizes architecture, schemas, f
 - **`manageJoinRequest` (Callable):** Allows a group admin to approve or deny a user's request to join a group. Approval adds the user to the `members` subcollection.
 - **`withdrawFromEvent` (Callable):** Allows a user to withdraw from an event. It processes refunds or penalties based on the event's `commitmentDeadline` and whether a waitlisted user can take the spot.
 - **`processWaitlist` (Internal):** Triggered by `withdrawFromEvent`, this function automatically promotes the first eligible user from the waitlist to "confirmed" status when a spot opens up.
+- **`cancelEvent` (Callable):** Allows a group admin to cancel an event, refunding all participants and marking the event as 'cancelled'.
+- **Push Notifications:** Cloud Functions trigger notifications for new events, event cancellations, and waitlist promotions. The Flutter client handles token registration and foreground message display.
 
 ### 5. Security Rules Highlights
 - **Default:** Deny all.
@@ -47,12 +49,12 @@ High-signal context for the GetSpot project. Summarizes architecture, schemas, f
 - Displays a list with status indicators (icons, colors) and wallet balance.
 
 ### 7. Project Status & Next Steps
-- **Core Features:** The primary features for group creation, event management, registration, waitlists, and withdrawals (including refunds/penalties) are **fully implemented and functional**.
+- **Core Features:** The primary features for group creation, event management, registration, waitlists, withdrawals (including refunds/penalties), and push notifications are **fully implemented and functional**.
 - **Potential Future Enhancements:**
-    1.  **Push Notifications:** Notify users of event reminders, join request approvals, or promotion from a waitlist.
-    2.  **Advanced Penalty Rules:** Implement more complex penalty logic for withdrawals (e.g., scaling penalties closer to the event date).
-    3.  **Admin Dashboard:** A dedicated UI for admins to view group statistics and manage settings.
-    4.  **User-to-User Transfers:** Allow members to transfer funds between their wallets.
+    1.  **Admin Dashboard:** A dedicated UI for admins to view group statistics and manage settings.
+    2.  **User-to-User Transfers:** Allow members to transfer funds between their wallets.
+    3.  **Recurring Events:** Allow organizers to create events that repeat on a schedule.
+    4.  **Enhanced User Profiles:** Allow users to upload custom profile pictures.
 
 ### 8. Performance & Scaling
 - **Current Bottleneck:** Resolved. The home screen now uses an efficient, denormalized query.

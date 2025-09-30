@@ -18,6 +18,13 @@ appId: org.getspot
 
 # Wait for the group list to load by asserting that the "No groups found." text is not visible.
 - assertVisible: "My Groups"
+
+# User profile
+- assertVisible: "user_profile_button"
+- tapOn: "user_profile_button"
+- takeScreenshot: screenshots/user_profile_screen
+- tapOn: "back_button"
+
 - assertNotVisible: "No groups found."
 - assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
 
@@ -28,6 +35,24 @@ appId: org.getspot
 - assertVisible: "Sunridge Saturday"
 
 - takeScreenshot: screenshots/group_details_screen
+
+# Announcements tab
+- tapOn: "Announcements\nTab 2 of 2"
+- takeScreenshot: screenshots/announcements_tab_screen
+- tapOn: "Events\nTab 1 of 2"
+
+# My Wallet button
+- assertVisible: "My Wallet"
+- tapOn: "My Wallet"
+- takeScreenshot: screenshots/my_wallet_screen
+- tapOn: "back_button"
+
+# Event details
+- assertVisible: "event_item_0"
+- tapOn: "event_item_0"
+
+- assertVisible: "Event Details"
+- takeScreenshot: screenshots/event_details_screen
 
 # Stop the app
 - stopApp

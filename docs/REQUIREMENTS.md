@@ -65,12 +65,12 @@ This model ensures that event spots are paid for, giving organizers the confiden
 ### 4.2. Event Management (for Organizers)
 *   [x] Create an event within a group.
 *   [x] Set event details: date, time, location, max participants, initial fee, and a **Commitment Deadline**.
-*   [ ] Create recurring events (e.g., weekly, bi-weekly) to automate event creation.
 *   [x] **Cancel an event**, which should notify all registered participants.
 *   [ ] Add or remove participant spots after event creation (before the event starts).
-*   [ ] Monitor the list of registered participants and their payment status.
+*   [x] Monitor the list of registered participants and their payment status.
 *   [ ] Clear a participant's "denied" status to allow them to re-register.
-*   [ ] Use a communication tool to send updates to all registered participants.
+*   [x] Use a communication tool to send updates to all registered participants.
+*   [ ] Create recurring events (e.g., weekly, bi-weekly) to automate event creation.
 
 ### 4.3. Participant Experience
 *   [x] Find a group by entering a unique Group Code.
@@ -82,7 +82,7 @@ This model ensures that event spots are paid for, giving organizers the confiden
     *   [x] If withdrawal is attempted after the commitment deadline, the user must confirm their understanding of the penalty.
     *   [x] There should be a popup confirmation dialog to confirm the withdrawal.
 *   [x] Join a waitlist if all spots are filled when the request is processed.
-*   [ ] Receive push notifications for status updates, event changes, and commitment deadlines.
+*   [x] Receive push notifications for status updates, event changes, and commitment deadlines.
 *   [ ] View their registration history.
 
 ### 4.4. Wallet & Currency
@@ -96,8 +96,18 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [x] **Organizer:** Post announcements that are visible to all group members.
 
 ### 4.6. User Profiles
-*   [ ] Display the user's Google Account profile picture (if available) next to their name.
+*   [x] Display the user's Google Account profile picture (if available) next to their name.
 *   [ ] Allow users to upload a custom profile picture from their device's gallery to override their Google photo.
+*   [x] Logout functionality.
+
+### 4.7. Data Lifecycle Management
+*   [x] Create `runDataLifecycleManagement` scheduled Cloud Function.
+*   [x] Implement archival logic for Events.
+*   [x] Implement archival logic for Transactions.
+*   [ ] Implement archival logic for inactive Groups.
+*   [ ] Implement archival logic for inactive User Accounts.
+*   [x] Implement deletion logic for Join Requests.
+*   [ ] Configure GCS Object Lifecycle Management rule for 2-year deletion.
 
 ## 5. Technical Stack
 

@@ -4,6 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
 
+enum CommitmentDeadlineOption {
+  oneDay,
+  twoDays,
+  threeDays,
+  fourDays,
+  fiveDays,
+  custom,
+}
+
 class CreateEventScreen extends StatefulWidget {
   final String groupId;
 
@@ -25,6 +34,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? _deadlineDate;
   TimeOfDay? _deadlineTime;
   bool _isLoading = false;
+  CommitmentDeadlineOption _deadlineOption = CommitmentDeadlineOption.twoDays;
 
   @override
   void initState() {
@@ -91,11 +101,73 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       if (isEvent) {
         _eventDate = date;
         _eventTime = time;
+        _applyRelativeDeadline();
       } else {
         _deadlineDate = date;
         _deadlineTime = time;
       }
     });
+  }
+
+  void _applyRelativeDeadline() {
+    final days = _daysBeforeForOption(_deadlineOption);
+    if (days == null) {
+      return;
+    }
+    if (_eventDate == null || _eventTime == null) {
+      _deadlineDate = null;
+      _deadlineTime = null;
+      return;
+    }
+
+    final eventDateTime = DateTime(
+      _eventDate!.year,
+      _eventDate!.month,
+      _eventDate!.day,
+      _eventTime!.hour,
+      _eventTime!.minute,
+    );
+    final deadlineDateTime = eventDateTime.subtract(Duration(days: days));
+    _deadlineDate = DateTime(
+      deadlineDateTime.year,
+      deadlineDateTime.month,
+      deadlineDateTime.day,
+    );
+    _deadlineTime = TimeOfDay.fromDateTime(deadlineDateTime);
+  }
+
+  int? _daysBeforeForOption(CommitmentDeadlineOption option) {
+    switch (option) {
+      case CommitmentDeadlineOption.oneDay:
+        return 1;
+      case CommitmentDeadlineOption.twoDays:
+        return 2;
+      case CommitmentDeadlineOption.threeDays:
+        return 3;
+      case CommitmentDeadlineOption.fourDays:
+        return 4;
+      case CommitmentDeadlineOption.fiveDays:
+        return 5;
+      case CommitmentDeadlineOption.custom:
+        return null;
+    }
+  }
+
+  String _labelForOption(CommitmentDeadlineOption option) {
+    switch (option) {
+      case CommitmentDeadlineOption.oneDay:
+        return '1 day before the event';
+      case CommitmentDeadlineOption.twoDays:
+        return '2 days before the event';
+      case CommitmentDeadlineOption.threeDays:
+        return '3 days before the event';
+      case CommitmentDeadlineOption.fourDays:
+        return '4 days before the event';
+      case CommitmentDeadlineOption.fiveDays:
+        return '5 days before the event';
+      case CommitmentDeadlineOption.custom:
+        return 'Custom date & time';
+    }
   }
 
   Future<void> _createEvent() async {
@@ -172,8 +244,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           ),
         );
       }
-    }
-    finally {
+    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -185,9 +256,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Event'),
-      ),
+      appBar: AppBar(title: const Text('Create New Event')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -223,12 +292,40 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 onTap: () => _pickDateTime(isEvent: true),
               ),
               const SizedBox(height: 16),
-              _buildDateTimePicker(
-                label: 'Commitment Deadline',
-                date: _deadlineDate,
-                time: _deadlineTime,
-                onTap: () => _pickDateTime(isEvent: false),
+              DropdownButtonFormField<CommitmentDeadlineOption>(
+                value: _deadlineOption,
+                decoration: const InputDecoration(
+                  labelText: 'Commitment Deadline (relative)',
+                  border: OutlineInputBorder(),
+                ),
+                items: CommitmentDeadlineOption.values
+                    .map(
+                      (option) => DropdownMenuItem(
+                        value: option,
+                        child: Text(_labelForOption(option)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() {
+                    _deadlineOption = value;
+                    if (value != CommitmentDeadlineOption.custom) {
+                      _applyRelativeDeadline();
+                    }
+                  });
+                },
               ),
+              const SizedBox(height: 16),
+              if (_deadlineOption == CommitmentDeadlineOption.custom)
+                _buildDateTimePicker(
+                  label: 'Commitment Deadline',
+                  date: _deadlineDate,
+                  time: _deadlineTime,
+                  onTap: () => _pickDateTime(isEvent: false),
+                )
+              else
+                _buildDeadlineSummary(),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _feeController,
@@ -247,7 +344,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _maxParticipantsController,
-                decoration: const InputDecoration(labelText: 'Max Participants'),
+                decoration: const InputDecoration(
+                  labelText: 'Max Participants',
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || int.tryParse(value) == null) {
@@ -267,6 +366,34 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDeadlineSummary() {
+    final theme = Theme.of(context);
+    final deadlineSet = _deadlineDate != null && _deadlineTime != null;
+    final formatted = deadlineSet
+        ? '${DateFormat.yMMMd().format(_deadlineDate!)} at ${_deadlineTime!.format(context)}'
+        : 'Select event date & time to calculate the deadline.';
+
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Commitment Deadline',
+        border: OutlineInputBorder(),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _labelForOption(_deadlineOption),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(formatted),
+        ],
       ),
     );
   }
