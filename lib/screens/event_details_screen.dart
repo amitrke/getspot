@@ -441,16 +441,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 final participant = participants[index].data();
                 final photoUrl = participant['photoURL'] as String?;
                 final displayName = participant['displayName'] ?? 'No Name';
+                final uid = participant['uid'] as String?;
 
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage:
-                        photoUrl != null ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null
-                        ? Text(displayName.isNotEmpty ? displayName[0] : '?')
-                        : null,
+                return Semantics(
+                  label: 'participant_item_${uid ?? index}',
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage:
+                          photoUrl != null ? NetworkImage(photoUrl) : null,
+                      child: photoUrl == null
+                          ? Text(displayName.isNotEmpty ? displayName[0] : '?')
+                          : null,
+                    ),
+                    title: Text(displayName),
                   ),
-                  title: Text(displayName),
                 );
               },
             );
@@ -471,12 +475,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
     if (_isAdmin && !isCancelled) {
       buttons.add(
-        ElevatedButton(
-          onPressed: _isCancelling ? null : _showCancelConfirmationDialog,
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-          child: _isCancelling
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text('Cancel Event'),
+        Semantics(
+          label: 'cancel_event_button',
+          child: ElevatedButton(
+            onPressed: _isCancelling ? null : _showCancelConfirmationDialog,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: _isCancelling
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('Cancel Event'),
+          ),
         ),
       );
     }
@@ -510,21 +517,27 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
             Widget button;
             if (status == 'confirmed' || status == 'waitlisted') {
-              button = ElevatedButton(
-                onPressed: _isWithdrawing
-                    ? null
-                    : () => _showWithdrawConfirmationDialog(eventData),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: _isWithdrawing
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Withdraw'),
+              button = Semantics(
+                label: 'withdraw_button',
+                child: ElevatedButton(
+                  onPressed: _isWithdrawing
+                      ? null
+                      : () => _showWithdrawConfirmationDialog(eventData),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: _isWithdrawing
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Withdraw'),
+                ),
               );
             } else if (status == null || status == 'withdrawn') {
-              button = ElevatedButton(
-                onPressed: _isRegistering ? null : _registerForEvent,
-                child: _isRegistering
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Register'),
+              button = Semantics(
+                label: 'register_button',
+                child: ElevatedButton(
+                  onPressed: _isRegistering ? null : _registerForEvent,
+                  child: _isRegistering
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Register'),
+                ),
               );
             } else { // Handles withdrawn_penalty, requested, etc.
               button = ElevatedButton(

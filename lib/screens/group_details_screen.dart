@@ -401,7 +401,13 @@ class _EventList extends StatelessWidget {
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   final event = events[index];
-                  return _EventListItem(key: ValueKey(event.id), event: event);
+                  return Semantics(
+                    label: 'event_item_$index',
+                    child: _EventListItem(
+                      key: ValueKey(event.id),
+                      event: event,
+                    ),
+                  );
                 },
               ),
             ),

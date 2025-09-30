@@ -39,15 +39,18 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My Groups'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const MemberProfileScreen(),
-                ),
-              );
-            },
+          Semantics(
+            label: 'user_profile_button',
+            child: IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MemberProfileScreen(),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
