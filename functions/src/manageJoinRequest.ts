@@ -126,8 +126,11 @@ export const manageJoinRequest = (db: admin.firestore.Firestore) =>
         }
 
         case "deny": {
-          // Update the request status to 'denied'
-          await requestRef.update({status: "denied"});
+          // Update the request status to 'denied' and add a timestamp
+          await requestRef.update({
+            status: "denied",
+            resolvedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
           return {status: "success", message: "User request denied."};
         }
 

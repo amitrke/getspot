@@ -100,6 +100,15 @@ This model ensures that event spots are paid for, giving organizers the confiden
 *   [ ] Allow users to upload a custom profile picture from their device's gallery to override their Google photo.
 *   [x] Logout functionality.
 
+### 4.7. Data Lifecycle Management
+*   [x] Create `runDataLifecycleManagement` scheduled Cloud Function.
+*   [x] Implement archival logic for Events.
+*   [x] Implement archival logic for Transactions.
+*   [ ] Implement archival logic for inactive Groups.
+*   [ ] Implement archival logic for inactive User Accounts.
+*   [x] Implement deletion logic for Join Requests.
+*   [ ] Configure GCS Object Lifecycle Management rule for 2-year deletion.
+
 ## 5. Technical Stack
 
 *   **Frontend:** Mobile (iOS & Android) and Web Application.
