@@ -2,9 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 
-const db = admin.firestore();
-const storage = admin.storage();
-const bucket = storage.bucket("getspot01.firebasestorage.app");
+const ARCHIVE_BUCKET_NAME = "getspot01.firebasestorage.app";
 
 /**
  * A scheduled function that runs daily to manage the data lifecycle.
@@ -15,13 +13,15 @@ export const runDataLifecycleManagement = onSchedule(
   async () => {
     functions.logger.info("Starting data lifecycle management job.");
 
+    const db = admin.firestore();
+
     try {
       // Each of these tasks will be implemented separately.
-      await archiveOldEvents();
-      await archiveOldTransactions();
+      await archiveOldEvents(db);
+      await archiveOldTransactions(db);
       // await archiveInactiveGroups();
       // await archiveInactiveUsers();
-      await deleteOldJoinRequests();
+      await deleteOldJoinRequests(db);
 
       functions.logger.info("Data lifecycle management job completed successfully.");
     } catch (error) {
@@ -35,9 +35,13 @@ export const runDataLifecycleManagement = onSchedule(
 
 /**
  * Archives events that are older than 3 months.
+ * @param {admin.firestore.Firestore} db Firestore instance.
+ * @return {Promise<void>} Resolves when archival completes.
  */
-async function archiveOldEvents() {
+async function archiveOldEvents(db: admin.firestore.Firestore) {
   functions.logger.info("Starting archiveOldEvents job.");
+
+  const bucket = admin.storage().bucket(ARCHIVE_BUCKET_NAME);
 
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - 3);
@@ -92,9 +96,13 @@ async function archiveOldEvents() {
 
 /**
  * Archives transactions that are older than 3 months.
+ * @param {admin.firestore.Firestore} db Firestore instance.
+ * @return {Promise<void>} Resolves when archival completes.
  */
-async function archiveOldTransactions() {
+async function archiveOldTransactions(db: admin.firestore.Firestore) {
   functions.logger.info("Starting archiveOldTransactions job.");
+
+  const bucket = admin.storage().bucket(ARCHIVE_BUCKET_NAME);
 
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - 3);
@@ -140,8 +148,10 @@ async function archiveOldTransactions() {
 
 /**
  * Deletes join requests that were denied more than 7 days ago.
+ * @param {admin.firestore.Firestore} db Firestore instance.
+ * @return {Promise<void>} Resolves when cleanup completes.
  */
-async function deleteOldJoinRequests() {
+async function deleteOldJoinRequests(db: admin.firestore.Firestore) {
   functions.logger.info("Starting deleteOldJoinRequests job.");
 
   const cutoff = new Date();
