@@ -80,6 +80,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       await participantRef.set({
         'uid': user.uid,
         'displayName': user.displayName ?? 'No Name',
+        'photoURL': user.photoURL, // Add this line
         'status': 'requested',
         'registeredAt': FieldValue.serverTimestamp(),
       });
@@ -438,11 +439,18 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               itemCount: participants.length,
               itemBuilder: (context, index) {
                 final participant = participants[index].data();
+                final photoUrl = participant['photoURL'] as String?;
+                final displayName = participant['displayName'] ?? 'No Name';
+
                 return ListTile(
                   leading: CircleAvatar(
-                    child: Text((index + 1).toString()),
+                    backgroundImage:
+                        photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null
+                        ? Text(displayName.isNotEmpty ? displayName[0] : '?')
+                        : null,
                   ),
-                  title: Text(participant['displayName'] ?? 'No Name'),
+                  title: Text(displayName),
                 );
               },
             );
