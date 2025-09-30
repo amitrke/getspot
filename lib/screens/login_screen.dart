@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/helpers/platform_helper.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'package:getspot/widgets/app_logo.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum AuthMode { signIn, register, forgotPassword }
 
@@ -28,6 +31,40 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     _displayNameController.dispose();
     super.dispose();
+  }
+
+  bool _isIOS() {
+    if (kIsWeb) {
+      final userAgent = getUserAgent();
+      return userAgent.contains('iphone') ||
+          userAgent.contains('ipad') ||
+          userAgent.contains('ipod');
+    }
+    return false;
+  }
+
+  bool _isAndroid() {
+    if (kIsWeb) {
+      final userAgent = getUserAgent();
+      return userAgent.contains('android');
+    }
+    return false;
+  }
+
+  Future<void> _launchAppStore() async {
+    final Uri url =
+        Uri.parse('https://apps.apple.com/app/getspot/6752911639');
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  Future<void> _launchPlayStore() async {
+    final Uri url = Uri.parse(
+        'https://play.google.com/store/apps/details?id=org.getspot');
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
   }
 
   void _setAuthMode(AuthMode mode) {
@@ -114,6 +151,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 24),
+                if (_isIOS()) ...[
+                  _buildIOSAppButton(),
+                  const SizedBox(height: 24),
+                ],
+                if (_isAndroid()) ...[
+                  _buildAndroidAppButton(),
+                  const SizedBox(height: 24),
+                ],
                 ElevatedButton.icon(
                   icon: const Icon(Icons.login), // Replace with a proper Google icon
                   onPressed: () => _authService.signInWithGoogle(),
@@ -154,6 +199,30 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildIOSAppButton() {
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.apple),
+      onPressed: _launchAppStore,
+      label: const Text('Get the iPhone App'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 48),
+        side: BorderSide(color: Theme.of(context).colorScheme.primary),
+      ),
+    );
+  }
+
+  Widget _buildAndroidAppButton() {
+    return OutlinedButton.icon(
+      icon: const Icon(Icons.android),
+      onPressed: _launchPlayStore,
+      label: const Text('Get the Android App'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 48),
+        side: BorderSide(color: Theme.of(context).colorScheme.primary),
       ),
     );
   }
