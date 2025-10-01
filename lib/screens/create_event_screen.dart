@@ -319,22 +319,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 const SizedBox(height: 16),
                 if (_deadlineOption == CommitmentDeadlineOption.custom)
-                  _buildDateTimePicker(
-                    label: 'Commitment Deadline',
-                    date: _deadlineDate,
-                    time: _deadlineTime,
-                    onTap: () => _pickDateTime(isEvent: false),
-                  )
-                else
-                  // Show the calculated deadline in a disabled picker for consistency
-                  _buildDateTimePicker(
-                    label: 'Commitment Deadline (calculated)',
-                    date: _deadlineDate,
-                    time: _deadlineTime,
-                    onTap: () {}, // No action when tapped
-                    enabled: false,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: _buildDateTimePicker(
+                      label: 'Commitment Deadline',
+                      date: _deadlineDate,
+                      time: _deadlineTime,
+                      onTap: () => _pickDateTime(isEvent: false),
+                    ),
                   ),
-                const SizedBox(height: 16),
                 TextFormField(
                   controller: _feeController,
                   decoration: const InputDecoration(
@@ -384,7 +377,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     DateTime? date,
     TimeOfDay? time,
     required VoidCallback onTap,
-    bool enabled = true, // Add enabled parameter
   }) {
     final formattedDate = date != null ? DateFormat.yMMMd().format(date) : '';
     final formattedTime = time != null ? time.format(context) : '';
@@ -393,25 +385,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         : 'Select event date to calculate';
 
     return InkWell(
-      onTap: enabled ? onTap : null, // Disable tap if not enabled
+      onTap: onTap,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
-          // Dim the text color if disabled
-          labelStyle: TextStyle(
-            color: enabled
-                ? Theme.of(context).textTheme.bodyLarge?.color
-                : Theme.of(context).disabledColor,
-          ),
         ),
         child: Text(
           value.isEmpty ? 'Select a date and time' : value,
-          style: TextStyle(
-            color: enabled
-                ? Theme.of(context).textTheme.bodyLarge?.color
-                : Theme.of(context).disabledColor,
-          ),
         ),
       ),
     );
