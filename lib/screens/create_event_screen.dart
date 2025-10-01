@@ -326,7 +326,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     onTap: () => _pickDateTime(isEvent: false),
                   )
                 else
-                  _buildDeadlineSummary(),
+                  // Show the calculated deadline in a disabled picker for consistency
+                  _buildDateTimePicker(
+                    label: 'Commitment Deadline (calculated)',
+                    date: _deadlineDate,
+                    time: _deadlineTime,
+                    onTap: () {}, // No action when tapped
+                    enabled: false,
+                  ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _feeController,
@@ -372,52 +379,40 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildDeadlineSummary() {
-    final theme = Theme.of(context);
-    final deadlineSet = _deadlineDate != null && _deadlineTime != null;
-    final formatted = deadlineSet
-        ? '${DateFormat.yMMMd().format(_deadlineDate!)} at ${_deadlineTime!.format(context)}'
-        : 'Select event date & time to calculate the deadline.';
-
-    return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Commitment Deadline',
-        border: OutlineInputBorder(),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _labelForOption(_deadlineOption),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(formatted),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDateTimePicker({
     required String label,
     DateTime? date,
     TimeOfDay? time,
     required VoidCallback onTap,
+    bool enabled = true, // Add enabled parameter
   }) {
     final formattedDate = date != null ? DateFormat.yMMMd().format(date) : '';
     final formattedTime = time != null ? time.format(context) : '';
-    final value = date != null ? '$formattedDate at $formattedTime' : '';
+    final value = date != null
+        ? '$formattedDate at $formattedTime'
+        : 'Select event date to calculate';
 
     return InkWell(
-      onTap: onTap,
+      onTap: enabled ? onTap : null, // Disable tap if not enabled
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
+          // Dim the text color if disabled
+          labelStyle: TextStyle(
+            color: enabled
+                ? Theme.of(context).textTheme.bodyLarge?.color
+                : Theme.of(context).disabledColor,
+          ),
         ),
-        child: Text(value.isEmpty ? 'Select a date and time' : value),
+        child: Text(
+          value.isEmpty ? 'Select a date and time' : value,
+          style: TextStyle(
+            color: enabled
+                ? Theme.of(context).textTheme.bodyLarge?.color
+                : Theme.of(context).disabledColor,
+          ),
+        ),
       ),
     );
   }
