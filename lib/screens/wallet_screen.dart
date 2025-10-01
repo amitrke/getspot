@@ -28,18 +28,20 @@ class WalletScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Group Wallet'),
       ),
-      body: Column(
-        children: [
-          _BalanceCard(stream: memberDocStream),
-          const Divider(height: 1),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text('History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-          Expanded(
-            child: _TransactionList(stream: transactionsStream),
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _BalanceCard(stream: memberDocStream),
+            const Divider(height: 1),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            Expanded(
+              child: _TransactionList(stream: transactionsStream),
+            ),
+          ],
+        ),
       ),
     );
   }

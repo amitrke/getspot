@@ -130,72 +130,74 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const AppLogo(size: 100),
-                const SizedBox(height: 24),
-                Text(
-                  _showEmailForm
-                      ? (_authMode == AuthMode.signIn
-                          ? 'Sign In'
-                          : _authMode == AuthMode.register
-                              ? 'Create Account'
-                              : 'Reset Password')
-                      : 'Welcome to GetSpot',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 24),
-                if (_isIOS()) ...[
-                  _buildIOSAppButton(),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const AppLogo(size: 100),
                   const SizedBox(height: 24),
-                ],
-                if (_isAndroid()) ...[
-                  _buildAndroidAppButton(),
-                  const SizedBox(height: 24),
-                ],
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.login), // Replace with a proper Google icon
-                  onPressed: () => _authService.signInWithGoogle(),
-                  label: const Text('Sign in with Google'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 48),
+                  Text(
+                    _showEmailForm
+                        ? (_authMode == AuthMode.signIn
+                            ? 'Sign In'
+                            : _authMode == AuthMode.register
+                                ? 'Create Account'
+                                : 'Reset Password')
+                        : 'Welcome to GetSpot',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                ),
-                const SizedBox(height: 16),
-                const Row(
-                  children: [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text('OR'),
-                    ),
-                    Expanded(child: Divider()),
+                  const SizedBox(height: 24),
+                  if (_isIOS()) ...[
+                    _buildIOSAppButton(),
+                    const SizedBox(height: 24),
                   ],
-                ),
-                const SizedBox(height: 16),
-                if (_showEmailForm)
-                  _buildAuthForm()
-                else
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _showEmailForm = true;
-                      });
-                    },
+                  if (_isAndroid()) ...[
+                    _buildAndroidAppButton(),
+                    const SizedBox(height: 24),
+                  ],
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.login), // Replace with a proper Google icon
+                    onPressed: () => _authService.signInWithGoogle(),
+                    label: const Text('Sign in with Google'),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.black,
                     ),
-                    child: const Text('Sign in with Email'),
                   ),
-              ],
+                  const SizedBox(height: 16),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text('OR'),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_showEmailForm)
+                    _buildAuthForm()
+                  else
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _showEmailForm = true;
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                        backgroundColor: Colors.grey[200],
+                        foregroundColor: Colors.black,
+                      ),
+                      child: const Text('Sign in with Email'),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

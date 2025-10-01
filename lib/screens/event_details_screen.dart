@@ -300,107 +300,109 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       appBar: AppBar(
         title: const Text('Event Details'),
       ),
-      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('events')
-            .doc(widget.eventId)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('Error loading event details.'));
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text('Event not found.'));
-          }
+      body: SafeArea(
+        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('events')
+              .doc(widget.eventId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text('Error loading event details.'));
+            }
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return const Center(child: Text('Event not found.'));
+            }
 
-          final event = snapshot.data!.data()!;
-          final eventTimestamp = event['eventTimestamp'] as Timestamp?;
-          final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
-          final isCancelled = event['status'] == 'cancelled';
+            final event = snapshot.data!.data()!;
+            final eventTimestamp = event['eventTimestamp'] as Timestamp?;
+            final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
+            final isCancelled = event['status'] == 'cancelled';
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isCancelled)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withAlpha((255 * 0.1).round()),
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: Border.all(color: Colors.red),
-                    ),
-                    child: const Text(
-                      'Event Cancelled',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isCancelled)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withAlpha((255 * 0.1).round()),
+                        borderRadius: BorderRadius.circular(8.0),
+                        border: Border.all(color: Colors.red),
                       ),
+                      child: const Text(
+                        'Event Cancelled',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  if (isCancelled) const SizedBox(height: 16),
+                  Text(
+                    event['name'] ?? 'Unnamed Event',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailRow(
+                    icon: Icons.location_on,
+                    label: 'Location',
+                    value: event['location'] ?? 'No location set',
+                  ),
+                  _buildDetailRow(
+                    icon: Icons.calendar_today,
+                    label: 'Time',
+                    value: eventTimestamp != null
+                        ? DateFormat.yMMMd()
+                            .add_jm()
+                            .format(eventTimestamp.toDate())
+                        : 'No date set',
+                  ),
+                  _buildDetailRow(
+                    icon: Icons.attach_money,
+                    label: 'Fee',
+                    value: '${event['fee'] ?? 0} credits',
+                  ),
+                  _buildDetailRow(
+                    icon: Icons.timer,
+                    label: 'Commitment Deadline',
+                    value: deadlineTimestamp != null
+                        ? DateFormat.yMMMd()
+                            .add_jm()
+                            .format(deadlineTimestamp.toDate())
+                        : 'No deadline set',
+                  ),
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _buildParticipantList(
+                          title:
+                              'Confirmed (${event['confirmedCount'] ?? 0}/${event['maxParticipants'] ?? 'N/A'})',
+                          status: 'confirmed',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildParticipantList(
+                          title: 'Waitlist (${event['waitlistCount'] ?? 0})',
+                          status: 'waitlisted',
+                        ),
+                      ],
                     ),
                   ),
-                if (isCancelled) const SizedBox(height: 16),
-                Text(
-                  event['name'] ?? 'Unnamed Event',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                _buildDetailRow(
-                  icon: Icons.location_on,
-                  label: 'Location',
-                  value: event['location'] ?? 'No location set',
-                ),
-                _buildDetailRow(
-                  icon: Icons.calendar_today,
-                  label: 'Time',
-                  value: eventTimestamp != null
-                      ? DateFormat.yMMMd()
-                          .add_jm()
-                          .format(eventTimestamp.toDate())
-                      : 'No date set',
-                ),
-                _buildDetailRow(
-                  icon: Icons.attach_money,
-                  label: 'Fee',
-                  value: '${event['fee'] ?? 0} credits',
-                ),
-                _buildDetailRow(
-                  icon: Icons.timer,
-                  label: 'Commitment Deadline',
-                  value: deadlineTimestamp != null
-                      ? DateFormat.yMMMd()
-                          .add_jm()
-                          .format(deadlineTimestamp.toDate())
-                      : 'No deadline set',
-                ),
-                const SizedBox(height: 24),
-                const Divider(),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      _buildParticipantList(
-                        title:
-                            'Confirmed (${event['confirmedCount'] ?? 0}/${event['maxParticipants'] ?? 'N/A'})',
-                        status: 'confirmed',
-                      ),
-                      const SizedBox(height: 16),
-                      _buildParticipantList(
-                        title: 'Waitlist (${event['waitlistCount'] ?? 0})',
-                        status: 'waitlisted',
-                      ),
-                    ],
-                  ),
-                ),
-                _buildActionButton(event),
-              ],
-            ),
-          );
-        },
+                  _buildActionButton(event),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
