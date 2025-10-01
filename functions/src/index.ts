@@ -151,5 +151,5 @@ export const updateFcmToken = updateFcmTokenHandler(db);
 export const cancelEvent = cancelEventHandler(db);
 export const notifyOnNewEvent = notifyOnNewEventHandler(db);
 export const sendEventReminders = sendEventRemindersHandler(db);
-export const runDataLifecycleManagement = runDataLifecycleManagementHandler;
+export const runDataLifecycleManagement = runDataLifecycleManagementHandler(db);
 

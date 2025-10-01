@@ -7,13 +7,13 @@ const ARCHIVE_BUCKET_NAME = "getspot01.firebasestorage.app";
 /**
  * A scheduled function that runs daily to manage the data lifecycle.
  * It archives old data from Firestore to Cloud Storage.
+ * @param {admin.firestore.Firestore} db The Firestore database instance.
+ * @return {*} A Cloud Scheduler handler.
  */
-export const runDataLifecycleManagement = onSchedule(
+export const runDataLifecycleManagement = (db: admin.firestore.Firestore) => onSchedule(
   {schedule: "every 24 hours", region: "us-east4"},
   async () => {
     functions.logger.info("Starting data lifecycle management job.");
-
-    const db = admin.firestore();
 
     try {
       // Each of these tasks will be implemented separately.
