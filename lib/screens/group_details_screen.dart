@@ -91,108 +91,110 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                 ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Text(
-            //   widget.group['name'] ?? 'Unnamed Group',
-            //   style: Theme.of(context).textTheme.headlineSmall,
-            // ),
-            const SizedBox(height: 8),
-            Text(
-              widget.group['description'] ?? '',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            if ((widget.group['groupCode'] as String?)?.isNotEmpty ?? false)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Group Code: ${widget.group['groupCode']}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton(
-                      tooltip: 'Copy group code',
-                      onPressed: _copyGroupCode,
-                      icon: const Icon(Icons.copy),
-                    ),
-                  ],
-                ),
-              )
-            else
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Text(
+              //   widget.group['name'] ?? 'Unnamed Group',
+              //   style: Theme.of(context).textTheme.headlineSmall,
+              // ),
+              const SizedBox(height: 8),
               Text(
-                'Group Code unavailable',
+                widget.group['description'] ?? '',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-            const SizedBox(height: 24),
-            const Divider(),
-            Row(
-              children: [
-                if (_isAdmin) ...[
+              const SizedBox(height: 8),
+              if ((widget.group['groupCode'] as String?)?.isNotEmpty ?? false)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Group Code: ${widget.group['groupCode']}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        tooltip: 'Copy group code',
+                        onPressed: _copyGroupCode,
+                        icon: const Icon(Icons.copy),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Text(
+                  'Group Code unavailable',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              const SizedBox(height: 24),
+              const Divider(),
+              Row(
+                children: [
+                  if (_isAdmin) ...[
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => GroupMembersScreen(
+                              groupId: widget.group['groupId'],
+                              adminUid: widget.group['admin'],
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.group),
+                      label: const Text('Members'),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => GroupMembersScreen(
-                            groupId: widget.group['groupId'],
-                            adminUid: widget.group['admin'],
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => WalletScreen(
+                              groupId: widget.group['groupId'],
+                              userId: user.uid,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
-                    icon: const Icon(Icons.group),
-                    label: const Text('Members'),
+                    icon: const Icon(Icons.wallet),
+                    label: const Text('My Wallet'),
                   ),
-                  const SizedBox(width: 8),
                 ],
-                ElevatedButton.icon(
-                  onPressed: () {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => WalletScreen(
-                            groupId: widget.group['groupId'],
-                            userId: user.uid,
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.wallet),
-                  label: const Text('My Wallet'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: _isAdmin
-                    ? [
-                        _EventList(groupId: widget.group['groupId']),
-                        _AnnouncementsTab(
-                          groupId: widget.group['groupId'],
-                          isAdmin: _isAdmin,
-                        ),
-                        _AdminManagementTab(groupId: widget.group['groupId']),
-                      ]
-                    : [
-                        _EventList(groupId: widget.group['groupId']),
-                        _AnnouncementsTab(
-                          groupId: widget.group['groupId'],
-                          isAdmin: _isAdmin,
-                        ),
-                      ],
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: _isAdmin
+                      ? [
+                          _EventList(groupId: widget.group['groupId']),
+                          _AnnouncementsTab(
+                            groupId: widget.group['groupId'],
+                            isAdmin: _isAdmin,
+                          ),
+                          _AdminManagementTab(groupId: widget.group['groupId']),
+                        ]
+                      : [
+                          _EventList(groupId: widget.group['groupId']),
+                          _AnnouncementsTab(
+                            groupId: widget.group['groupId'],
+                            isAdmin: _isAdmin,
+                          ),
+                        ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: _isAdmin
