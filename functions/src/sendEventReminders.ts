@@ -3,7 +3,10 @@ import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
 export const sendEventReminders = (db: admin.firestore.Firestore) =>
-  onSchedule("every 1 hours", async (event) => {
+  onSchedule({
+    schedule: "every 1 hours",
+    region: "us-east4",
+  }, async (event) => {
     const now = new Date();
     const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const twentyFiveHoursFromNow = new Date(now.getTime() + 25 * 60 * 60 * 1000);
