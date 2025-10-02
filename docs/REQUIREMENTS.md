@@ -138,3 +138,11 @@ To protect both the users and the service provider, the application must include
 *   [ ] **In-App Implementation:**
     *   During the sign-up process, users must explicitly agree to the Terms of Service and Privacy Policy via a checkbox before they can create an account.
     *   Links to both documents must be easily accessible from within the app's settings or "About" section.
+
+*   [ ] **User Account Deletion:** To comply with Apple's App Store guidelines, the app must provide a way for users to initiate the deletion of their own account from within the app.
+    *   [ ] The user interface should clearly explain that this action is irreversible and will permanently delete all their data associated with the app.
+    *   [ ] The app must provide a confirmation dialog before proceeding with the deletion.
+    *   [ ] The deletion process should be handled by a Cloud Function that removes all user data from Firestore and Firebase Authentication.
+    *   [ ] **Handle Outstanding Balances:**
+        *   [ ] If the user has a positive wallet balance in any of their groups, they must forfeit the funds upon account deletion. The UI should clearly state this.
+        *   [ ] If the user has a negative wallet balance in any of their groups, the account deletion process will be **pended**. The user must be clearly informed that their account will be deleted once their balance is settled. The app should provide clear instructions on how to contact their group admin to resolve the balance. The account deletion should proceed automatically once the balance is zero.

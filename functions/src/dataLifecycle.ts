@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {onSchedule} from "firebase-functions/v2/scheduler";
+import {auth} from "firebase-functions/v1";
 
 const ARCHIVE_BUCKET_NAME = "getspot01.firebasestorage.app";
 
@@ -316,3 +317,34 @@ async function deleteSubCollection(collectionRef: admin.firestore.CollectionRefe
     await deleteSubCollection(collectionRef);
   }
 }
+
+export const onUserDeleted = (db: admin.firestore.Firestore) =>
+  auth.user().onDelete(async (user) => {
+    const userId = user.uid;
+    functions.logger.info(`User ${userId} has been deleted from Authentication. Cleaning up Firestore data.`);
+
+    const batch = db.batch();
+
+    // 1. Delete the user's document from the `users` collection.
+    const userRef = db.collection("users").doc(userId);
+    batch.delete(userRef);
+
+    // 2. Delete the user's group memberships.
+    const userGroupMembershipsRef = db.collection("userGroupMemberships").doc(userId).collection("groups");
+    const userGroupMembershipsSnapshot = await userGroupMembershipsRef.get();
+    userGroupMembershipsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+
+      // 3. Delete the user from the `members` subcollection of each group.
+      const groupId = doc.id;
+      const memberRef = db.collection("groups").doc(groupId).collection("members").doc(userId);
+      batch.delete(memberRef);
+    });
+
+    try {
+      await batch.commit();
+      functions.logger.info(`Successfully cleaned up Firestore data for user ${userId}.`);
+    } catch (error) {
+      functions.logger.error(`Error cleaning up Firestore data for user ${userId}:`, error);
+    }
+  });

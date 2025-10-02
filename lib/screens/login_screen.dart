@@ -161,6 +161,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                   ],
                   ElevatedButton.icon(
+                    icon: const Icon(Icons.apple),
+                    onPressed: () => _authService.signInWithApple(),
+                    label: const Text('Sign in with Apple'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
                     icon: const Icon(Icons.login), // Replace with a proper Google icon
                     onPressed: () => _authService.signInWithGoogle(),
                     label: const Text('Sign in with Google'),

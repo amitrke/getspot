@@ -116,6 +116,57 @@ class AuthService {
     }
   }
 
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+
+  // Sign in with Apple
+  Future<UserCredential?> signInWithApple() async {
+    try {
+      final rawNonce = _generateNonce();
+      final nonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      final oAuthProvider = OAuthProvider("apple.com")
+        ..credential(
+          idToken: appleCredential.identityToken,
+          rawNonce: rawNonce,
+        );
+
+      final userCredential = await _auth.signInWithCredential(oAuthProvider);
+      final user = userCredential.user;
+
+      if (user != null) {
+        // For the first sign-in, create a new user document in Firestore
+        final userDoc = _firestore.collection('users').doc(user.uid);
+        final userDocSnapshot = await userDoc.get();
+
+        if (!userDocSnapshot.exists) {
+          await userDoc.set({
+            'uid': user.uid,
+            'displayName': appleCredential.givenName ?? user.displayName ?? '',
+            'email': appleCredential.email ?? user.email,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      return userCredential;
+    } catch (e) {
+      developer.log('Error during Apple Sign-In: $e', name: 'AuthService');
+      return null;
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
     await _googleSignIn.signOut();
