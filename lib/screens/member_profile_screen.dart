@@ -75,6 +75,7 @@ class MemberProfileScreen extends StatelessWidget {
 
                       if (!context.mounted) return;
                       await AuthService().signOut();
+                      if (!context.mounted) return;
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (context) => const LoginScreen()),
                         (route) => false,
