@@ -97,6 +97,9 @@ class AuthService {
         final rawNonce = _generateNonce();
         final nonce = sha256.convert(utf8.encode(rawNonce)).toString();
 
+        developer.log('Starting Apple Sign-In for mobile platform', name: 'AuthService');
+        developer.log('Generated nonce (hashed): $nonce', name: 'AuthService');
+
         final appleCredential = await SignInWithApple.getAppleIDCredential(
           scopes: [
             AppleIDAuthorizationScopes.email,
@@ -105,12 +108,21 @@ class AuthService {
           nonce: nonce,
         );
 
+        if (appleCredential.identityToken == null) {
+          throw FirebaseAuthException(
+            code: 'missing-identity-token',
+            message: 'Apple Sign-In failed: Identity token is null',
+          );
+        }
+
         final oAuthProvider = OAuthProvider("apple.com");
         final credential = oAuthProvider.credential(
           idToken: appleCredential.identityToken,
           rawNonce: rawNonce,
+          accessToken: appleCredential.authorizationCode, // Add authorization code
         );
 
+        developer.log('Attempting to sign in with Firebase credential', name: 'AuthService');
         final userCredential = await _auth.signInWithCredential(credential);
         final user = userCredential.user;
 
