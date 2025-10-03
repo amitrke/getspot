@@ -21,7 +21,10 @@ export const cancelEvent = (db: admin.firestore.Firestore) => functions.https.on
       throw new HttpsError("not-found", "Event not found.");
     }
 
-    const eventData = eventDoc.data()!;
+    const eventData = eventDoc.data();
+    if (!eventData) {
+      throw new HttpsError("internal", "Event data is missing.");
+    }
     const groupId = eventData.groupId;
     const groupRef = db.collection("groups").doc(groupId);
     const groupDoc = await groupRef.get();
@@ -30,7 +33,10 @@ export const cancelEvent = (db: admin.firestore.Firestore) => functions.https.on
       throw new HttpsError("not-found", "Group not found.");
     }
 
-    const groupData = groupDoc.data()!;
+    const groupData = groupDoc.data();
+    if (!groupData) {
+      throw new HttpsError("internal", "Group data is missing.");
+    }
     if (groupData.admin !== request.auth.uid) {
       throw new HttpsError("permission-denied", "User is not the group admin.");
     }

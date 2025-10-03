@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'package:getspot/screens/login_screen.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class MemberProfileScreen extends StatelessWidget {
   const MemberProfileScreen({super.key});
@@ -44,6 +45,61 @@ class MemberProfileScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text(user.displayName ?? 'Anonymous', style: Theme.of(context).textTheme.headlineSmall),
               Text(user.email ?? ''),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Delete Account?'),
+                      content: const Text(
+                          'This action is irreversible. All your data will be permanently deleted. If you have a positive balance in any of your groups, it will be forfeited. Are you sure you want to continue?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
+                      final callable = functions.httpsCallable('requestAccountDeletion');
+                      await callable.call();
+
+                      if (!context.mounted) return;
+                      await AuthService().signOut();
+                      if (!context.mounted) return;
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    } on FirebaseFunctionsException catch (e) {
+                      if (!context.mounted) return;
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Error'),
+                          content: Text(e.message ?? 'An unknown error occurred.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+              ),
               const SizedBox(height: 24),
               Text('Group Balances', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),

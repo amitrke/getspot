@@ -294,7 +294,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<CommitmentDeadlineOption>(
-                  value: _deadlineOption,
+                  initialValue: _deadlineOption,
                   decoration: const InputDecoration(
                     labelText: 'Commitment Deadline (relative)',
                     border: OutlineInputBorder(),
@@ -319,15 +319,15 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 const SizedBox(height: 16),
                 if (_deadlineOption == CommitmentDeadlineOption.custom)
-                  _buildDateTimePicker(
-                    label: 'Commitment Deadline',
-                    date: _deadlineDate,
-                    time: _deadlineTime,
-                    onTap: () => _pickDateTime(isEvent: false),
-                  )
-                else
-                  _buildDeadlineSummary(),
-                const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: _buildDateTimePicker(
+                      label: 'Commitment Deadline',
+                      date: _deadlineDate,
+                      time: _deadlineTime,
+                      onTap: () => _pickDateTime(isEvent: false),
+                    ),
+                  ),
                 TextFormField(
                   controller: _feeController,
                   decoration: const InputDecoration(
@@ -372,34 +372,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  Widget _buildDeadlineSummary() {
-    final theme = Theme.of(context);
-    final deadlineSet = _deadlineDate != null && _deadlineTime != null;
-    final formatted = deadlineSet
-        ? '${DateFormat.yMMMd().format(_deadlineDate!)} at ${_deadlineTime!.format(context)}'
-        : 'Select event date & time to calculate the deadline.';
-
-    return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Commitment Deadline',
-        border: OutlineInputBorder(),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _labelForOption(_deadlineOption),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(formatted),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDateTimePicker({
     required String label,
     DateTime? date,
@@ -408,7 +380,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }) {
     final formattedDate = date != null ? DateFormat.yMMMd().format(date) : '';
     final formattedTime = time != null ? time.format(context) : '';
-    final value = date != null ? '$formattedDate at $formattedTime' : '';
+    final value = date != null
+        ? '$formattedDate at $formattedTime'
+        : 'Select event date to calculate';
 
     return InkWell(
       onTap: onTap,
@@ -417,7 +391,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           labelText: label,
           border: const OutlineInputBorder(),
         ),
-        child: Text(value.isEmpty ? 'Select a date and time' : value),
+        child: Text(
+          value.isEmpty ? 'Select a date and time' : value,
+        ),
       ),
     );
   }
