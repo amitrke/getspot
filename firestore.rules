@@ -23,8 +23,8 @@ service cloud.firestore {
 
     // Allows the collectionGroup query in the app for a user to find their own join requests.
     // The document ID ({userId}) must match the authenticated user's UID.
-    match /{path=**}/joinRequests/{userId} {
-      allow list: if request.auth.uid == userId;
+    match /{path=**}/joinRequests/{requestId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
     match /groups/{groupId} {
