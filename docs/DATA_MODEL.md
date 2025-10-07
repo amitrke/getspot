@@ -1,14 +1,40 @@
 # Firestore Data Model for GetSpot
 
-This document outlines the proposed Firestore collection and document structure based on the application requirements.
+This document outlines the Firestore collection and document structure based on the application requirements.
 
 ## Root Collections
 
-*   `/users`
-*   `/groups`
-*   `/events`
-*   `/transactions`
-*   `/userGroupMemberships`
+*   `/users` - User profiles and FCM tokens
+*   `/groups` - Groups with subcollections for members, join requests, and announcements
+*   `/events` - Events (root-level for flexible querying across groups)
+*   `/transactions` - Financial activity audit log (root-level for cross-group user queries)
+*   `/userGroupMemberships` - Denormalized index for efficient user→groups lookups
+
+## Design Rationale
+
+### Root-Level vs Subcollections
+
+**Events at Root Level:**
+- Events are stored at `/events/{eventId}` rather than `/groups/{groupId}/events/{eventId}`
+- **Rationale:** Enables efficient querying of events across groups, supports future cross-group features, and simplifies security rules
+- Events reference their parent group via `groupId` field
+
+**Transactions at Root Level:**
+- Transactions are stored at `/transactions/{transactionId}` rather than under groups or users
+- **Rationale:** Allows efficient querying of a user's complete transaction history across all groups without collection group queries
+- Transactions reference both `uid` and `groupId` for filtering
+
+**Denormalized User Group Memberships:**
+- The `/userGroupMemberships/{userId}/groups/{groupId}` structure duplicates group membership data
+- **Rationale:** Avoids expensive collection group queries when loading the home screen (fetching all groups a user belongs to)
+- **Consistency guarantee:** Cloud Functions maintain this denormalized data atomically when users join/leave groups
+
+### Denormalized Counts
+
+Events store `confirmedCount` and `waitlistCount` fields:
+- **Rationale:** Eliminates need to count participants subcollection on every read
+- **Consistency guarantee:** Cloud Functions (`processEventRegistration`, `withdrawFromEvent`, `processWaitlist`) update these counts atomically using transactions
+- **Trade-off:** Slightly more complex write logic for guaranteed fast reads
 
 ---
 
@@ -181,3 +207,36 @@ This model significantly improves performance and scalability.
   "isAdmin": "boolean"      // Whether the user is an admin of this group
 }
 ```
+
+---
+
+## Required Composite Indexes
+
+Firestore requires composite indexes for queries with multiple fields. The following indexes should be configured:
+
+### Events Collection
+- **Fields:** `groupId` (Ascending), `eventTimestamp` (Ascending)
+  - **Purpose:** Query events by group in chronological order
+  - **Used by:** Group details screen, event list views
+
+### Participants Subcollection
+- **Fields:** `status` (Ascending), `registeredAt` (Ascending)
+  - **Purpose:** Query waitlisted participants in first-come, first-served order
+  - **Used by:** `processWaitlist` function for automatic promotion
+
+### Transactions Collection
+- **Fields:** `uid` (Ascending), `createdAt` (Descending)
+  - **Purpose:** Query user's transaction history in reverse chronological order
+  - **Used by:** Wallet screen transaction history
+
+- **Fields:** `groupId` (Ascending), `createdAt` (Descending)
+  - **Purpose:** Query group-specific transactions (for admin views)
+  - **Used by:** Future admin dashboard features
+
+### Join Requests Collection Group
+- **Collection Group:** `joinRequests`
+- **Fields:** `uid` (Ascending), `requestedAt` (Descending)
+  - **Purpose:** Query all join requests for a user across groups
+  - **Used by:** Home screen to show pending requests
+
+**Note:** Firestore will automatically prompt for index creation when these queries are first executed in development. Add them proactively to avoid runtime errors in production.

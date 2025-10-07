@@ -2,43 +2,69 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class WalletScreen extends StatelessWidget {
+class WalletScreen extends StatefulWidget {
   final String groupId;
   final String userId;
 
   const WalletScreen({super.key, required this.groupId, required this.userId});
 
   @override
+  State<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends State<WalletScreen> {
+  late Future<DocumentSnapshot<Map<String, dynamic>>> _balanceFuture;
+  late Future<QuerySnapshot<Map<String, dynamic>>> _transactionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() {
+    setState(() {
+      _balanceFuture = FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .collection('members')
+          .doc(widget.userId)
+          .get();
+
+      _transactionsFuture = FirebaseFirestore.instance
+          .collection('transactions')
+          .where('groupId', isEqualTo: widget.groupId)
+          .where('uid', isEqualTo: widget.userId)
+          .orderBy('createdAt', descending: true)
+          .limit(100)
+          .get();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final memberDocStream = FirebaseFirestore.instance
-        .collection('groups')
-        .doc(groupId)
-        .collection('members')
-        .doc(userId)
-        .snapshots();
-
-    final transactionsStream = FirebaseFirestore.instance
-        .collection('transactions')
-        .where('groupId', isEqualTo: groupId)
-        .where('uid', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .snapshots();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Group Wallet'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            _BalanceCard(stream: memberDocStream),
+            _BalanceCard(future: _balanceFuture),
             const Divider(height: 1),
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text('History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             Expanded(
-              child: _TransactionList(stream: transactionsStream),
+              child: _TransactionList(future: _transactionsFuture),
             ),
           ],
         ),
@@ -48,16 +74,37 @@ class WalletScreen extends StatelessWidget {
 }
 
 class _BalanceCard extends StatelessWidget {
-  final Stream<DocumentSnapshot<Map<String, dynamic>>> stream;
-  const _BalanceCard({required this.stream});
+  final Future<DocumentSnapshot<Map<String, dynamic>>> future;
+  const _BalanceCard({required this.future});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: stream,
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: future,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Card(
+            elevation: 4,
+            margin: EdgeInsets.all(16),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          return Card(
+            elevation: 4,
+            margin: const EdgeInsets.all(16),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Text('Error: ${snapshot.error}'),
+              ),
+            ),
+          );
         }
         final balance = snapshot.data?.data()?['walletBalance'] ?? 0;
         final formattedBalance = NumberFormat.currency(symbol: '', decimalDigits: 2).format(balance);
@@ -84,13 +131,13 @@ class _BalanceCard extends StatelessWidget {
 }
 
 class _TransactionList extends StatelessWidget {
-  final Stream<QuerySnapshot<Map<String, dynamic>>> stream;
-  const _TransactionList({required this.stream});
+  final Future<QuerySnapshot<Map<String, dynamic>>> future;
+  const _TransactionList({required this.future});
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: stream,
+    return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

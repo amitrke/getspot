@@ -116,15 +116,16 @@ class GroupService {
 
     final groupIds = memberships.map((doc) => doc.id).toList();
 
-    // Fetch pending requests count for all groups where the user is a member
-    final pendingCountsFutures = groupIds.map((groupId) {
+    // Get pending requests count from already-fetched group documents
+    final pendingCounts = groupIds.map((groupId) {
       final groupDoc = groupDocs[groupId];
       // Check if the current user is the admin for this group
       if (groupDoc != null && groupDoc.data()?['admin'] == userId) {
-        return getPendingJoinRequestsCountStream(groupId).first;
+        // Read from the denormalized count field (maintained by Cloud Functions)
+        return groupDoc.data()?['pendingJoinRequestsCount'] ?? 0;
       }
-      // If not admin, return a future with 0
-      return Future.value(0);
+      // If not admin, return 0
+      return 0;
     }).toList();
 
     final eventsFuture = _firestore
@@ -146,12 +147,10 @@ class GroupService {
     final results = await Future.wait([
       eventsFuture,
       Future.wait(membersFutures),
-      Future.wait(pendingCountsFutures),
     ]);
 
     final eventsSnapshot = results[0] as QuerySnapshot<Map<String, dynamic>>;
     final membersSnapshots = results[1] as List<DocumentSnapshot<Map<String, dynamic>>>;
-    final pendingCounts = results[2] as List<int>;
 
     final memberDocs = {
       for (var doc in membersSnapshots)
@@ -202,15 +201,5 @@ class GroupService {
       }
     }
     return viewModels;
-  }
-
-  Stream<int> getPendingJoinRequestsCountStream(String groupId) {
-    return _firestore
-        .collection('groups')
-        .doc(groupId)
-        .collection('joinRequests')
-        .where('status', isEqualTo: 'pending')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
   }
 }

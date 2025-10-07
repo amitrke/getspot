@@ -2,11 +2,60 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/services/auth_service.dart';
+import 'package:getspot/services/group_cache_service.dart';
+import 'package:getspot/services/user_cache_service.dart';
 import 'package:getspot/screens/login_screen.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
+class GroupBalance {
+  final String groupName;
+  final num balance;
+
+  GroupBalance({required this.groupName, required this.balance});
+}
+
 class MemberProfileScreen extends StatelessWidget {
   const MemberProfileScreen({super.key});
+
+  Future<List<GroupBalance>> _fetchGroupBalances(
+    String userId,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> memberships,
+  ) async {
+    if (memberships.isEmpty) return [];
+
+    final groupIds = memberships
+        .map((m) => m.data()['groupId'] as String)
+        .toList();
+
+    // Use GroupCacheService for batch fetching groups (with cache)
+    final groupCache = GroupCacheService();
+    final groupsMap = await groupCache.getGroups(groupIds);
+
+    // Batch query for all member documents
+    final memberFutures = groupIds.map((groupId) =>
+        FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .collection('members')
+            .doc(userId)
+            .get());
+
+    final memberSnapshots = await Future.wait(memberFutures);
+    final membersMap = {
+      for (var doc in memberSnapshots)
+        if (doc.exists) doc.reference.parent.parent!.id: doc
+    };
+
+    // Build the list
+    return groupIds.map((groupId) {
+      final group = groupsMap[groupId];
+      final member = membersMap[groupId];
+      return GroupBalance(
+        groupName: group?.name ?? 'Group',
+        balance: member?.data()?['walletBalance'] ?? 0,
+      );
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,51 +184,29 @@ class MemberProfileScreen extends StatelessWidget {
                       return const Center(
                           child: Text('No group memberships yet.'));
                     }
-                    return ListView.builder(
-                      itemCount: memberships.length,
-                      itemBuilder: (context, index) {
-                        final m = memberships[index].data();
-                        final groupId = m['groupId'];
-                        return FutureBuilder<
-                            DocumentSnapshot<Map<String, dynamic>>>(
-                          future: FirebaseFirestore.instance
-                              .collection('groups')
-                              .doc(groupId)
-                              .get(),
-                          builder: (context, groupSnap) {
-                            String groupName = 'Group';
-                            final gs = groupSnap.data; // property, not method
-                            if (gs != null) {
-                              final raw = gs.data();
-                              if (raw != null) {
-                                final nameVal = raw['name'];
-                                if (nameVal is String) groupName = nameVal;
-                              }
-                            }
-                            return FutureBuilder<
-                                DocumentSnapshot<Map<String, dynamic>>>(
-                              future: FirebaseFirestore.instance
-                                  .collection('groups')
-                                  .doc(groupId)
-                                  .collection('members')
-                                  .doc(user.uid)
-                                  .get(),
-                              builder: (context, memberSnap) {
-                                num? balNum;
-                                final ms = memberSnap.data; // property
-                                if (ms != null) {
-                                  final rawMember = ms.data();
-                                  final val = rawMember?['walletBalance'];
-                                  if (val is num) balNum = val;
-                                }
-                                final balanceStr = balNum == null
-                                    ? '--'
-                                    : balNum.toStringAsFixed(2);
-                                return ListTile(
-                                  title: Text(groupName),
-                                  subtitle: Text('Balance: $balanceStr'),
-                                );
-                              },
+
+                    // Use FutureBuilder at the top level, not in ListView
+                    return FutureBuilder<List<GroupBalance>>(
+                      future: _fetchGroupBalances(user.uid, memberships),
+                      builder: (context, balanceSnapshot) {
+                        if (balanceSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        if (balanceSnapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${balanceSnapshot.error}'));
+                        }
+                        final balances = balanceSnapshot.data ?? [];
+                        return ListView.builder(
+                          itemCount: balances.length,
+                          itemBuilder: (context, index) {
+                            final balance = balances[index];
+                            return ListTile(
+                              title: Text(balance.groupName),
+                              subtitle: Text(
+                                  'Balance: ${balance.balance.toStringAsFixed(2)}'),
                             );
                           },
                         );
@@ -226,6 +253,9 @@ class MemberProfileScreen extends StatelessWidget {
                   final callable =
                       functions.httpsCallable('updateUserDisplayName');
                   await callable.call({'displayName': newName});
+
+                  // 3. Invalidate user cache to force fresh data on next access
+                  UserCacheService().invalidate(user.uid);
 
                   if (!context.mounted) return;
                   Navigator.of(context).pop();
