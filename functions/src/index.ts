@@ -1,3 +1,4 @@
+import * as functionsV1 from "firebase-functions/v1";
 /**
  * Import function triggers from their respective submodules:
  *
@@ -154,7 +155,7 @@ export const cancelEvent = cancelEventHandler(db);
 export const notifyOnNewEvent = notifyOnNewEventHandler(db);
 export const sendEventReminders = sendEventRemindersHandler(db);
 export const runDataLifecycleManagement = runDataLifecycleManagementHandler(db);
-export const onUserDeleted = onUserDeletedHandler(db);
+export const onUserDeleted = functionsV1.region("us-east4").auth.user().onDelete(onUserDeletedHandler(db));
 export const requestAccountDeletion = requestAccountDeletionHandler(db);
-export const updateUserDisplayName = updateUserDisplayNameHandler(db);
+export const updateUserDisplayName = functionsV1.region("us-east4").https.onCall(updateUserDisplayNameHandler(db));
 

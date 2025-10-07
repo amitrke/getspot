@@ -1,14 +1,12 @@
-import * as functions from "firebase-functions";
+
 import * as admin from "firebase-admin";
-import {onCall, CallableContext} from "firebase-functions/v1/https";
+import {HttpsError} from "firebase-functions/v2/https";
+import * as logger from "firebase-functions/logger";
 
-// This should be initialized in your index.ts
-// admin.initializeApp();
-
-export const updateUserDisplayName = (db: admin.firestore.Firestore) => onCall(async (data: any, context: CallableContext) => {
+export const updateUserDisplayName = (db: admin.firestore.Firestore) => async (data: any, context: any) => {
   // 1. Authentication Check
   if (!context.auth) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       "unauthenticated",
       "You must be logged in to update your display name."
     );
@@ -19,7 +17,7 @@ export const updateUserDisplayName = (db: admin.firestore.Firestore) => onCall(a
 
   // 2. Input Validation
   if (!newDisplayName || typeof newDisplayName !== "string" || newDisplayName.trim().length === 0) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       "invalid-argument",
       "A valid display name must be provided."
     );
@@ -39,7 +37,7 @@ export const updateUserDisplayName = (db: admin.firestore.Firestore) => onCall(a
       .get();
 
     // 5. Update the 'displayName' in each member document
-    membershipsSnapshot.forEach((doc) => {
+    membershipsSnapshot.forEach((doc: any) => {
       batch.update(doc.ref, {displayName: newDisplayName});
     });
 
@@ -50,7 +48,7 @@ export const updateUserDisplayName = (db: admin.firestore.Firestore) => onCall(a
       .get();
 
     // 7. Update the 'displayName' in each join request document
-    joinRequestsSnapshot.forEach((doc) => {
+    joinRequestsSnapshot.forEach((doc: any) => {
       batch.update(doc.ref, {displayName: newDisplayName});
     });
 
@@ -59,10 +57,10 @@ export const updateUserDisplayName = (db: admin.firestore.Firestore) => onCall(a
 
     return {success: true, message: "Display name updated successfully."};
   } catch (error) {
-    console.error("Error updating display name for UID:", uid, error);
-    throw new functions.https.HttpsError(
+    logger.error("Error updating display name for UID:", uid, error);
+    throw new HttpsError(
       "internal",
       "An error occurred while updating the display name."
     );
   }
-});
+};
