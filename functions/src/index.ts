@@ -22,6 +22,7 @@ import {notifyOnNewEvent as notifyOnNewEventHandler} from "./notifyOnNewEvent";
 import {sendEventReminders as sendEventRemindersHandler} from "./sendEventReminders";
 import {runDataLifecycleManagement as runDataLifecycleManagementHandler, onUserDeleted as onUserDeletedHandler} from "./dataLifecycle";
 import {requestAccountDeletion as requestAccountDeletionHandler} from "./requestAccountDeletion";
+import {updateUserDisplayName as updateUserDisplayNameHandler} from "./updateUserDisplayName";
 
 
 // Initialize the Firebase Admin SDK
@@ -155,4 +156,5 @@ export const sendEventReminders = sendEventRemindersHandler(db);
 export const runDataLifecycleManagement = runDataLifecycleManagementHandler(db);
 export const onUserDeleted = onUserDeletedHandler(db);
 export const requestAccountDeletion = requestAccountDeletionHandler(db);
+export const updateUserDisplayName = updateUserDisplayNameHandler(db);
 
