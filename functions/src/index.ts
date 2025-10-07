@@ -29,7 +29,7 @@ import {
   onJoinRequestUpdated as onJoinRequestUpdatedHandler,
   onJoinRequestDeleted as onJoinRequestDeletedHandler,
 } from "./maintainJoinRequestCount";
-import {initializePendingJoinRequestsCount as initializePendingJoinRequestsCountHandler} from "./migrations/initializePendingJoinRequestsCount";
+// import {initializePendingJoinRequestsCount as initializePendingJoinRequestsCountHandler} from "./migrations/initializePendingJoinRequestsCount";
 
 
 // Initialize the Firebase Admin SDK
@@ -170,7 +170,8 @@ export const onJoinRequestUpdated = onJoinRequestUpdatedHandler(db);
 export const onJoinRequestDeleted = onJoinRequestDeletedHandler(db);
 
 // Migration function - call once, then comment out or remove
-export const initializePendingJoinRequestsCount = onCall(
-  initializePendingJoinRequestsCountHandler(db)
-);
+// MIGRATION COMPLETED - Commented out on 2025-10-07
+// export const initializePendingJoinRequestsCount = onCall(
+//   initializePendingJoinRequestsCountHandler(db)
+// );
 
