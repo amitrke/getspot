@@ -24,6 +24,12 @@ import {sendEventReminders as sendEventRemindersHandler} from "./sendEventRemind
 import {runDataLifecycleManagement as runDataLifecycleManagementHandler, onUserDeleted as onUserDeletedHandler} from "./dataLifecycle";
 import {requestAccountDeletion as requestAccountDeletionHandler} from "./requestAccountDeletion";
 import {updateUserDisplayName as updateUserDisplayNameHandler} from "./updateUserDisplayName";
+import {
+  onJoinRequestCreated as onJoinRequestCreatedHandler,
+  onJoinRequestUpdated as onJoinRequestUpdatedHandler,
+  onJoinRequestDeleted as onJoinRequestDeletedHandler,
+} from "./maintainJoinRequestCount";
+import {initializePendingJoinRequestsCount as initializePendingJoinRequestsCountHandler} from "./migrations/initializePendingJoinRequestsCount";
 
 
 // Initialize the Firebase Admin SDK
@@ -109,6 +115,7 @@ export const createGroup = onCall(async (request) => {
       groupCode,
       groupCodeSearch: rawCode, // Standardized version for searching
       negativeBalanceLimit,
+      pendingJoinRequestsCount: 0, // Initialize counter
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -158,4 +165,12 @@ export const runDataLifecycleManagement = runDataLifecycleManagementHandler(db);
 export const onUserDeleted = functionsV1.region("us-east4").auth.user().onDelete(onUserDeletedHandler(db));
 export const requestAccountDeletion = requestAccountDeletionHandler(db);
 export const updateUserDisplayName = functionsV1.region("us-east4").https.onCall(updateUserDisplayNameHandler(db));
+export const onJoinRequestCreated = onJoinRequestCreatedHandler(db);
+export const onJoinRequestUpdated = onJoinRequestUpdatedHandler(db);
+export const onJoinRequestDeleted = onJoinRequestDeletedHandler(db);
+
+// Migration function - call once, then comment out or remove
+export const initializePendingJoinRequestsCount = onCall(
+  initializePendingJoinRequestsCountHandler(db)
+);
 
