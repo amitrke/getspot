@@ -43,7 +43,17 @@ class MemberProfileScreen extends StatelessWidget {
                 backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
               ),
               const SizedBox(height: 16),
-              Text(user.displayName ?? 'Anonymous', style: Theme.of(context).textTheme.headlineSmall),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(user.displayName ?? 'Anonymous',
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _showEditNameDialog(context, user),
+                  ),
+                ],
+              ),
               Text(user.email ?? ''),
               const SizedBox(height: 24),
               TextButton(
@@ -69,15 +79,18 @@ class MemberProfileScreen extends StatelessWidget {
 
                   if (confirm == true) {
                     try {
-                      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
-                      final callable = functions.httpsCallable('requestAccountDeletion');
+                      final functions =
+                          FirebaseFunctions.instanceFor(region: 'us-east4');
+                      final callable =
+                          functions.httpsCallable('requestAccountDeletion');
                       await callable.call();
 
                       if (!context.mounted) return;
                       await AuthService().signOut();
                       if (!context.mounted) return;
                       Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
                         (route) => false,
                       );
                     } on FirebaseFunctionsException catch (e) {
@@ -86,7 +99,8 @@ class MemberProfileScreen extends StatelessWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Error'),
-                          content: Text(e.message ?? 'An unknown error occurred.'),
+                          content:
+                              Text(e.message ?? 'An unknown error occurred.'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(context).pop(),
@@ -98,10 +112,12 @@ class MemberProfileScreen extends StatelessWidget {
                     }
                   }
                 },
-                child: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+                child: const Text('Delete Account',
+                    style: TextStyle(color: Colors.red)),
               ),
               const SizedBox(height: 24),
-              Text('Group Balances', style: Theme.of(context).textTheme.titleMedium),
+              Text('Group Balances',
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               Expanded(
                 child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -116,15 +132,20 @@ class MemberProfileScreen extends StatelessWidget {
                     }
                     final memberships = snapshot.data?.docs ?? [];
                     if (memberships.isEmpty) {
-                      return const Center(child: Text('No group memberships yet.'));
+                      return const Center(
+                          child: Text('No group memberships yet.'));
                     }
                     return ListView.builder(
                       itemCount: memberships.length,
                       itemBuilder: (context, index) {
                         final m = memberships[index].data();
                         final groupId = m['groupId'];
-                        return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                          future: FirebaseFirestore.instance.collection('groups').doc(groupId).get(),
+                        return FutureBuilder<
+                            DocumentSnapshot<Map<String, dynamic>>>(
+                          future: FirebaseFirestore.instance
+                              .collection('groups')
+                              .doc(groupId)
+                              .get(),
                           builder: (context, groupSnap) {
                             String groupName = 'Group';
                             final gs = groupSnap.data; // property, not method
@@ -135,7 +156,8 @@ class MemberProfileScreen extends StatelessWidget {
                                 if (nameVal is String) groupName = nameVal;
                               }
                             }
-                            return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                            return FutureBuilder<
+                                DocumentSnapshot<Map<String, dynamic>>>(
                               future: FirebaseFirestore.instance
                                   .collection('groups')
                                   .doc(groupId)
@@ -150,7 +172,9 @@ class MemberProfileScreen extends StatelessWidget {
                                   final val = rawMember?['walletBalance'];
                                   if (val is num) balNum = val;
                                 }
-                                final balanceStr = balNum == null ? '--' : balNum.toStringAsFixed(2);
+                                final balanceStr = balNum == null
+                                    ? '--'
+                                    : balNum.toStringAsFixed(2);
                                 return ListTile(
                                   title: Text(groupName),
                                   subtitle: Text('Balance: $balanceStr'),
@@ -168,6 +192,65 @@ class MemberProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showEditNameDialog(BuildContext context, User user) {
+    final nameController = TextEditingController(text: user.displayName);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Display Name'),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(labelText: 'New Name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final newName = nameController.text.trim();
+                if (newName.isEmpty) return;
+
+                try {
+                  // 1. Update Firebase Auth
+                  await user.updateDisplayName(newName);
+
+                  // 2. Call Cloud Function to update Firestore
+                  final functions =
+                      FirebaseFunctions.instanceFor(region: 'us-east4');
+                  final callable =
+                      functions.httpsCallable('updateUserDisplayName');
+                  await callable.call({'displayName': newName});
+
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Display name updated successfully!')),
+                  );
+                  // The UI will update automatically via the StreamBuilder
+                } catch (e) {
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'An error occurred: ${e.toString()}'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
