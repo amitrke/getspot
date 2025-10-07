@@ -47,6 +47,7 @@ dependencies:
   web: ^1.1.1
   sign_in_with_apple: ^6.1.1
   crypto: ^3.0.3
+  rxdart: ^0.28.0
 
 dev_dependencies:
   flutter_test:

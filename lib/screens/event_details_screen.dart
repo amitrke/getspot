@@ -7,8 +7,13 @@ import 'dart:developer' as developer;
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
+  final bool isGroupAdmin;
 
-  const EventDetailsScreen({super.key, required this.eventId});
+  const EventDetailsScreen({
+    super.key,
+    required this.eventId,
+    this.isGroupAdmin = false,
+  });
 
   @override
   State<EventDetailsScreen> createState() => _EventDetailsScreenState();
@@ -18,46 +23,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isRegistering = false;
   bool _isWithdrawing = false;
   bool _isCancelling = false;
-  bool _isAdmin = false;
+
+  bool get _isAdmin => widget.isGroupAdmin;
 
   @override
   void initState() {
     super.initState();
-    _fetchGroupAdminStatus();
-  }
-
-  Future<void> _fetchGroupAdminStatus() async {
-    try {
-      final eventSnapshot = await FirebaseFirestore.instance
-          .collection('events')
-          .doc(widget.eventId)
-          .get();
-
-      if (!eventSnapshot.exists) return;
-
-      final eventData = eventSnapshot.data()!;
-      final groupId = eventData['groupId'];
-      if (groupId == null) return;
-
-      final groupSnapshot = await FirebaseFirestore.instance
-          .collection('groups')
-          .doc(groupId)
-          .get();
-
-      if (mounted && groupSnapshot.exists) {
-        final groupData = groupSnapshot.data()!;
-        final currentUser = FirebaseAuth.instance.currentUser;
-        setState(() {
-          _isAdmin = currentUser?.uid == groupData['admin'];
-        });
-      }
-    } catch (e) {
-      developer.log(
-        'Error fetching admin status',
-        name: 'EventDetailsScreen',
-        error: e,
-      );
-    }
+    // No longer need to fetch admin status - it's passed as a parameter
   }
 
   Future<void> _registerForEvent() async {

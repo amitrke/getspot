@@ -294,7 +294,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<CommitmentDeadlineOption>(
-                  initialValue: _deadlineOption,
+                  value: _deadlineOption,
                   decoration: const InputDecoration(
                     labelText: 'Commitment Deadline (relative)',
                     border: OutlineInputBorder(),

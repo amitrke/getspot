@@ -2,11 +2,60 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/services/auth_service.dart';
+import 'package:getspot/services/group_cache_service.dart';
+import 'package:getspot/services/user_cache_service.dart';
 import 'package:getspot/screens/login_screen.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
+class GroupBalance {
+  final String groupName;
+  final num balance;
+
+  GroupBalance({required this.groupName, required this.balance});
+}
+
 class MemberProfileScreen extends StatelessWidget {
   const MemberProfileScreen({super.key});
+
+  Future<List<GroupBalance>> _fetchGroupBalances(
+    String userId,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> memberships,
+  ) async {
+    if (memberships.isEmpty) return [];
+
+    final groupIds = memberships
+        .map((m) => m.data()['groupId'] as String)
+        .toList();
+
+    // Use GroupCacheService for batch fetching groups (with cache)
+    final groupCache = GroupCacheService();
+    final groupsMap = await groupCache.getGroups(groupIds);
+
+    // Batch query for all member documents
+    final memberFutures = groupIds.map((groupId) =>
+        FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .collection('members')
+            .doc(userId)
+            .get());
+
+    final memberSnapshots = await Future.wait(memberFutures);
+    final membersMap = {
+      for (var doc in memberSnapshots)
+        if (doc.exists) doc.reference.parent.parent!.id: doc
+    };
+
+    // Build the list
+    return groupIds.map((groupId) {
+      final group = groupsMap[groupId];
+      final member = membersMap[groupId];
+      return GroupBalance(
+        groupName: group?.name ?? 'Group',
+        balance: member?.data()?['walletBalance'] ?? 0,
+      );
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +92,17 @@ class MemberProfileScreen extends StatelessWidget {
                 backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
               ),
               const SizedBox(height: 16),
-              Text(user.displayName ?? 'Anonymous', style: Theme.of(context).textTheme.headlineSmall),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(user.displayName ?? 'Anonymous',
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _showEditNameDialog(context, user),
+                  ),
+                ],
+              ),
               Text(user.email ?? ''),
               const SizedBox(height: 24),
               TextButton(
@@ -69,15 +128,18 @@ class MemberProfileScreen extends StatelessWidget {
 
                   if (confirm == true) {
                     try {
-                      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
-                      final callable = functions.httpsCallable('requestAccountDeletion');
+                      final functions =
+                          FirebaseFunctions.instanceFor(region: 'us-east4');
+                      final callable =
+                          functions.httpsCallable('requestAccountDeletion');
                       await callable.call();
 
                       if (!context.mounted) return;
                       await AuthService().signOut();
                       if (!context.mounted) return;
                       Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
                         (route) => false,
                       );
                     } on FirebaseFunctionsException catch (e) {
@@ -86,7 +148,8 @@ class MemberProfileScreen extends StatelessWidget {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Error'),
-                          content: Text(e.message ?? 'An unknown error occurred.'),
+                          content:
+                              Text(e.message ?? 'An unknown error occurred.'),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(context).pop(),
@@ -98,10 +161,12 @@ class MemberProfileScreen extends StatelessWidget {
                     }
                   }
                 },
-                child: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+                child: const Text('Delete Account',
+                    style: TextStyle(color: Colors.red)),
               ),
               const SizedBox(height: 24),
-              Text('Group Balances', style: Theme.of(context).textTheme.titleMedium),
+              Text('Group Balances',
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               Expanded(
                 child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -116,46 +181,32 @@ class MemberProfileScreen extends StatelessWidget {
                     }
                     final memberships = snapshot.data?.docs ?? [];
                     if (memberships.isEmpty) {
-                      return const Center(child: Text('No group memberships yet.'));
+                      return const Center(
+                          child: Text('No group memberships yet.'));
                     }
-                    return ListView.builder(
-                      itemCount: memberships.length,
-                      itemBuilder: (context, index) {
-                        final m = memberships[index].data();
-                        final groupId = m['groupId'];
-                        return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                          future: FirebaseFirestore.instance.collection('groups').doc(groupId).get(),
-                          builder: (context, groupSnap) {
-                            String groupName = 'Group';
-                            final gs = groupSnap.data; // property, not method
-                            if (gs != null) {
-                              final raw = gs.data();
-                              if (raw != null) {
-                                final nameVal = raw['name'];
-                                if (nameVal is String) groupName = nameVal;
-                              }
-                            }
-                            return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                              future: FirebaseFirestore.instance
-                                  .collection('groups')
-                                  .doc(groupId)
-                                  .collection('members')
-                                  .doc(user.uid)
-                                  .get(),
-                              builder: (context, memberSnap) {
-                                num? balNum;
-                                final ms = memberSnap.data; // property
-                                if (ms != null) {
-                                  final rawMember = ms.data();
-                                  final val = rawMember?['walletBalance'];
-                                  if (val is num) balNum = val;
-                                }
-                                final balanceStr = balNum == null ? '--' : balNum.toStringAsFixed(2);
-                                return ListTile(
-                                  title: Text(groupName),
-                                  subtitle: Text('Balance: $balanceStr'),
-                                );
-                              },
+
+                    // Use FutureBuilder at the top level, not in ListView
+                    return FutureBuilder<List<GroupBalance>>(
+                      future: _fetchGroupBalances(user.uid, memberships),
+                      builder: (context, balanceSnapshot) {
+                        if (balanceSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        if (balanceSnapshot.hasError) {
+                          return Center(
+                              child: Text('Error: ${balanceSnapshot.error}'));
+                        }
+                        final balances = balanceSnapshot.data ?? [];
+                        return ListView.builder(
+                          itemCount: balances.length,
+                          itemBuilder: (context, index) {
+                            final balance = balances[index];
+                            return ListTile(
+                              title: Text(balance.groupName),
+                              subtitle: Text(
+                                  'Balance: ${balance.balance.toStringAsFixed(2)}'),
                             );
                           },
                         );
@@ -168,6 +219,68 @@ class MemberProfileScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showEditNameDialog(BuildContext context, User user) {
+    final nameController = TextEditingController(text: user.displayName);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Display Name'),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(labelText: 'New Name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final newName = nameController.text.trim();
+                if (newName.isEmpty) return;
+
+                try {
+                  // 1. Update Firebase Auth
+                  await user.updateDisplayName(newName);
+
+                  // 2. Call Cloud Function to update Firestore
+                  final functions =
+                      FirebaseFunctions.instanceFor(region: 'us-east4');
+                  final callable =
+                      functions.httpsCallable('updateUserDisplayName');
+                  await callable.call({'displayName': newName});
+
+                  // 3. Invalidate user cache to force fresh data on next access
+                  UserCacheService().invalidate(user.uid);
+
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Display name updated successfully!')),
+                  );
+                  // The UI will update automatically via the StreamBuilder
+                } catch (e) {
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'An error occurred: ${e.toString()}'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

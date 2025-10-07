@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:getspot/screens/create_event_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
+import 'package:getspot/providers/participant_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
 import 'package:getspot/screens/wallet_screen.dart';
@@ -177,7 +178,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                   controller: _tabController,
                   children: _isAdmin
                       ? [
-                          _EventList(groupId: widget.group['groupId']),
+                          _EventList(
+                            groupId: widget.group['groupId'],
+                            isAdmin: _isAdmin,
+                          ),
                           _AnnouncementsTab(
                             groupId: widget.group['groupId'],
                             isAdmin: _isAdmin,
@@ -185,7 +189,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                           _AdminManagementTab(groupId: widget.group['groupId']),
                         ]
                       : [
-                          _EventList(groupId: widget.group['groupId']),
+                          _EventList(
+                            groupId: widget.group['groupId'],
+                            isAdmin: _isAdmin,
+                          ),
                           _AnnouncementsTab(
                             groupId: widget.group['groupId'],
                             isAdmin: _isAdmin,
@@ -310,6 +317,7 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                 .doc(widget.groupId)
                 .collection('announcements')
                 .orderBy('createdAt', descending: true)
+                .limit(50)
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -352,17 +360,40 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
   }
 }
 
-class _EventList extends StatelessWidget {
+class _EventList extends StatefulWidget {
   final String groupId;
+  final bool isAdmin;
 
-  const _EventList({required this.groupId});
+  const _EventList({required this.groupId, required this.isAdmin});
+
+  @override
+  State<_EventList> createState() => _EventListState();
+}
+
+class _EventListState extends State<_EventList> {
+  ParticipantProvider? _participantProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _participantProvider = ParticipantProvider(userId: user.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    _participantProvider?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: FirebaseFirestore.instance
           .collection('events')
-          .where('groupId', isEqualTo: groupId)
+          .where('groupId', isEqualTo: widget.groupId)
           .where('status', isEqualTo: 'active')
           .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
           .orderBy('eventTimestamp', descending: false)
@@ -408,6 +439,8 @@ class _EventList extends StatelessWidget {
                     child: _EventListItem(
                       key: ValueKey(event.id),
                       event: event,
+                      isAdmin: widget.isAdmin,
+                      participantProvider: _participantProvider,
                     ),
                   );
                 },
@@ -422,28 +455,26 @@ class _EventList extends StatelessWidget {
 
 class _EventListItem extends StatefulWidget {
   final QueryDocumentSnapshot<Map<String, dynamic>> event;
+  final bool isAdmin;
+  final ParticipantProvider? participantProvider;
 
-  const _EventListItem({super.key, required this.event});
+  const _EventListItem({
+    super.key,
+    required this.event,
+    required this.isAdmin,
+    this.participantProvider,
+  });
 
   @override
   State<_EventListItem> createState() => _EventListItemState();
 }
 
 class _EventListItemState extends State<_EventListItem> {
-  Stream<DocumentSnapshot<Map<String, dynamic>>>? _participantStream;
-
   @override
   void initState() {
     super.initState();
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _participantStream = FirebaseFirestore.instance
-          .collection('events')
-          .doc(widget.event.id)
-          .collection('participants')
-          .doc(user.uid)
-          .snapshots();
-    }
+    // Subscribe to participant updates for this event
+    widget.participantProvider?.subscribeToEvent(widget.event.id);
   }
 
   Widget _getStatusIcon(String? status) {
@@ -488,40 +519,55 @@ class _EventListItemState extends State<_EventListItem> {
               ],
             ),
             const SizedBox(height: 4),
-            StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: _participantStream,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Row(
+            widget.participantProvider != null
+                ? ListenableBuilder(
+                    listenable: widget.participantProvider!,
+                    builder: (context, child) {
+                      final participantData = widget.participantProvider!
+                          .getParticipantStatus(widget.event.id);
+                      final status = participantData?['status'] as String?;
+
+                      if (participantData == null) {
+                        return const Row(
+                          children: [
+                            Icon(Icons.help_outline,
+                                color: Colors.grey, size: 16),
+                            SizedBox(width: 4),
+                            Text('Not Registered'),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          _getStatusIcon(status),
+                          const SizedBox(width: 4),
+                          Text(
+                            status != null
+                                ? '${status[0].toUpperCase()}${status.substring(1)}'
+                                : 'Not Registered',
+                          ),
+                        ],
+                      );
+                    },
+                  )
+                : const Row(
                     children: [
                       Icon(Icons.help_outline, color: Colors.grey, size: 16),
                       SizedBox(width: 4),
                       Text('Not Registered'),
                     ],
-                  );
-                }
-                final status = snapshot.data!.data()?['status'] as String?;
-                return Row(
-                  children: [
-                    _getStatusIcon(status),
-                    const SizedBox(width: 4),
-                    Text(
-                      status != null
-                          ? '${status[0].toUpperCase()}${status.substring(1)}'
-                          : 'Not Registered',
-                    ),
-                  ],
-                );
-              },
-            ),
+                  ),
           ],
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) =>
-                  EventDetailsScreen(eventId: widget.event.id),
+              builder: (context) => EventDetailsScreen(
+                eventId: widget.event.id,
+                isGroupAdmin: widget.isAdmin,
+              ),
             ),
           );
         },
