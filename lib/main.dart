@@ -43,29 +43,37 @@ class _AuthWrapperState extends State<AuthWrapper> {
   final NotificationService _notificationService = NotificationService();
 
   @override
-  void initState() {
-    super.initState();
-    FirebaseAuth.instance.authStateChanges().listen((user) {
-      if (user != null) {
-        _notificationService.initNotifications();
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      // Use userChanges() instead of authStateChanges() for better web compatibility
+      stream: FirebaseAuth.instance.userChanges(),
       builder: (context, snapshot) {
         developer.log(
-          'Auth state changed: ${snapshot.connectionState}',
+          'AuthWrapper StreamBuilder - connectionState: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, user: ${snapshot.data?.uid}',
           name: 'AuthWrapper',
         );
+
+        // Show loading while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final user = snapshot.data;
+
         // User is logged in
-        if (snapshot.hasData) {
+        if (user != null) {
+          developer.log('Showing HomeScreen for user: ${user.uid}', name: 'AuthWrapper');
+          // Initialize notifications when user signs in
+          _notificationService.initNotifications();
           return const HomeScreen();
         }
+
         // User is not logged in
+        developer.log('Showing LoginScreen', name: 'AuthWrapper');
         return const LoginScreen();
       },
     );

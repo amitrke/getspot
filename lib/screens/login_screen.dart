@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/helpers/platform_helper.dart';
+import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'package:getspot/widgets/app_logo.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -162,7 +163,38 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                   ElevatedButton.icon(
                     icon: const Icon(Icons.apple),
-                    onPressed: () => _authService.signInWithApple(),
+                    onPressed: _isLoading ? null : () async {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      try {
+                        final result = await _authService.signInWithApple();
+                        if (!mounted) return;
+
+                        // On web, signInWithPopup doesn't reliably trigger auth streams
+                        // Navigate manually if sign-in was successful
+                        if (result != null && result.user != null) {
+                          if (mounted) {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => const HomeScreen()),
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        final messenger = ScaffoldMessenger.of(context);
+                        final colorScheme = Theme.of(context).colorScheme;
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to sign in: $e'),
+                            backgroundColor: colorScheme.error,
+                          ),
+                        );
+                      }
+                    },
                     label: const Text('Sign in with Apple'),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
@@ -173,7 +205,38 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.login), // Replace with a proper Google icon
-                    onPressed: () => _authService.signInWithGoogle(),
+                    onPressed: _isLoading ? null : () async {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      try {
+                        final result = await _authService.signInWithGoogle();
+                        if (!mounted) return;
+
+                        // On web, signInWithPopup doesn't reliably trigger auth streams
+                        // Navigate manually if sign-in was successful
+                        if (result != null && result.user != null) {
+                          if (mounted) {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => const HomeScreen()),
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        final messenger = ScaffoldMessenger.of(context);
+                        final colorScheme = Theme.of(context).colorScheme;
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to sign in: $e'),
+                            backgroundColor: colorScheme.error,
+                          ),
+                        );
+                      }
+                    },
                     label: const Text('Sign in with Google'),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
