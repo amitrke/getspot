@@ -1,7 +1,6 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
-import {processWaitlist} from "./processWaitlist";
 
 /**
  * Callable function to update the maxParticipants capacity for an event.
@@ -91,31 +90,48 @@ export const updateEventCapacity = (db: admin.firestore.Firestore) =>
           );
         }
 
-        // 7. Update the capacity
+        // 7. If capacity increased, read waitlist participants BEFORE any writes
+        // (Firestore requires all reads before writes in a transaction)
+        let waitlistedParticipants: admin.firestore.QueryDocumentSnapshot<admin.firestore.DocumentData>[] = [];
+        if (newMaxParticipants > currentMaxParticipants) {
+          const spotsAvailable = newMaxParticipants - confirmedCount;
+          const usersToPromote = Math.min(spotsAvailable, waitlistCount);
+
+          if (usersToPromote > 0) {
+            logger.info(`Reading up to ${usersToPromote} waitlisted users for event ${eventId}`);
+
+            const waitlistQuery = eventRef.collection("participants")
+              .where("status", "==", "waitlisted")
+              .orderBy("registeredAt", "asc")
+              .limit(usersToPromote);
+
+            const waitlistSnap = await transaction.get(waitlistQuery);
+            waitlistedParticipants = waitlistSnap.docs;
+
+            logger.info(`Found ${waitlistedParticipants.length} waitlisted users to promote`);
+          }
+        }
+
+        // 8. NOW do all writes: Update capacity and promote waitlisted users
         transaction.update(eventRef, {
           maxParticipants: newMaxParticipants,
         });
 
         logger.info(`Updated event ${eventId} capacity from ${currentMaxParticipants} to ${newMaxParticipants}`);
 
-        // 8. If capacity increased, process waitlist to promote users
+        // Promote waitlisted users
         const promotedUsers: string[] = [];
-        if (newMaxParticipants > currentMaxParticipants) {
-          const spotsAvailable = newMaxParticipants - confirmedCount;
-          const usersToPromote = Math.min(spotsAvailable, waitlistCount);
+        for (const participantDoc of waitlistedParticipants) {
+          transaction.update(participantDoc.ref, {status: "confirmed"});
+          transaction.update(eventRef, {
+            confirmedCount: admin.firestore.FieldValue.increment(1),
+            waitlistCount: admin.firestore.FieldValue.increment(-1),
+          });
+          promotedUsers.push(participantDoc.id);
+          logger.info(`Promoted user ${participantDoc.id} from waitlist for event ${eventId}`);
+        }
 
-          logger.info(`Attempting to promote up to ${usersToPromote} users from waitlist for event ${eventId}`);
-
-          for (let i = 0; i < usersToPromote; i++) {
-            const promotedUserId = await processWaitlist(db, transaction, eventId);
-            if (promotedUserId) {
-              promotedUsers.push(promotedUserId);
-            } else {
-              // No more users to promote
-              break;
-            }
-          }
-
+        if (promotedUsers.length > 0) {
           logger.info(`Promoted ${promotedUsers.length} users from waitlist for event ${eventId}`);
         }
 
