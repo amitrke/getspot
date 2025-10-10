@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:getspot/screens/create_event_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
 import 'package:getspot/providers/participant_provider.dart';
+import 'package:getspot/services/group_cache_service.dart';
+import 'package:getspot/services/user_cache_service.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
 import 'package:getspot/screens/wallet_screen.dart';
@@ -24,11 +26,26 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     with SingleTickerProviderStateMixin {
   bool _isAdmin = false;
   TabController? _tabController;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
     super.initState();
     _checkAdminStatus();
+  }
+
+  Future<void> _handleRefresh() async {
+    developer.log('Pull-to-refresh triggered on Group Details Screen', name: 'GroupDetailsScreen');
+
+    // Invalidate cache for this specific group
+    GroupCacheService().invalidate(widget.group['groupId']);
+    // Clear user cache to refresh member display names and photos
+    UserCacheService().clear();
+
+    // Wait a bit to allow the stream to pick up fresh data
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    developer.log('Cache invalidated for group ${widget.group['groupId']}', name: 'GroupDetailsScreen');
   }
 
   void _checkAdminStatus() {
@@ -174,30 +191,34 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: _isAdmin
-                      ? [
-                          _EventList(
-                            groupId: widget.group['groupId'],
-                            isAdmin: _isAdmin,
-                          ),
-                          _AnnouncementsTab(
-                            groupId: widget.group['groupId'],
-                            isAdmin: _isAdmin,
-                          ),
-                          _AdminManagementTab(groupId: widget.group['groupId']),
-                        ]
-                      : [
-                          _EventList(
-                            groupId: widget.group['groupId'],
-                            isAdmin: _isAdmin,
-                          ),
-                          _AnnouncementsTab(
-                            groupId: widget.group['groupId'],
-                            isAdmin: _isAdmin,
-                          ),
-                        ],
+                child: RefreshIndicator(
+                  key: _refreshIndicatorKey,
+                  onRefresh: _handleRefresh,
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: _isAdmin
+                        ? [
+                            _EventList(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                            _AnnouncementsTab(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                            _AdminManagementTab(groupId: widget.group['groupId']),
+                          ]
+                        : [
+                            _EventList(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                            _AnnouncementsTab(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                          ],
+                  ),
                 ),
               ),
             ],
