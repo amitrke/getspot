@@ -47,5 +47,6 @@ flutter build ios --release --no-codesign
 
 echo "Installing CocoaPods..."
 pushd ios >/dev/null
-pod install
+rm -f Podfile.lock
+pod install --repo-update
 popd >/dev/null
