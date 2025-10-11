@@ -6,6 +6,7 @@ import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/screens/login_screen.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/services/notification_service.dart';
+import 'package:getspot/services/analytics_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,9 @@ class MyApp extends StatelessWidget {
       ),
       home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [
+        AnalyticsService().getAnalyticsObserver(),
+      ],
     );
   }
 }
@@ -41,6 +45,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   final NotificationService _notificationService = NotificationService();
+  final AnalyticsService _analytics = AnalyticsService();
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +72,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
         // User is logged in
         if (user != null) {
           developer.log('Showing HomeScreen for user: ${user.uid}', name: 'AuthWrapper');
+          // Set analytics user ID
+          _analytics.setUserId(user.uid);
           // Initialize notifications when user signs in
           _notificationService.initNotifications();
           return const HomeScreen();
