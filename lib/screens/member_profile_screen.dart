@@ -259,25 +259,12 @@ class MemberProfileScreen extends StatelessWidget {
                   value: notificationsEnabled,
                   onChanged: (bool value) async {
                     try {
-                      // Use set with merge to handle both existing and new fields
-                      // But only include the field we're updating
-                      final userRef = FirebaseFirestore.instance
+                      await FirebaseFirestore.instance
                           .collection('users')
-                          .doc(userId);
-
-                      // Check if document exists first
-                      final docSnapshot = await userRef.get();
-                      if (!docSnapshot.exists) {
-                        // Document doesn't exist, create it
-                        await userRef.set({
-                          'notificationsEnabled': value,
-                        });
-                      } else {
-                        // Document exists, use update
-                        await userRef.update({
-                          'notificationsEnabled': value,
-                        });
-                      }
+                          .doc(userId)
+                          .set({
+                        'notificationsEnabled': value,
+                      }, SetOptions(merge: true));
 
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
