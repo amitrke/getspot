@@ -535,32 +535,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   ),
                   const SizedBox(height: 12),
                   const Divider(),
-                  if (_isAdmin && !isCancelled)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _isUpdatingCapacity
-                                ? null
-                                : () => _showUpdateCapacityDialog(event),
-                            icon: _isUpdatingCapacity
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.edit_outlined, size: 18),
-                            label: const Text('Update Capacity'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   Expanded(
                     child: ListView(
                       children: [
@@ -568,6 +542,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           title:
                               'Confirmed (${event['confirmedCount'] ?? 0}/${event['maxParticipants'] ?? 'N/A'})',
                           status: 'confirmed',
+                          showUpdateButton: _isAdmin && !isCancelled,
+                          onUpdatePressed: () => _showUpdateCapacityDialog(event),
+                          isUpdating: _isUpdatingCapacity,
                         ),
                         const SizedBox(height: 16),
                         _buildParticipantList(
@@ -587,13 +564,44 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildParticipantList({required String title, required String status}) {
+  Widget _buildParticipantList({
+    required String title,
+    required String status,
+    bool showUpdateButton = false,
+    VoidCallback? onUpdatePressed,
+    bool isUpdating = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            if (showUpdateButton)
+              ElevatedButton.icon(
+                onPressed: isUpdating ? null : onUpdatePressed,
+                icon: isUpdating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Update'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
