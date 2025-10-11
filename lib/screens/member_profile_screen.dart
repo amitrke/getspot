@@ -165,6 +165,8 @@ class MemberProfileScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.red)),
               ),
               const SizedBox(height: 24),
+              _buildNotificationSettings(context, user.uid),
+              const SizedBox(height: 24),
               Text('Group Balances',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
@@ -217,6 +219,75 @@ class MemberProfileScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationSettings(BuildContext context, String userId) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Notification Settings',
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                      child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ));
+                }
+
+                final userData = snapshot.data?.data();
+                final notificationsEnabled =
+                    userData?['notificationsEnabled'] ?? true;
+
+                return SwitchListTile(
+                  title: const Text('Push Notifications'),
+                  subtitle: const Text(
+                      'Receive notifications for new events, join approvals, and reminders'),
+                  value: notificationsEnabled,
+                  onChanged: (bool value) async {
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
+                          .set({
+                        'notificationsEnabled': value,
+                      }, SetOptions(merge: true));
+
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(value
+                              ? 'Notifications enabled'
+                              : 'Notifications disabled'),
+                        ),
+                      );
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error updating settings: $e'),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

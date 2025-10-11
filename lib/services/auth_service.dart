@@ -8,10 +8,12 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:getspot/services/analytics_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AnalyticsService _analytics = AnalyticsService();
 
   GoogleSignIn _getGoogleSignIn() {
     if (kIsWeb) {
@@ -42,8 +44,20 @@ class AuthService {
         if (user != null) {
           developer.log('Web sign-in successful: ${user.uid}', name: 'AuthService');
           developer.log('Current auth user: ${_auth.currentUser?.uid}', name: 'AuthService');
+
+          // Check if this is a new user
+          final userDoc = await _firestore.collection('users').doc(user.uid).get();
+          final isNewUser = !userDoc.exists;
+
           // Create user document in Firestore if it doesn't exist (non-blocking)
           _createUserDocumentIfNeeded(user.uid, user.displayName ?? '', user.email);
+
+          // Track analytics
+          if (isNewUser) {
+            await _analytics.logSignUp('google');
+          } else {
+            await _analytics.logLogin('google');
+          }
         }
 
         return userCredential;
@@ -88,8 +102,19 @@ class AuthService {
 
         developer.log('User reloaded, current user: ${_auth.currentUser?.uid}', name: 'AuthService');
 
+        // Check if this is a new user
+        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+        final isNewUser = !userDoc.exists;
+
         // Create user document in Firestore if it doesn't exist (non-blocking)
         _createUserDocumentIfNeeded(user.uid, user.displayName ?? '', user.email);
+
+        // Track analytics
+        if (isNewUser) {
+          await _analytics.logSignUp('google');
+        } else {
+          await _analytics.logLogin('google');
+        }
       }
 
       return userCredential;
@@ -243,6 +268,9 @@ class AuthService {
   Future<void> signOut() async {
     try {
       developer.log('Signing out user', name: 'AuthService');
+
+      // Track analytics
+      await _analytics.logLogout();
 
       // Sign out from Google first
       await _googleSignIn.signOut();

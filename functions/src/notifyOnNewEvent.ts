@@ -1,6 +1,7 @@
 import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
+import {sendNotificationWithCleanup} from "./cleanupInvalidTokens";
 
 export const notifyOnNewEvent = (db: admin.firestore.Firestore) =>
   onDocumentCreated("events/{eventId}", async (event) => {
@@ -27,34 +28,14 @@ export const notifyOnNewEvent = (db: admin.firestore.Firestore) =>
 
     const memberIds = membersSnap.docs.map((doc) => doc.id);
 
-    // Fetch all users and their tokens
-    const usersSnap = await db.collection("users").where(admin.firestore.FieldPath.documentId(), "in", memberIds).get();
-
-    const tokens: string[] = [];
-    usersSnap.forEach((userDoc) => {
-      const userData = userDoc.data();
-      if (userData.fcmTokens) {
-        tokens.push(...userData.fcmTokens);
-      }
-    });
-
-    if (tokens.length === 0) {
-      logger.info("No FCM tokens found for any members.");
-      return;
-    }
-
-    const message = {
-      notification: {
-        title: `New Event: ${groupName}`,
-        body: `${eventName} has been scheduled. Tap to see details.`,
+    // Send notifications with automatic token cleanup
+    await sendNotificationWithCleanup(db, memberIds, {
+      title: `New Event: ${groupName}`,
+      body: `${eventName} has been scheduled. Tap to see details.`,
+      data: {
+        type: "new_event",
+        eventId: event.params.eventId,
+        groupId: groupId,
       },
-      tokens: tokens,
-    };
-
-    try {
-      await admin.messaging().sendEachForMulticast(message);
-      logger.info(`Sent notification for new event to ${tokens.length} tokens.`);
-    } catch (error) {
-      logger.error("Error sending new event notification:", error);
-    }
+    });
   });

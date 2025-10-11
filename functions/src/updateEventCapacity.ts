@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
+import {sendNotificationWithCleanup} from "./cleanupInvalidTokens";
 
 /**
  * Callable function to update the maxParticipants capacity for an event.
@@ -142,15 +143,36 @@ export const updateEventCapacity = (db: admin.firestore.Firestore) =>
           waitlistCount,
           promotedCount: promotedUsers.length,
           promotedUsers,
+          groupId,
         };
       });
+
+      // Send notifications to promoted users after the transaction completes
+      if (result.promotedUsers.length > 0) {
+        const eventDoc = await eventRef.get();
+        const eventName = eventDoc.data()?.name ?? "an event";
+
+        await sendNotificationWithCleanup(db, result.promotedUsers, {
+          title: "You're In!",
+          body: `A spot has opened up for '${eventName}'. You are now confirmed.`,
+          data: {
+            type: "waitlist_promoted",
+            eventId: eventId,
+            groupId: result.groupId,
+          },
+        });
+      }
 
       return {
         success: true,
         message: result.promotedCount > 0 ?
           `Capacity updated to ${result.newCapacity}. ${result.promotedCount} user(s) promoted from waitlist.` :
           `Capacity updated to ${result.newCapacity}.`,
-        ...result,
+        oldCapacity: result.oldCapacity,
+        newCapacity: result.newCapacity,
+        confirmedCount: result.confirmedCount,
+        waitlistCount: result.waitlistCount,
+        promotedCount: result.promotedCount,
       };
     } catch (error) {
       if (error instanceof HttpsError) {
