@@ -1,0 +1,165 @@
+# This file contains the fastlane configuration
+# You can find the documentation at https://docs.fastlane.tools
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Ensure we're on a clean git state
+    ensure_git_status_clean
+
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "ios/Runner.xcodeproj"
+    )
+
+    # Build the app (Xcode Cloud handles this, but kept for manual runs)
+    build_app(
+      workspace: "ios/Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "com.yourcompany.getspot" => "match AppStore com.yourcompany.getspot"
+        }
+      }
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: "Bug fixes and improvements"
+    )
+  end
+
+  desc "Promote the latest TestFlight build to App Store Review"
+  lane :promote_to_review do
+    # Load API key from JSON file
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: false,
+      in_house: false
+    )
+
+    # Get the latest build number from TestFlight
+    latest_build = latest_testflight_build_number(
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      api_key: api_key
+    )
+
+    UI.message("Latest TestFlight build: #{latest_build}")
+
+    # Deliver the build to App Store Review
+    deliver(
+      api_key: api_key,
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      build_number: latest_build.to_s,
+      submit_for_review: true,
+      automatic_release: false, # Set to true if you want auto-release after approval
+      force: true, # Skip verification of HTML preview file
+      skip_metadata: false,
+      skip_screenshots: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      }
+    )
+
+    UI.success("✅ Build #{latest_build} submitted for App Store Review!")
+  end
+
+  desc "Promote specific build number to App Store Review"
+  lane :promote_build do |options|
+    build_number = options[:build_number]
+
+    if build_number.nil?
+      UI.user_error!("Please provide a build number: fastlane promote_build build_number:123")
+    end
+
+    # Load API key from environment
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: false,
+      in_house: false
+    )
+
+    UI.message("Promoting build #{build_number} to App Store Review")
+
+    deliver(
+      api_key: api_key,
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      build_number: build_number.to_s,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      }
+    )
+
+    UI.success("✅ Build #{build_number} submitted for App Store Review!")
+  end
+
+  desc "Download metadata and screenshots from App Store Connect"
+  lane :download_metadata do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"],
+      download_metadata: true,
+      download_screenshots: true,
+      force: true
+    )
+
+    UI.success("✅ Metadata downloaded to fastlane/metadata")
+  end
+
+  desc "Update App Store metadata only (no build submission)"
+  lane :update_metadata do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"],
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      force: true
+    )
+
+    UI.success("✅ Metadata updated on App Store Connect!")
+  end
+
+  desc "Release the approved build to production"
+  lane :release do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"],
+      release_build: true
+    )
+
+    # Optional: Tag the release in git
+    add_git_tag(
+      tag: "v#{get_version_number(xcodeproj: "ios/Runner.xcodeproj")}-#{get_build_number(xcodeproj: "ios/Runner.xcodeproj")}"
+    )
+
+    UI.success("✅ Build released to App Store!")
+  end
+
+  desc "Get app version and build number"
+  lane :version_info do
+    version = get_version_number(xcodeproj: "ios/Runner.xcodeproj")
+    build = get_build_number(xcodeproj: "ios/Runner.xcodeproj")
+
+    UI.message("Version: #{version}")
+    UI.message("Build: #{build}")
+  end
+
+  # Error handling
+  error do |lane, exception|
+    UI.error("Error in lane #{lane}: #{exception.message}")
+  end
+end

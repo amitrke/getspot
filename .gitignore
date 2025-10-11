@@ -54,7 +54,24 @@ GoogleService-Info.plist
 key.properties
 *.jks
 ""  
-"# Environment variables"  
+"# Environment variables
 .env
+fastlane/.env
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output
+
+# App Store Connect API Key (NEVER COMMIT THIS)
+fastlane/app_store_connect_api_key.json
+*.p8
+
+# Fastlane metadata downloads
+fastlane/metadata
+fastlane/screenshots
+
+# Ruby/Bundler
+vendor/bundle/
+.bundle/
+Gemfile.lock
 
 screenshots/

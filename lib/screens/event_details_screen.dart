@@ -541,14 +541,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   const Divider(),
                   if (_isAdmin && !isCancelled)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
+                      padding: const EdgeInsets.only(bottom: 12.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            'Event Capacity Management',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
                           ElevatedButton.icon(
                             onPressed: _isUpdatingCapacity
                                 ? null
@@ -559,7 +555,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                                     height: 16,
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   )
-                                : const Icon(Icons.edit, size: 18),
+                                : const Icon(Icons.edit_outlined, size: 18),
                             label: const Text('Update Capacity'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
