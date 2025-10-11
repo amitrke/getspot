@@ -85,25 +85,54 @@ class MemberProfileScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
-              ),
-              const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(user.displayName ?? 'Anonymous',
-                      style: Theme.of(context).textTheme.headlineSmall),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _showEditNameDialog(context, user),
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+                    child: user.photoURL == null
+                        ? Text(
+                            user.displayName?.isNotEmpty == true
+                                ? user.displayName![0].toUpperCase()
+                                : 'A',
+                            style: const TextStyle(fontSize: 32),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                user.displayName ?? 'Anonymous',
+                                style: Theme.of(context).textTheme.headlineSmall,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _showEditNameDialog(context, user),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          user.email ?? '',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              Text(user.email ?? ''),
               const SizedBox(height: 24),
               TextButton(
                 onPressed: () async {

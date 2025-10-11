@@ -508,63 +508,33 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     event['name'] ?? 'Unnamed Event',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: 16),
-                  _buildDetailRow(
+                  const SizedBox(height: 12),
+                  _buildCompactDetailRow(
                     icon: Icons.location_on,
-                    label: 'Location',
                     value: event['location'] ?? 'No location set',
                   ),
-                  _buildDetailRow(
+                  _buildCompactDetailRow(
                     icon: Icons.calendar_today,
-                    label: 'Time',
                     value: eventTimestamp != null
                         ? DateFormat.yMMMd()
                             .add_jm()
                             .format(eventTimestamp.toDate())
                         : 'No date set',
                   ),
-                  _buildDetailRow(
+                  _buildCompactDetailRow(
                     icon: Icons.attach_money,
-                    label: 'Fee',
                     value: '${event['fee'] ?? 0} credits',
                   ),
-                  _buildDetailRow(
+                  _buildCompactDetailRow(
                     icon: Icons.timer,
-                    label: 'Commitment Deadline',
                     value: deadlineTimestamp != null
                         ? DateFormat.yMMMd()
                             .add_jm()
                             .format(deadlineTimestamp.toDate())
-                        : 'No deadline set',
+                        : 'No deadline',
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
                   const Divider(),
-                  if (_isAdmin && !isCancelled)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _isUpdatingCapacity
-                                ? null
-                                : () => _showUpdateCapacityDialog(event),
-                            icon: _isUpdatingCapacity
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.edit_outlined, size: 18),
-                            label: const Text('Update Capacity'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   Expanded(
                     child: ListView(
                       children: [
@@ -572,6 +542,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                           title:
                               'Confirmed (${event['confirmedCount'] ?? 0}/${event['maxParticipants'] ?? 'N/A'})',
                           status: 'confirmed',
+                          showUpdateButton: _isAdmin && !isCancelled,
+                          onUpdatePressed: () => _showUpdateCapacityDialog(event),
+                          isUpdating: _isUpdatingCapacity,
                         ),
                         const SizedBox(height: 16),
                         _buildParticipantList(
@@ -591,13 +564,44 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildParticipantList({required String title, required String status}) {
+  Widget _buildParticipantList({
+    required String title,
+    required String status,
+    bool showUpdateButton = false,
+    VoidCallback? onUpdatePressed,
+    bool isUpdating = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            if (showUpdateButton)
+              ElevatedButton.icon(
+                onPressed: isUpdating ? null : onUpdatePressed,
+                icon: isUpdating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Update'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -751,24 +755,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildDetailRow({
+  Widget _buildCompactDetailRow({
     required IconData icon,
-    required String label,
     required String value,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.secondary),
-          const SizedBox(width: 16),
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.secondary),
+          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: Theme.of(context).textTheme.bodySmall),
-                Text(value, style: Theme.of(context).textTheme.bodyLarge),
-              ],
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
         ],

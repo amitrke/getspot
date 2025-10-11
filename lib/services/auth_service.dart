@@ -9,11 +9,13 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:getspot/services/analytics_service.dart';
+import 'package:getspot/services/crashlytics_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AnalyticsService _analytics = AnalyticsService();
+  final CrashlyticsService _crashlytics = CrashlyticsService();
 
   GoogleSignIn _getGoogleSignIn() {
     if (kIsWeb) {
@@ -118,9 +120,10 @@ class AuthService {
       }
 
       return userCredential;
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Handle error
       developer.log('Error during Google Sign-In: $e', name: 'AuthService');
+      await _crashlytics.logAuthError('google', e, stackTrace);
       return null;
     }
   }
@@ -271,6 +274,9 @@ class AuthService {
 
       // Track analytics
       await _analytics.logLogout();
+
+      // Clear crashlytics user ID
+      await _crashlytics.clearUserId();
 
       // Sign out from Google first
       await _googleSignIn.signOut();

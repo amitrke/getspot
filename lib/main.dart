@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/firebase_options.dart';
 import 'package:getspot/screens/home_screen.dart';
@@ -8,6 +10,8 @@ import 'package:getspot/screens/login_screen.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/services/notification_service.dart';
 import 'package:getspot/services/analytics_service.dart';
+import 'package:getspot/services/crashlytics_service.dart';
+import 'package:upgrader/upgrader.dart';
 
 /// Background message handler - must be top-level function
 @pragma('vm:entry-point')
@@ -28,6 +32,16 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize Firebase Crashlytics
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  // Pass all uncaught asynchronous errors that aren't handled by Flutter to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
 
   // Register background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -65,6 +79,7 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   final NotificationService _notificationService = NotificationService();
   final AnalyticsService _analytics = AnalyticsService();
+  final CrashlyticsService _crashlytics = CrashlyticsService();
 
   @override
   void initState() {
@@ -122,9 +137,16 @@ class _AuthWrapperState extends State<AuthWrapper> {
           developer.log('Showing HomeScreen for user: ${user.uid}', name: 'AuthWrapper');
           // Set analytics user ID
           _analytics.setUserId(user.uid);
+          // Set crashlytics user ID
+          _crashlytics.setUserId(user.uid);
           // Initialize notifications when user signs in
           _notificationService.initNotifications();
-          return const HomeScreen();
+          return UpgradeAlert(
+            upgrader: Upgrader(
+              durationUntilAlertAgain: const Duration(days: 1),
+            ),
+            child: const HomeScreen(),
+          );
         }
 
         // User is not logged in

@@ -12,7 +12,9 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read, create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId && request.resource.data.keys().hasOnly(['fcmTokens', 'displayName', 'photoURL']);
+      // Allow update if user is updating their own document and only modifying allowed fields
+      allow update: if request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmTokens', 'displayName', 'photoURL', 'notificationsEnabled']);
     }
 
     // New collection for simplified group lookups.
