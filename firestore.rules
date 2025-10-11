@@ -56,6 +56,7 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
       allow create: if exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(request.auth.uid));
+      // Admin can update/delete events. Note: maxParticipants updates are handled via Cloud Function for safety
       allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.admin;
 
       //--- SUBCOLLECTIONS ---//

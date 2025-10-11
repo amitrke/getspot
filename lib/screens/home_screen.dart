@@ -8,6 +8,8 @@ import 'package:getspot/models/group_view_model.dart';
 
 import 'package:getspot/screens/faq_screen.dart';
 import 'package:getspot/services/group_service.dart';
+import 'package:getspot/services/group_cache_service.dart';
+import 'package:getspot/services/user_cache_service.dart';
 import 'package:getspot/screens/member_profile_screen.dart';
 import 'package:getspot/widgets/group_list_item.dart';
 
@@ -103,6 +105,7 @@ class _GroupList extends StatefulWidget {
 class _GroupListState extends State<_GroupList> {
   late final Stream<List<GroupViewModel>> _groupsViewModelStream;
   final GroupService _groupService = GroupService();
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
@@ -110,61 +113,87 @@ class _GroupListState extends State<_GroupList> {
     _groupsViewModelStream = _groupService.getGroupViewModelsStream();
   }
 
+  Future<void> _handleRefresh() async {
+    developer.log('Pull-to-refresh triggered on Home Screen', name: 'HomeScreen');
+
+    // Invalidate all caches to force fresh data
+    GroupCacheService().clear();
+    UserCacheService().clear();
+
+    // Wait a bit to allow the stream to pick up fresh data
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    developer.log('Caches cleared, data refreshing', name: 'HomeScreen');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<GroupViewModel>>(
-      stream: _groupsViewModelStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return RefreshIndicator(
+      key: _refreshIndicatorKey,
+      onRefresh: _handleRefresh,
+      child: StreamBuilder<List<GroupViewModel>>(
+        stream: _groupsViewModelStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        if (snapshot.hasError) {
-          final user = FirebaseAuth.instance.currentUser;
-          developer.log(
-            'Error fetching groups stream for user ${user?.uid}.',
-            name: 'HomeScreen',
-            error: snapshot.error,
-            stackTrace: snapshot.stackTrace,
-          );
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
+          if (snapshot.hasError) {
+            final user = FirebaseAuth.instance.currentUser;
+            developer.log(
+              'Error fetching groups stream for user ${user?.uid}.',
+              name: 'HomeScreen',
+              error: snapshot.error,
+              stackTrace: snapshot.stackTrace,
+            );
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
 
-        final viewModels = snapshot.data;
+          final viewModels = snapshot.data;
 
-        if (viewModels == null || viewModels.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Welcome to GetSpot!',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
+          if (viewModels == null || viewModels.isEmpty) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Welcome to GetSpot!',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'This is your space to manage sports groups and events. '
+                            'Get started by creating a new group or joining an existing one with a code.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'This is your space to manage sports groups and events. '
-                    'Get started by creating a new group or joining an existing one with a code.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+                ),
+              ],
+            );
+          }
 
-        return ListView.builder(
-          itemCount: viewModels.length,
-          itemBuilder: (context, index) {
-            return GroupListItem(viewModel: viewModels[index]);
-          },
-        );
-      },
+          return ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: viewModels.length,
+            itemBuilder: (context, index) {
+              return GroupListItem(viewModel: viewModels[index]);
+            },
+          );
+        },
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
+import 'dart:math' as math;
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -23,6 +24,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isRegistering = false;
   bool _isWithdrawing = false;
   bool _isCancelling = false;
+  bool _isUpdatingCapacity = false;
 
   bool get _isAdmin => widget.isGroupAdmin;
 
@@ -203,6 +205,190 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
+  Future<void> _updateEventCapacity(int newCapacity) async {
+    setState(() {
+      _isUpdatingCapacity = true;
+    });
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
+      final callable = functions.httpsCallable('updateEventCapacity');
+      final result = await callable.call({
+        'eventId': widget.eventId,
+        'newMaxParticipants': newCapacity,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.data['message'] ?? 'Capacity updated successfully.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseFunctionsException catch (e, st) {
+      developer.log(
+        'Error updating event capacity',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'An unknown error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (e, st) {
+      developer.log(
+        'Generic error updating event capacity',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('An unexpected error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingCapacity = false;
+        });
+      }
+    }
+  }
+
+  void _showUpdateCapacityDialog(Map<String, dynamic> eventData) {
+    final currentCapacity = eventData['maxParticipants'] ?? 0;
+    final confirmedCount = eventData['confirmedCount'] ?? 0;
+    final waitlistCount = eventData['waitlistCount'] ?? 0;
+    final capacityController = TextEditingController(text: currentCapacity.toString());
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Update Event Capacity'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Current capacity: $currentCapacity'),
+              Text('Confirmed participants: $confirmedCount'),
+              Text('Waitlisted participants: $waitlistCount'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: capacityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'New Capacity',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Note: Cannot reduce below $confirmedCount (current confirmed count)',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Update'),
+              onPressed: () {
+                final newCapacity = int.tryParse(capacityController.text);
+                if (newCapacity == null || newCapacity <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Please enter a valid positive number.'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.of(dialogContext).pop();
+                _showConfirmCapacityChangeDialog(
+                  currentCapacity,
+                  newCapacity,
+                  confirmedCount,
+                  waitlistCount,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showConfirmCapacityChangeDialog(
+    int oldCapacity,
+    int newCapacity,
+    int confirmedCount,
+    int waitlistCount,
+  ) {
+    final isIncreasing = newCapacity > oldCapacity;
+    final change = (newCapacity - oldCapacity).abs();
+
+    String message;
+    if (isIncreasing) {
+      final canPromote = math.min(change, waitlistCount);
+      if (canPromote > 0) {
+        message = 'Increasing capacity by $change spots.\n\n'
+            '$canPromote user(s) will be automatically promoted from the waitlist.\n\n'
+            'Continue?';
+      } else {
+        message = 'Increasing capacity by $change spots.\n\n'
+            'No waitlisted users to promote.\n\n'
+            'Continue?';
+      }
+    } else {
+      message = 'Decreasing capacity by $change spots (from $oldCapacity to $newCapacity).\n\n'
+          'This will not affect current confirmed participants.\n\n'
+          'Continue?';
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirm Capacity Change'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Confirm'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _updateEventCapacity(newCapacity);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showCancelConfirmationDialog() {
     showDialog(
       context: context,
@@ -353,6 +539,36 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   ),
                   const SizedBox(height: 24),
                   const Divider(),
+                  if (_isAdmin && !isCancelled)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Event Capacity Management',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: _isUpdatingCapacity
+                                ? null
+                                : () => _showUpdateCapacityDialog(event),
+                            icon: _isUpdatingCapacity
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.edit, size: 18),
+                            label: const Text('Update Capacity'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Expanded(
                     child: ListView(
                       children: [

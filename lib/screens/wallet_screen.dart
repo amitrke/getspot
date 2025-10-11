@@ -55,18 +55,31 @@ class _WalletScreenState extends State<WalletScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            _BalanceCard(future: _balanceFuture),
-            const Divider(height: 1),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            Expanded(
-              child: _TransactionList(future: _transactionsFuture),
-            ),
-          ],
+        child: RefreshIndicator(
+          onRefresh: () async {
+            _loadData();
+            // Wait a bit to ensure data is refreshed
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: _BalanceCard(future: _balanceFuture),
+              ),
+              const SliverToBoxAdapter(
+                child: Divider(height: 1),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              SliverFillRemaining(
+                child: _TransactionList(future: _transactionsFuture),
+              ),
+            ],
+          ),
         ),
       ),
     );

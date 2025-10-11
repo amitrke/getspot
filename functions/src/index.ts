@@ -29,6 +29,7 @@ import {
   onJoinRequestUpdated as onJoinRequestUpdatedHandler,
   onJoinRequestDeleted as onJoinRequestDeletedHandler,
 } from "./maintainJoinRequestCount";
+import {updateEventCapacity as updateEventCapacityHandler} from "./updateEventCapacity";
 // import {initializePendingJoinRequestsCount as initializePendingJoinRequestsCountHandler} from "./migrations/initializePendingJoinRequestsCount";
 
 
@@ -168,6 +169,7 @@ export const updateUserDisplayName = functionsV1.region("us-east4").https.onCall
 export const onJoinRequestCreated = onJoinRequestCreatedHandler(db);
 export const onJoinRequestUpdated = onJoinRequestUpdatedHandler(db);
 export const onJoinRequestDeleted = onJoinRequestDeletedHandler(db);
+export const updateEventCapacity = updateEventCapacityHandler(db);
 
 // Migration function - call once, then comment out or remove
 // MIGRATION COMPLETED - Commented out on 2025-10-07
