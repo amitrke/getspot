@@ -2,6 +2,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {HttpsError} from "firebase-functions/v1/https";
+import {sendNotificationWithCleanup} from "./cleanupInvalidTokens";
 
 export const cancelEvent = (db: admin.firestore.Firestore) => functions.https.onCall(async (request) => {
   if (!request.auth) {
@@ -70,25 +71,15 @@ export const cancelEvent = (db: admin.firestore.Firestore) => functions.https.on
     // Post-transaction notifications
     const userIds = participantsSnapshot.docs.map((doc) => doc.data().uid);
     if (userIds.length > 0) {
-      const usersSnapshot = await db.collection("users").where(admin.firestore.FieldPath.documentId(), "in", userIds).get();
-      const tokens: string[] = [];
-      usersSnapshot.forEach((userDoc) => {
-        const userData = userDoc.data();
-        if (userData.fcmTokens) {
-          tokens.push(...userData.fcmTokens);
-        }
+      await sendNotificationWithCleanup(db, userIds, {
+        title: "Event Cancelled",
+        body: `The event '${eventData.name}' has been cancelled. Your wallet has been refunded.`,
+        data: {
+          type: "event_cancelled",
+          eventId: eventId,
+          groupId: groupId,
+        },
       });
-
-      if (tokens.length > 0) {
-        const message = {
-          notification: {
-            title: "Event Cancelled",
-            body: `The event '${eventData.name}' has been cancelled. Your wallet has been refunded.`,
-          },
-          tokens: tokens,
-        };
-        await admin.messaging().sendEachForMulticast(message);
-      }
     }
 
 

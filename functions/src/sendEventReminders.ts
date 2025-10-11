@@ -1,6 +1,7 @@
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
+import {sendNotificationWithCleanup} from "./cleanupInvalidTokens";
 
 export const sendEventReminders = (db: admin.firestore.Firestore) =>
   onSchedule({
@@ -35,26 +36,17 @@ export const sendEventReminders = (db: admin.firestore.Firestore) =>
       }
 
       const userIds = participantsSnap.docs.map((doc) => doc.id);
-      const usersSnap = await db.collection("users").where(admin.firestore.FieldPath.documentId(), "in", userIds).get();
 
-      const tokens: string[] = [];
-      usersSnap.forEach((userDoc) => {
-        const userData = userDoc.data();
-        if (userData.fcmTokens) {
-          tokens.push(...userData.fcmTokens);
-        }
-      });
-
-      if (tokens.length > 0) {
-        const message = {
-          notification: {
-            title: `Reminder: ${eventName}`,
-            body: "Your event is tomorrow. Don't forget!",
+      if (userIds.length > 0) {
+        await sendNotificationWithCleanup(db, userIds, {
+          title: `Reminder: ${eventName}`,
+          body: "Your event is tomorrow. Don't forget!",
+          data: {
+            type: "event_reminder",
+            eventId: eventDoc.id,
+            groupId: eventData.groupId,
           },
-          tokens: tokens,
-        };
-        await admin.messaging().sendEachForMulticast(message);
-        logger.info(`Sent reminders for event ${eventDoc.id} to ${tokens.length} tokens.`);
+        });
       }
     }
   });

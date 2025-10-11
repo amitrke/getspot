@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
+import {sendNotificationWithCleanup} from "./cleanupInvalidTokens";
 
 interface ManageJoinRequestData {
   groupId: string;
@@ -107,20 +108,14 @@ export const manageJoinRequest = (db: admin.firestore.Firestore) =>
           });
 
           // Send notification after the transaction is successful
-          const userDoc = await db.collection("users").doc(requestedUserId).get();
-          const fcmTokens = userDoc.data()?.fcmTokens;
-
-          if (fcmTokens && fcmTokens.length > 0) {
-            const message = {
-              notification: {
-                title: "Request Approved",
-                body: `Your request to join '${groupName}' has been approved!`,
-              },
-              tokens: fcmTokens,
-            };
-            await admin.messaging().sendEachForMulticast(message);
-            logger.info(`Sent join approval notification to ${requestedUserId}`);
-          }
+          await sendNotificationWithCleanup(db, [requestedUserId], {
+            title: "Request Approved",
+            body: `Your request to join '${groupName}' has been approved!`,
+            data: {
+              type: "join_approved",
+              groupId: groupId,
+            },
+          });
 
           return {status: "success", message: "User approved successfully."};
         }

@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import {processWaitlist} from "./processWaitlist";
+import {sendNotificationWithCleanup} from "./cleanupInvalidTokens";
 
 interface WithdrawFromEventData {
   eventId: string;
@@ -147,22 +148,20 @@ export const withdrawFromEvent = (db: admin.firestore.Firestore) =>
 
         // Send notification if a user was promoted
         if (promotedUserId) {
-          const userDoc = await db.collection("users").doc(promotedUserId).get();
-          const fcmTokens = userDoc.data()?.fcmTokens;
           const eventDoc = await db.collection("events").doc(eventId).get();
-          const eventName = eventDoc.data()?.name ?? "an event";
+          const eventData = eventDoc.data();
+          const eventName = eventData?.name ?? "an event";
+          const groupId = eventData?.groupId;
 
-          if (fcmTokens && fcmTokens.length > 0) {
-            const message = {
-              notification: {
-                title: "You're In!",
-                body: `A spot has opened up for '${eventName}'. You are now confirmed.`,
-              },
-              tokens: fcmTokens,
-            };
-            await admin.messaging().sendEachForMulticast(message);
-            logger.info(`Sent waitlist promotion notification to ${promotedUserId}`);
-          }
+          await sendNotificationWithCleanup(db, [promotedUserId], {
+            title: "You're In!",
+            body: `A spot has opened up for '${eventName}'. You are now confirmed.`,
+            data: {
+              type: "waitlist_promoted",
+              eventId: eventId,
+              groupId: groupId || "",
+            },
+          });
         }
       }
 
