@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'package:getspot/services/group_cache_service.dart';
 import 'package:getspot/services/user_cache_service.dart';
+import 'package:getspot/services/feature_flag_service.dart';
+import 'package:getspot/services/crashlytics_service.dart';
 import 'package:getspot/screens/login_screen.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
@@ -134,6 +136,74 @@ class MemberProfileScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
+              // Debug: Crash test button (only visible to specific users via Remote Config)
+              if (FeatureFlagService().canAccessCrashTest(user.uid))
+                Column(
+                  children: [
+                    Card(
+                      color: Colors.orange.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.bug_report, color: Colors.orange.shade700),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Debug Tools',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Colors.orange.shade700,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      CrashlyticsService().testCrash();
+                                    },
+                                    icon: const Icon(Icons.warning),
+                                    label: const Text('Test Crash'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () async {
+                                      await CrashlyticsService().testError();
+                                      if (!context.mounted) return;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Test error logged to Crashlytics'),
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.error_outline),
+                                    label: const Text('Test Error'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               TextButton(
                 onPressed: () async {
                   final confirm = await showDialog<bool>(

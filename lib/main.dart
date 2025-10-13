@@ -11,6 +11,7 @@ import 'dart:developer' as developer;
 import 'package:getspot/services/notification_service.dart';
 import 'package:getspot/services/analytics_service.dart';
 import 'package:getspot/services/crashlytics_service.dart';
+import 'package:getspot/services/feature_flag_service.dart';
 import 'package:upgrader/upgrader.dart';
 
 /// Background message handler - must be top-level function
@@ -45,6 +46,9 @@ void main() async {
 
   // Register background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Initialize Remote Config for feature flags
+  await FeatureFlagService().initialize();
 
   runApp(const MyApp());
 }
