@@ -17,15 +17,8 @@ existing_script = target.shell_script_build_phases.find do |phase|
 end
 
 if existing_script
-  puts "✅ Crashlytics upload script already exists!"
-  exit 0
-end
-
-# Find the position to insert (after Flutter build script, before other scripts)
-flutter_build_phase_index = target.build_phases.find_index do |phase|
-  phase.is_a?(Xcodeproj::Project::Object::PBXShellScriptBuildPhase) &&
-  phase.shell_script.include?('xcode_backend.sh') &&
-  phase.shell_script.include?('build')
+  puts "⚠️  Removing existing Crashlytics upload script to fix dependency cycle..."
+  target.build_phases.delete(existing_script)
 end
 
 # Create new Run Script build phase
@@ -38,13 +31,20 @@ phase.input_paths = [
   '$(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)'
 ]
 
-# Move the phase to the correct position if we found the Flutter build phase
-if flutter_build_phase_index
+# Find the "Thin Binary" phase - this runs after compilation
+thin_binary_index = target.build_phases.find_index do |phase|
+  phase.is_a?(Xcodeproj::Project::Object::PBXShellScriptBuildPhase) &&
+  phase.name == 'Thin Binary'
+end
+
+# Place Crashlytics upload AFTER "Thin Binary" to avoid dependency cycles
+# The build order should be: Sources -> Frameworks -> Resources -> Embed Frameworks -> Thin Binary -> Crashlytics
+if thin_binary_index
   target.build_phases.delete(phase)
-  target.build_phases.insert(flutter_build_phase_index + 1, phase)
-  puts "✅ Added Crashlytics upload script after Flutter build phase"
+  target.build_phases.insert(thin_binary_index + 1, phase)
+  puts "✅ Added Crashlytics upload script after 'Thin Binary' phase (post-compilation)"
 else
-  puts "✅ Added Crashlytics upload script at default position"
+  puts "✅ Added Crashlytics upload script at default position (end of build phases)"
 end
 
 project.save
