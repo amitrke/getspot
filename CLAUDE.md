@@ -177,6 +177,7 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
 - Hosting serves from: `build/web`
 - Functions predeploy: runs `npm run lint` and `npm run build`
 - All resources deployed to us-east4
+- **GoogleService-Info.plist:** Generated dynamically during CI/CD by `ios/ci_scripts/ci_post_clone.sh` from the `GOOGLE_SERVICE_INFO_PLIST_BASE64` environment variable. This file is not checked into source control for security. If Firebase services (Auth, Crashlytics, etc.) are working, the plist file is correctly configured.
 
 ## Important Notes
 
@@ -187,3 +188,23 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
 - **Caching:** `UserCacheService` and `GroupCacheService` cache frequently-accessed data with TTL. Always call `invalidate()` after updates:
   - `UserCacheService().invalidate(userId)` after updating user display name
   - `GroupCacheService().invalidate(groupId)` after updating group metadata (when implemented)
+- **Crashlytics:**
+  - Configured in `lib/main.dart` (lines 37-48) to capture Flutter errors and async errors
+  - Collection is **explicitly enabled** via `setCrashlyticsCollectionEnabled(true)` on startup
+  - `CrashlyticsService` provides centralized error logging with context
+  - **iOS Configuration:**
+    - dSYM files generated with `DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"` for Release/Profile builds
+    - Crashlytics upload script in Xcode (Runner target → Build Phases → "Upload Crashlytics Symbols")
+    - Script runs `${PODS_ROOT}/FirebaseCrashlytics/run` to upload symbols after each build
+  - **Testing Crashlytics (via TestFlight):**
+    1. Build and upload to TestFlight (or use Xcode Archive)
+    2. Install the TestFlight build on device
+    3. Trigger a test error: `CrashlyticsService().testError()` (non-fatal) or `CrashlyticsService().testCrash()` (fatal)
+    4. For fatal crashes: app will crash, reopen it immediately
+    5. Wait 5-10 minutes, then check Firebase Console → Crashlytics
+    6. If crashes don't appear, check Xcode build logs for "Crashlytics" to verify symbol upload succeeded
+  - **Troubleshooting:**
+    - Verify `isCrashlyticsCollectionEnabled()` returns true when app is running
+    - Check that GoogleService-Info.plist exists at runtime (created by ci_post_clone.sh)
+    - Ensure Firebase project has Crashlytics enabled in Firebase Console
+    - First crash from a new build version may take longer to appear (up to 1 hour)

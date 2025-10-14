@@ -169,7 +169,7 @@ Users who create groups automatically become admins with additional capabilities
 ---
 
 ### ✅ Push Notifications
-**Status:** Production | **Added:** 2025-10-08
+**Status:** Production | **Added:** 2025-10-08 | **Navigation Added:** 2025-10-13
 
 - [x] Event created
 - [x] Join request approved/denied
@@ -178,6 +178,7 @@ Users who create groups automatically become admins with additional capabilities
 - [x] Event reminder (24h before)
 - [x] Toggle notifications on/off
 - [x] FCM token management
+- [x] **Notification tap navigation** - Tapping notifications navigates to relevant screen
 
 **Not Yet Implemented:**
 - [ ] Granular notification preferences
@@ -185,7 +186,7 @@ Users who create groups automatically become admins with additional capabilities
 - [ ] In-app notification center
 - [ ] Notification history
 
-**Files:** `lib/services/notification_service.dart`, `functions/src/sendNotification.ts`
+**Files:** `lib/services/notification_service.dart`, `lib/main.dart:98-219`, `functions/src/notifyOnNewEvent.ts`, `docs/PUSH_NOTIFICATIONS_TESTING.md`
 
 ---
 
