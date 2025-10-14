@@ -161,7 +161,7 @@ GetSpot uses a virtual currency system that keeps things simple:
 - **Group privacy** - All groups are private and require approval
 - **Transparent tracking** - Every transaction is logged and visible
 
-See our [Privacy Policy](privacy.md) for details.
+See our [Privacy Policy](./privacy.md) for details.
 
 ---
 
@@ -230,7 +230,7 @@ No monthly fees, no per-transaction costs, no hidden charges. We built this beca
 
 - **Website:** [www.getspot.org](https://www.getspot.org)
 - **Email:** support@getspot.org
-- **Issues/Feedback:** [GitHub Issues](https://github.com/yourusername/getspot/issues)
+- **Issues/Feedback:** [GitHub Issues](https://github.com/amitrke/getspot/issues)
 
 ---
 
@@ -249,13 +249,13 @@ If they cancel after the commitment deadline, they forfeit their fee (unless som
 Absolutely! Players can join multiple groups with one account. Organizers can create and manage multiple groups too.
 
 ### What if I need a feature that's not available?
-We're actively developing! Check out our [roadmap](PRODUCT.md) or submit a feature request via GitHub Issues.
+We're actively developing! Check out our [roadmap](./PRODUCT.md) or submit a feature request via GitHub Issues.
 
 ### Is my data safe?
-Yes! We use Firebase with industry-standard security. Your payment information never touches our servers (since you handle real payments offline). See our [Privacy Policy](privacy.md).
+Yes! We use Firebase with industry-standard security. Your payment information never touches our servers (since you handle real payments offline). See our [Privacy Policy](./privacy.md).
 
 ### Can I customize the app for my sport?
-Currently GetSpot works great for all sports. Sport-specific features (like court assignments, skill-based matching) are on our [roadmap](PRODUCT.md).
+Currently GetSpot works great for all sports. Sport-specific features (like court assignments, skill-based matching) are on our [roadmap](./PRODUCT.md).
 
 ---
 
@@ -279,6 +279,6 @@ Currently GetSpot works great for all sports. Sport-specific features (like cour
 
 **Built with ❤️ for sports organizers everywhere**
 
-[Website](https://www.getspot.org) • [iOS App](https://apps.apple.com/us/app/sports-getspot/id6752911639) • [Android App](https://play.google.com/store/apps/details?id=org.getspot) • [Documentation](../README.md)
+[Website](https://www.getspot.org) • [iOS App](https://apps.apple.com/us/app/sports-getspot/id6752911639) • [Android App](https://play.google.com/store/apps/details?id=org.getspot) • [Documentation](https://github.com/amitrke/getspot/blob/main/README.md)
 
 </div>
