@@ -35,6 +35,9 @@ void main() async {
   );
 
   // Initialize Firebase Crashlytics
+  // Explicitly enable crash collection (required for iOS)
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
   FlutterError.onError = (errorDetails) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
   };
