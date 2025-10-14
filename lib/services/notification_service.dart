@@ -1,12 +1,12 @@
 import 'dart:developer' as developer;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FirebaseFunctions _functions =
-      FirebaseFunctions.instanceFor(region: 'us-east4');
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
@@ -15,7 +15,8 @@ class NotificationService {
 
   Future<void> initNotifications() async {
     // Request permission for iOS and web
-    await _firebaseMessaging.requestPermission();
+    final permission = await _firebaseMessaging.requestPermission();
+    developer.log('Notification permission: ${permission.authorizationStatus}', name: 'NotificationService');
 
     // Initialize local notifications with tap handling
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -37,6 +38,8 @@ class NotificationService {
 
     if (fcmToken != null) {
       await _updateTokenInFirestore(fcmToken);
+    } else {
+      developer.log('FCM Token is null, skipping Firestore update', name: 'NotificationService');
     }
 
     // Listen for token refreshes
@@ -122,18 +125,23 @@ class NotificationService {
 
   Future<void> _updateTokenInFirestore(String token) async {
     try {
-      final callable = _functions.httpsCallable('updateFcmToken');
-      await callable.call({'token': token});
-      developer.log('Successfully updated FCM token in Firestore.', name: 'NotificationService');
-    } on FirebaseFunctionsException catch (e) {
-      developer.log(
-        'Error updating FCM token: ${e.message}',
-        name: 'NotificationService',
-        error: e,
-      );
+      // Verify user is authenticated
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        developer.log('User not authenticated, skipping FCM token update', name: 'NotificationService');
+        return;
+      }
+
+      // Write token directly to Firestore
+      final userRef = _firestore.collection('users').doc(currentUser.uid);
+      await userRef.set({
+        'fcmTokens': FieldValue.arrayUnion([token]),
+      }, SetOptions(merge: true));
+
+      developer.log('Successfully updated FCM token', name: 'NotificationService');
     } catch (e) {
       developer.log(
-        'An unexpected error occurred while updating FCM token.',
+        'Error updating FCM token',
         name: 'NotificationService',
         error: e,
       );

@@ -2,11 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/firebase_options.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/screens/login_screen.dart';
+import 'package:getspot/screens/event_details_screen.dart';
+import 'package:getspot/screens/group_details_screen.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/services/notification_service.dart';
 import 'package:getspot/services/analytics_service.dart';
@@ -35,9 +38,8 @@ void main() async {
   );
 
   // Initialize Firebase Crashlytics
-  // Explicitly enable crash collection (required for iOS)
-  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-
+  // Note: setCrashlyticsCollectionEnabled is handled automatically by Firebase
+  // on iOS via firebase.json configuration
   FlutterError.onError = (errorDetails) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
   };
@@ -59,10 +61,14 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // Global key for navigation from notification handlers
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'GetSpot',
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -102,18 +108,115 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final eventId = data['eventId'] as String?;
     final groupId = data['groupId'] as String?;
 
-    // TODO: Navigate based on notification type
-    // For now, just log the navigation intent
+    // Get the navigator context
+    final navigatorContext = MyApp.navigatorKey.currentContext;
+    if (navigatorContext == null) {
+      developer.log('Navigator context not available, cannot navigate', name: 'AuthWrapper');
+      return;
+    }
+
+    // Navigate based on notification type
     if (type == 'new_event' && eventId != null) {
-      developer.log('Would navigate to event: $eventId', name: 'AuthWrapper');
+      developer.log('Navigating to event: $eventId', name: 'AuthWrapper');
+      _navigateToEvent(navigatorContext, eventId);
     } else if (type == 'join_approved' && groupId != null) {
-      developer.log('Would navigate to group: $groupId', name: 'AuthWrapper');
+      developer.log('Navigating to group: $groupId', name: 'AuthWrapper');
+      _navigateToGroup(navigatorContext, groupId);
     } else if (type == 'event_reminder' && eventId != null) {
-      developer.log('Would navigate to event: $eventId', name: 'AuthWrapper');
+      developer.log('Navigating to event: $eventId', name: 'AuthWrapper');
+      _navigateToEvent(navigatorContext, eventId);
     } else if (type == 'event_cancelled' && eventId != null) {
-      developer.log('Would navigate to event: $eventId', name: 'AuthWrapper');
+      developer.log('Navigating to event: $eventId', name: 'AuthWrapper');
+      _navigateToEvent(navigatorContext, eventId);
     } else if (type == 'waitlist_promoted' && eventId != null) {
-      developer.log('Would navigate to event: $eventId', name: 'AuthWrapper');
+      developer.log('Navigating to event: $eventId', name: 'AuthWrapper');
+      _navigateToEvent(navigatorContext, eventId);
+    }
+  }
+
+  void _navigateToEvent(BuildContext context, String eventId) async {
+    try {
+      // Fetch event to check if user is admin of the group
+      final eventDoc = await FirebaseFirestore.instance
+          .collection('events')
+          .doc(eventId)
+          .get();
+
+      if (!eventDoc.exists) {
+        developer.log('Event not found: $eventId', name: 'AuthWrapper');
+        return;
+      }
+
+      final eventData = eventDoc.data();
+      final groupId = eventData?['groupId'] as String?;
+
+      if (groupId == null) {
+        developer.log('Group ID not found for event: $eventId', name: 'AuthWrapper');
+        return;
+      }
+
+      // Check if current user is admin of the group
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .get();
+
+      final groupData = groupDoc.data();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final isAdmin = currentUser != null && groupData?['admin'] == currentUser.uid;
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => EventDetailsScreen(
+            eventId: eventId,
+            isGroupAdmin: isAdmin,
+          ),
+        ),
+      );
+    } catch (e, st) {
+      developer.log(
+        'Error navigating to event',
+        name: 'AuthWrapper',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  void _navigateToGroup(BuildContext context, String groupId) async {
+    try {
+      // Fetch group data
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .get();
+
+      if (!groupDoc.exists) {
+        developer.log('Group not found: $groupId', name: 'AuthWrapper');
+        return;
+      }
+
+      final groupData = groupDoc.data();
+      if (groupData == null) {
+        developer.log('Group data is null for: $groupId', name: 'AuthWrapper');
+        return;
+      }
+
+      // Add groupId to the map
+      final groupWithId = {...groupData, 'groupId': groupId};
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GroupDetailsScreen(group: groupWithId),
+        ),
+      );
+    } catch (e, st) {
+      developer.log(
+        'Error navigating to group',
+        name: 'AuthWrapper',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
