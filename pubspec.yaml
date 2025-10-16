@@ -52,6 +52,11 @@ dependencies:
   crypto: ^3.0.3
   rxdart: ^0.28.0
   upgrader: ^11.2.0
+  package_info_plus: ^8.0.0
+  shared_preferences: ^2.2.3
+  smooth_page_indicator: ^1.2.0
+  share_plus: ^10.1.2
+  app_links: ^6.3.2
 
 dev_dependencies:
   flutter_test:

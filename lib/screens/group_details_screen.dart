@@ -11,6 +11,7 @@ import 'package:getspot/services/user_cache_service.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
 import 'package:getspot/screens/wallet_screen.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:developer' as developer;
 
 class GroupDetailsScreen extends StatefulWidget {
@@ -89,12 +90,76 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     );
   }
 
+  Future<void> _shareGroup() async {
+    final code = widget.group['groupCode'] as String?;
+    final name = widget.group['name'] as String?;
+    final description = widget.group['description'] as String?;
+
+    if (code == null || code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Group code not available.')),
+      );
+      return;
+    }
+
+    try {
+      // Create the deep link URL
+      final deepLink = 'https://getspot.app/join/$code';
+
+      // Build share message
+      final StringBuffer message = StringBuffer();
+      message.writeln('Join our group on GetSpot!');
+      message.writeln();
+      if (name != null && name.isNotEmpty) {
+        message.writeln('Group: $name');
+      }
+      if (description != null && description.isNotEmpty) {
+        message.writeln(description);
+      }
+      message.writeln();
+      message.writeln('Tap to join: $deepLink');
+      message.writeln();
+      message.writeln('Or use code: $code in the GetSpot app');
+
+      // Get the share button position for iPad popover
+      final box = context.findRenderObject() as RenderBox?;
+      final sharePositionOrigin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+
+      await Share.share(
+        message.toString(),
+        subject: 'Join ${name ?? "our group"} on GetSpot',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+
+      developer.log('Group shared successfully', name: 'GroupDetailsScreen');
+    } catch (e) {
+      developer.log('Error sharing group', name: 'GroupDetailsScreen', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sharing: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     developer.log('Building GroupDetailsScreen.', name: 'GroupDetailsScreen');
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.group['name'] ?? 'Group Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share Group',
+            onPressed: _shareGroup,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: _isAdmin

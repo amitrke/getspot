@@ -34,6 +34,300 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     // No longer need to fetch admin status - it's passed as a parameter
   }
 
+  Future<void> _showRegistrationConfirmationDialog(Map<String, dynamic> eventData) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      // Fetch user's wallet balance from the group
+      final groupId = eventData['groupId'] as String;
+      final fee = (eventData['fee'] as num?)?.toDouble() ?? 0.0;
+
+      final memberDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .collection('members')
+          .doc(user.uid)
+          .get();
+
+      if (!memberDoc.exists) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('You are not a member of this group.'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      final walletBalance = (memberDoc.data()?['walletBalance'] as num?)?.toDouble() ?? 0.0;
+      final newBalance = walletBalance - fee;
+
+      // Fetch group's negative balance limit
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .get();
+
+      final negativeBalanceLimit = (groupDoc.data()?['negativeBalanceLimit'] as num?)?.toDouble() ?? 0.0;
+
+      // Check if event is full
+      final confirmedCount = eventData['confirmedCount'] ?? 0;
+      final maxParticipants = eventData['maxParticipants'] ?? 0;
+      final isFull = confirmedCount >= maxParticipants;
+
+      if (!mounted) return;
+
+      // Show appropriate dialog
+      if (isFull) {
+        _showWaitlistConfirmationDialog(
+          eventData: eventData,
+          fee: fee,
+          currentBalance: walletBalance,
+          newBalance: newBalance,
+        );
+      } else if (newBalance < -negativeBalanceLimit) {
+        // Insufficient balance
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Insufficient Balance'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Current Balance: \$${walletBalance.toStringAsFixed(2)}'),
+                  Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+                  Text('New Balance: \$${newBalance.toStringAsFixed(2)}'),
+                  const SizedBox(height: 16),
+                  Text('Allowed Negative Limit: \$${negativeBalanceLimit.toStringAsFixed(2)}'),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'You do not have sufficient balance to register for this event. Please contact your group admin to add funds.',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else if (newBalance < 0) {
+        // Balance will be negative but within limit
+        _showNegativeBalanceConfirmationDialog(
+          eventData: eventData,
+          fee: fee,
+          currentBalance: walletBalance,
+          newBalance: newBalance,
+          negativeLimit: negativeBalanceLimit,
+        );
+      } else {
+        // Normal registration
+        _showNormalRegistrationDialog(
+          eventData: eventData,
+          fee: fee,
+          currentBalance: walletBalance,
+          newBalance: newBalance,
+        );
+      }
+    } catch (e, st) {
+      developer.log(
+        'Error showing registration dialog',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showNormalRegistrationDialog({
+    required Map<String, dynamic> eventData,
+    required double fee,
+    required double currentBalance,
+    required double newBalance,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Register for Event?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eventData['name'] ?? 'Event',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              const Divider(height: 24),
+              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(
+                'New Balance: \$${newBalance.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _registerForEvent();
+              },
+              child: const Text('Confirm Registration'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showNegativeBalanceConfirmationDialog({
+    required Map<String, dynamic> eventData,
+    required double fee,
+    required double currentBalance,
+    required double newBalance,
+    required double negativeLimit,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Low Balance Warning'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eventData['name'] ?? 'Event',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              const Divider(height: 24),
+              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(
+                'New Balance: \$${newBalance.toStringAsFixed(2)} (negative)',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+              ),
+              Text('Allowed Limit: \$${negativeLimit.toStringAsFixed(2)}'),
+              const SizedBox(height: 16),
+              const Text(
+                'You\'ll have a negative balance after registration. Please coordinate payment with your group admin.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _registerForEvent();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('I Understand, Register'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showWaitlistConfirmationDialog({
+    required Map<String, dynamic> eventData,
+    required double fee,
+    required double currentBalance,
+    required double newBalance,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.list, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Join Waitlist?'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This event is full. You\'ll be added to the waitlist.',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text('Fee: \$${fee.toStringAsFixed(2)} (charged now, refunded if not confirmed)'),
+              const Divider(height: 24),
+              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(
+                'New Balance: \$${newBalance.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'You\'ll be automatically confirmed if a spot opens.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _registerForEvent();
+              },
+              child: const Text('Join Waitlist'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _registerForEvent() async {
     setState(() {
       _isRegistering = true;
@@ -54,7 +348,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       await participantRef.set({
         'uid': user.uid,
         'displayName': user.displayName ?? 'No Name',
-        'photoURL': user.photoURL, // Add this line
+        'photoURL': user.photoURL,
         'status': 'requested',
         'registeredAt': FieldValue.serverTimestamp(),
       });
@@ -419,9 +713,25 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   void _showWithdrawConfirmationDialog(Map<String, dynamic> eventData) {
     final deadlineTimestamp = eventData['commitmentDeadline'] as Timestamp?;
+    final fee = (eventData['fee'] as num?)?.toDouble() ?? 0.0;
     bool isAfterDeadline = false;
+
     if (deadlineTimestamp != null) {
       isAfterDeadline = DateTime.now().isAfter(deadlineTimestamp.toDate());
+    }
+
+    String refundInfo;
+    Color refundColor;
+    IconData refundIcon;
+
+    if (isAfterDeadline) {
+      refundInfo = 'Refund: May be forfeited (depends on waitlist)';
+      refundColor = Colors.orange;
+      refundIcon = Icons.warning;
+    } else {
+      refundInfo = 'Refund: \$${fee.toStringAsFixed(2)} (full refund)';
+      refundColor = Colors.green;
+      refundIcon = Icons.check_circle;
     }
 
     showDialog(
@@ -429,9 +739,48 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirm Withdrawal'),
-          content: Text(isAfterDeadline
-              ? 'The commitment deadline has passed. If you withdraw now, your fee may be forfeited unless someone from the waitlist takes your spot. Are you sure you want to withdraw?'
-              : 'Are you sure you want to withdraw from this event?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eventData['name'] ?? 'Event',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              const Divider(height: 24),
+              Row(
+                children: [
+                  Icon(refundIcon, color: refundColor, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      refundInfo,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: refundColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (deadlineTimestamp != null) ...[
+                Text(
+                  'Commitment Deadline: ${DateFormat.yMMMd().add_jm().format(deadlineTimestamp.toDate())}',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                isAfterDeadline
+                    ? 'The commitment deadline has passed. If you withdraw now, your fee will only be refunded if someone from the waitlist takes your spot.'
+                    : 'You are withdrawing before the commitment deadline. You will receive a full refund of your fee.',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -439,12 +788,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: const Text('Withdraw'),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isAfterDeadline ? Colors.orange : Colors.red,
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 _withdrawFromEvent();
               },
+              child: const Text('Confirm Withdrawal'),
             ),
           ],
         );
@@ -723,7 +1075,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               button = Semantics(
                 label: 'register_button',
                 child: ElevatedButton(
-                  onPressed: _isRegistering ? null : _registerForEvent,
+                  onPressed: _isRegistering ? null : () => _showRegistrationConfirmationDialog(eventData),
                   child: _isRegistering
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text('Register'),

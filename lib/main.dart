@@ -15,6 +15,8 @@ import 'package:getspot/services/notification_service.dart';
 import 'package:getspot/services/analytics_service.dart';
 import 'package:getspot/services/crashlytics_service.dart';
 import 'package:getspot/services/feature_flag_service.dart';
+import 'package:getspot/screens/join_group_screen.dart';
+import 'package:app_links/app_links.dart';
 import 'package:upgrader/upgrader.dart';
 
 /// Background message handler - must be top-level function
@@ -78,6 +80,20 @@ class MyApp extends StatelessWidget {
       navigatorObservers: [
         AnalyticsService().getAnalyticsObserver(),
       ],
+      onGenerateRoute: (settings) {
+        // Handle /join/{code} route for web
+        if (settings.name != null && settings.name!.startsWith('/join/')) {
+          final code = settings.name!.substring('/join/'.length);
+          if (code.isNotEmpty) {
+            developer.log('Handling web route: ${settings.name}', name: 'MyApp');
+            return MaterialPageRoute(
+              builder: (context) => JoinGroupScreen(groupCode: code),
+              settings: settings,
+            );
+          }
+        }
+        return null;
+      },
     );
   }
 }
@@ -93,12 +109,77 @@ class _AuthWrapperState extends State<AuthWrapper> {
   final NotificationService _notificationService = NotificationService();
   final AnalyticsService _analytics = AnalyticsService();
   final CrashlyticsService _crashlytics = CrashlyticsService();
+  late AppLinks _appLinks;
 
   @override
   void initState() {
     super.initState();
     // Set up notification tap handler for navigation
     NotificationService.onNotificationTap = _handleNotificationNavigation;
+    // Initialize deep link handler
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() async {
+    _appLinks = AppLinks();
+
+    // Handle links when app is already running
+    _appLinks.uriLinkStream.listen((uri) {
+      developer.log('Deep link received: $uri', name: 'AuthWrapper');
+      _handleDeepLink(uri);
+    }, onError: (e) {
+      developer.log('Error handling deep link', name: 'AuthWrapper', error: e);
+    });
+
+    // Check if app was opened from a deep link
+    try {
+      final uri = await _appLinks.getInitialLink();
+      if (uri != null) {
+        developer.log('App opened with deep link: $uri', name: 'AuthWrapper');
+        _handleDeepLink(uri);
+      }
+    } catch (e) {
+      developer.log('Error getting initial link', name: 'AuthWrapper', error: e);
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    developer.log('Processing deep link: $uri', name: 'AuthWrapper');
+
+    // Get the navigator context
+    final navigatorContext = MyApp.navigatorKey.currentContext;
+    if (navigatorContext == null) {
+      developer.log('Navigator context not available', name: 'AuthWrapper');
+      return;
+    }
+
+    // Check if user is authenticated
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      developer.log('User not authenticated, cannot handle deep link', name: 'AuthWrapper');
+      ScaffoldMessenger.of(navigatorContext).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to join a group'),
+        ),
+      );
+      return;
+    }
+
+    // Parse the deep link
+    // Expected format: https://getspot.app/join/{GROUP_CODE}
+    if (uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'join') {
+      final groupCode = uri.pathSegments[1];
+      if (groupCode.isNotEmpty) {
+        developer.log('Navigating to join group with code: $groupCode', name: 'AuthWrapper');
+        Navigator.of(navigatorContext).push(
+          MaterialPageRoute(
+            builder: (context) => JoinGroupScreen(groupCode: groupCode),
+          ),
+        );
+      }
+    } else {
+      developer.log('Unknown deep link format: $uri', name: 'AuthWrapper');
+    }
   }
 
   void _handleNotificationNavigation(Map<String, dynamic> data) {
