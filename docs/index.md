@@ -82,17 +82,25 @@ GetSpot uses a virtual currency system that keeps things simple:
 
 ## 📱 Get Started Today
 
-### Download the App
+<h3 align="center">Download the App</h3>
 
-<div align="center">
+<p align="center">
+   <a href="https://apps.apple.com/us/app/sports-getspot/id6752911639">
+      <img alt="Download on the App Store" src="https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white">
+   </a>
+</p>
 
-[![Download on the App Store](https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white)](https://apps.apple.com/us/app/sports-getspot/id6752911639)
+<p align="center">
+   <a href="https://play.google.com/store/apps/details?id=org.getspot">
+      <img alt="Get it on Google Play" src="https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=google-play&logoColor=white">
+   </a>
+</p>
 
-[![Get it on Google Play](https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=org.getspot)
-
-[![Open Web App](https://img.shields.io/badge/Web_App-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://www.getspot.org)
-
-</div>
+<p align="center">
+   <a href="https://www.getspot.org">
+      <img alt="Open Web App" src="https://img.shields.io/badge/Web_App-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white">
+   </a>
+</p>
 
 ---
 
@@ -161,7 +169,7 @@ GetSpot uses a virtual currency system that keeps things simple:
 - **Group privacy** - All groups are private and require approval
 - **Transparent tracking** - Every transaction is logged and visible
 
-See our [Privacy Policy](privacy.md) for details.
+See our [Privacy Policy](./privacy.md) for details.
 
 ---
 
@@ -230,7 +238,7 @@ No monthly fees, no per-transaction costs, no hidden charges. We built this beca
 
 - **Website:** [www.getspot.org](https://www.getspot.org)
 - **Email:** support@getspot.org
-- **Issues/Feedback:** [GitHub Issues](https://github.com/yourusername/getspot/issues)
+- **Issues/Feedback:** [GitHub Issues](https://github.com/amitrke/getspot/issues)
 
 ---
 
@@ -249,36 +257,40 @@ If they cancel after the commitment deadline, they forfeit their fee (unless som
 Absolutely! Players can join multiple groups with one account. Organizers can create and manage multiple groups too.
 
 ### What if I need a feature that's not available?
-We're actively developing! Check out our [roadmap](PRODUCT.md) or submit a feature request via GitHub Issues.
+We're actively developing! Check out our [roadmap](./PRODUCT.md) or submit a feature request via GitHub Issues.
 
 ### Is my data safe?
-Yes! We use Firebase with industry-standard security. Your payment information never touches our servers (since you handle real payments offline). See our [Privacy Policy](privacy.md).
+Yes! We use Firebase with industry-standard security. Your payment information never touches our servers (since you handle real payments offline). See our [Privacy Policy](./privacy.md).
 
 ### Can I customize the app for my sport?
-Currently GetSpot works great for all sports. Sport-specific features (like court assignments, skill-based matching) are on our [roadmap](PRODUCT.md).
+Currently GetSpot works great for all sports. Sport-specific features (like court assignments, skill-based matching) are on our [roadmap](./PRODUCT.md).
 
 ---
 
 ## 🚀 Ready to Transform Your Sports Group?
 
-<div align="center">
+<h3 align="center">Download GetSpot Today - It's Free!</h3>
 
-### Download GetSpot Today - It's Free!
+<p align="center">
+   <a href="https://apps.apple.com/us/app/sports-getspot/id6752911639">
+      <img alt="Download on the App Store" src="https://img.shields.io/badge/Download-App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white">
+   </a>
+   <a href="https://play.google.com/store/apps/details?id=org.getspot">
+      <img alt="Get it on Google Play" src="https://img.shields.io/badge/Download-Google_Play-414141?style=for-the-badge&logo=google-play&logoColor=white">
+   </a>
+   <a href="https://www.getspot.org">
+      <img alt="Open Web App" src="https://img.shields.io/badge/Open-Web_App-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white">
+   </a>
+</p>
 
-[![iOS](https://img.shields.io/badge/Download-App_Store-0D96F6?style=for-the-badge&logo=app-store&logoColor=white)](https://apps.apple.com/us/app/sports-getspot/id6752911639)
-[![Android](https://img.shields.io/badge/Download-Google_Play-414141?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=org.getspot)
-[![Web](https://img.shields.io/badge/Open-Web_App-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://www.getspot.org)
-
-**Join hundreds of organizers who've reclaimed their time**
-
-</div>
+<p align="center"><strong>Join hundreds of organizers who've reclaimed their time</strong></p>
 
 ---
 
-<div align="center">
-
-**Built with ❤️ for sports organizers everywhere**
-
-[Website](https://www.getspot.org) • [iOS App](https://apps.apple.com/us/app/sports-getspot/id6752911639) • [Android App](https://play.google.com/store/apps/details?id=org.getspot) • [Documentation](../README.md)
-
-</div>
+<p align="center"><strong>Built with ❤️ for sports organizers everywhere</strong></p>
+<p align="center">
+   <a href="https://www.getspot.org">Website</a> •
+   <a href="https://apps.apple.com/us/app/sports-getspot/id6752911639">iOS App</a> •
+   <a href="https://play.google.com/store/apps/details?id=org.getspot">Android App</a> •
+   <a href="https://github.com/amitrke/getspot/blob/main/README.md">Documentation</a>
+</p>

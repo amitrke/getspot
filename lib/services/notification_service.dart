@@ -14,9 +14,28 @@ class NotificationService {
   static Function(Map<String, dynamic>)? onNotificationTap;
 
   Future<void> initNotifications() async {
+    // Verify user is authenticated before initializing
+    final currentUser = FirebaseAuth.instance.currentUser;
+    developer.log('Initializing notifications for user: ${currentUser?.uid}', name: 'NotificationService');
+
+    if (currentUser == null) {
+      developer.log('WARNING: User not authenticated during notification init', name: 'NotificationService');
+    }
+
     // Request permission for iOS and web
-    final permission = await _firebaseMessaging.requestPermission();
-    developer.log('Notification permission: ${permission.authorizationStatus}', name: 'NotificationService');
+    final permission = await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    developer.log('Notification permission status: ${permission.authorizationStatus.toString()}', name: 'NotificationService');
+
+    // Set foreground notification presentation options for iOS
+    await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
     // Initialize local notifications with tap handling
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -33,13 +52,34 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onLocalNotificationTap,
     );
 
+    // On iOS, wait for APNS token before getting FCM token
+    try {
+      final apnsToken = await _firebaseMessaging.getAPNSToken();
+      if (apnsToken != null) {
+        developer.log('APNS Token obtained: ${apnsToken.substring(0, 20)}...', name: 'NotificationService');
+      } else {
+        developer.log('WARNING: APNS Token is null, waiting for it...', name: 'NotificationService');
+        // Wait a bit for APNS token to be available
+        await Future.delayed(const Duration(seconds: 2));
+        final retryApnsToken = await _firebaseMessaging.getAPNSToken();
+        if (retryApnsToken != null) {
+          developer.log('APNS Token obtained after retry: ${retryApnsToken.substring(0, 20)}...', name: 'NotificationService');
+        } else {
+          developer.log('ERROR: APNS Token still null after retry - notifications may not work on iOS!', name: 'NotificationService');
+        }
+      }
+    } catch (e) {
+      developer.log('Error getting APNS token: $e', name: 'NotificationService');
+    }
+
     final fcmToken = await _firebaseMessaging.getToken();
-    developer.log('FCM Token: $fcmToken', name: 'NotificationService');
+    developer.log('FCM Token obtained: ${fcmToken != null ? "${fcmToken.substring(0, 20)}..." : "NULL"}', name: 'NotificationService');
 
     if (fcmToken != null) {
+      developer.log('Attempting to save FCM token to Firestore...', name: 'NotificationService');
       await _updateTokenInFirestore(fcmToken);
     } else {
-      developer.log('FCM Token is null, skipping Firestore update', name: 'NotificationService');
+      developer.log('ERROR: FCM Token is null - notifications will not work!', name: 'NotificationService');
     }
 
     // Listen for token refreshes
@@ -47,9 +87,20 @@ class NotificationService {
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      developer.log(
+        'Notification received in foreground: ${message.notification?.title}',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Notification data: ${message.data}',
+        name: 'NotificationService',
+      );
       final notification = message.notification;
       if (notification != null) {
+        developer.log('Showing local notification', name: 'NotificationService');
         _showLocalNotification(notification, message.data);
+      } else {
+        developer.log('No notification payload in message', name: 'NotificationService');
       }
     });
 
@@ -128,9 +179,11 @@ class NotificationService {
       // Verify user is authenticated
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        developer.log('User not authenticated, skipping FCM token update', name: 'NotificationService');
+        developer.log('ERROR: User not authenticated, cannot save FCM token!', name: 'NotificationService');
         return;
       }
+
+      developer.log('Saving FCM token for user: ${currentUser.uid}', name: 'NotificationService');
 
       // Write token directly to Firestore
       final userRef = _firestore.collection('users').doc(currentUser.uid);
@@ -138,10 +191,15 @@ class NotificationService {
         'fcmTokens': FieldValue.arrayUnion([token]),
       }, SetOptions(merge: true));
 
-      developer.log('Successfully updated FCM token', name: 'NotificationService');
+      developer.log('✓ Successfully saved FCM token to Firestore for user ${currentUser.uid}', name: 'NotificationService');
+
+      // Verify token was saved by reading it back
+      final userDoc = await userRef.get();
+      final savedTokens = userDoc.data()?['fcmTokens'] as List?;
+      developer.log('Verified: User now has ${savedTokens?.length ?? 0} FCM token(s)', name: 'NotificationService');
     } catch (e) {
       developer.log(
-        'Error updating FCM token',
+        'ERROR: Failed to save FCM token to Firestore',
         name: 'NotificationService',
         error: e,
       );
