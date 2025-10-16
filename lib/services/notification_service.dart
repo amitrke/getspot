@@ -23,8 +23,19 @@ class NotificationService {
     }
 
     // Request permission for iOS and web
-    final permission = await _firebaseMessaging.requestPermission();
+    final permission = await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     developer.log('Notification permission status: ${permission.authorizationStatus.toString()}', name: 'NotificationService');
+
+    // Set foreground notification presentation options for iOS
+    await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
     // Initialize local notifications with tap handling
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -76,9 +87,20 @@ class NotificationService {
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      developer.log(
+        'Notification received in foreground: ${message.notification?.title}',
+        name: 'NotificationService',
+      );
+      developer.log(
+        'Notification data: ${message.data}',
+        name: 'NotificationService',
+      );
       final notification = message.notification;
       if (notification != null) {
+        developer.log('Showing local notification', name: 'NotificationService');
         _showLocalNotification(notification, message.data);
+      } else {
+        developer.log('No notification payload in message', name: 'NotificationService');
       }
     });
 
