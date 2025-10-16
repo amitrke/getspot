@@ -1,7 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:getspot/screens/onboarding_screen.dart';
 
-class FaqScreen extends StatelessWidget {
+class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
+
+  @override
+  State<FaqScreen> createState() => _FaqScreenState();
+}
+
+class _FaqScreenState extends State<FaqScreen> {
+  String _version = '';
+  String _buildNumber = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppInfo();
+  }
+
+  Future<void> _loadAppInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = packageInfo.version;
+      _buildNumber = packageInfo.buildNumber;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +36,7 @@ class FaqScreen extends StatelessWidget {
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16.0),
-          children: const <Widget>[
+          children: <Widget>[
             Text(
               'For Users',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -214,6 +238,82 @@ class FaqScreen extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 40),
+            const Divider(),
+            const SizedBox(height: 20),
+            // How It Works button
+            Center(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const OnboardingScreen(showSkip: false),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.school),
+                label: const Text('How It Works'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            // About section
+            const Center(
+              child: Text(
+                'About',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      'GetSpot',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Organize sports meetups with ease',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Version: ',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        Text(_version.isEmpty ? 'Loading...' : _version),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Build: ',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        Text(_buildNumber.isEmpty ? 'Loading...' : _buildNumber),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
           ],
         ),
       ),

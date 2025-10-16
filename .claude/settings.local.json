@@ -4,7 +4,8 @@
       "Bash(flutter analyze:*)",
       "Bash(npm run build)",
       "Bash(npm run deploy)",
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "Bash(flutter pub:*)"
     ],
     "deny": [],
     "ask": []

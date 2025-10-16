@@ -12,9 +12,40 @@ import 'package:getspot/services/group_cache_service.dart';
 import 'package:getspot/services/user_cache_service.dart';
 import 'package:getspot/screens/member_profile_screen.dart';
 import 'package:getspot/widgets/group_list_item.dart';
+import 'package:getspot/screens/onboarding_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkFirstLaunch();
+  }
+
+  Future<void> _checkFirstLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+
+    if (!onboardingComplete && mounted) {
+      // Show onboarding after a short delay to let the home screen render
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const OnboardingScreen(showSkip: true),
+            ),
+          );
+        }
+      });
+    }
+  }
 
   void _openCreateGroupModal(BuildContext context) {
     showModalBottomSheet(
