@@ -1,0 +1,9 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [{
+      "appID": "BTSKP77HML.com.getspot.app",
+      "paths": ["/join/*", "/join"]
+    }]
+  }
+}
