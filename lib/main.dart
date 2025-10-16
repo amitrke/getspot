@@ -179,7 +179,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     // Parse the deep link
-    // Expected format: https://getspot.app/join/{GROUP_CODE}
+    // Expected format: https://getspot.org/join/{GROUP_CODE}
     if (uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'join') {
       final groupCode = uri.pathSegments[1];
       if (groupCode.isNotEmpty) {

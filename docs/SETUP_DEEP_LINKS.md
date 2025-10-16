@@ -5,8 +5,8 @@ This guide will get your deep linking working in 5 minutes!
 ## What This Does
 
 Enables sharing group invitations with links like:
-- `https://getspot.app/join/ABC-DEF-GHI`
-- `https://www.getspot.app/join/ABC-DEF-GHI`
+- `https://getspot.org/join/ABC-DEF-GHI`
+- `https://www.getspot.org/join/ABC-DEF-GHI`
 
 **Result:**
 - 📱 Opens app directly on mobile (if installed)
@@ -102,8 +102,8 @@ firebase deploy --only hosting
 Check that files are accessible:
 ```bash
 # Should return JSON (not 404)
-curl https://getspot.app/.well-known/apple-app-site-association
-curl https://getspot.app/.well-known/assetlinks.json
+curl https://getspot.org/.well-known/apple-app-site-association
+curl https://getspot.org/.well-known/assetlinks.json
 ```
 
 ## Testing
@@ -119,7 +119,7 @@ curl https://getspot.app/.well-known/assetlinks.json
    Group: [Group Name]
    [Description]
 
-   Tap to join: https://getspot.app/join/ABC-DEF-GHI
+   Tap to join: https://getspot.org/join/ABC-DEF-GHI
 
    Or use code: ABC-DEF-GHI in the GetSpot app
    ```
@@ -151,14 +151,14 @@ curl https://getspot.app/.well-known/assetlinks.json
 - Wait a few minutes for verification
 
 ### Test Web Fallback
-1. Open link in desktop browser: `https://getspot.app/join/ABC-DEF-GHI`
+1. Open link in desktop browser: `https://getspot.org/join/ABC-DEF-GHI`
 2. Should show Flutter web app with join screen
 3. Group details should be visible
 
 ## What Was Changed
 
 ✅ **iOS Configuration:**
-- `ios/Runner/Runner.entitlements` - Added both `getspot.app` and `www.getspot.app`
+- `ios/Runner/Runner.entitlements` - Added both `getspot.org` and `www.getspot.org`
 
 ✅ **Android Configuration:**
 - `android/app/src/main/AndroidManifest.xml` - Added intent filters for both domains
@@ -178,7 +178,7 @@ curl https://getspot.app/.well-known/assetlinks.json
 **iOS:**
 ```bash
 # Verify file is accessible and valid JSON
-curl -I https://getspot.app/.well-known/apple-app-site-association
+curl -I https://getspot.org/.well-known/apple-app-site-association
 
 # Should show: Content-Type: application/json
 ```
@@ -188,7 +188,7 @@ curl -I https://getspot.app/.well-known/apple-app-site-association
 # Check App Links verification
 adb shell pm get-app-links com.getspot.app
 
-# Should show: verified for getspot.app
+# Should show: verified for getspot.org
 ```
 
 ### "Group Not Found" Error
@@ -205,7 +205,7 @@ adb shell pm get-app-links com.getspot.app
 
 ## Advanced: Custom Domain Setup
 
-If you want to use a different domain (e.g., `go.getspot.app`):
+If you want to use a different domain (e.g., `go.getspot.org`):
 
 1. Update entitlements and manifest with new domain
 2. Deploy `.well-known` files to new domain

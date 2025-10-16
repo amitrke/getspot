@@ -104,7 +104,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
 
     try {
       // Create the deep link URL
-      final deepLink = 'https://getspot.app/join/$code';
+      final deepLink = 'https://getspot.org/join/$code';
 
       // Build share message
       final StringBuffer message = StringBuffer();
