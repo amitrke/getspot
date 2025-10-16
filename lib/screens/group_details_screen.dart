@@ -121,9 +121,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       message.writeln();
       message.writeln('Or use code: $code in the GetSpot app');
 
+      // Get the share button position for iPad popover
+      final box = context.findRenderObject() as RenderBox?;
+      final sharePositionOrigin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+
       await Share.share(
         message.toString(),
         subject: 'Join ${name ?? "our group"} on GetSpot',
+        sharePositionOrigin: sharePositionOrigin,
       );
 
       developer.log('Group shared successfully', name: 'GroupDetailsScreen');
