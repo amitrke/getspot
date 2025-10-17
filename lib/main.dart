@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:getspot/firebase_options.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/screens/login_screen.dart';
@@ -35,6 +36,18 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configure system UI for edge-to-edge on Android
+  // Use transparent system bars (handled by native code for Android 15+)
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -110,6 +123,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   final AnalyticsService _analytics = AnalyticsService();
   final CrashlyticsService _crashlytics = CrashlyticsService();
   late AppLinks _appLinks;
+  bool _notificationsInitialized = false;
 
   @override
   void initState() {
@@ -166,7 +180,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     // Parse the deep link
-    // Expected format: https://getspot.app/join/{GROUP_CODE}
+    // Expected format: https://getspot.org/join/{GROUP_CODE}
     if (uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'join') {
       final groupCode = uri.pathSegments[1];
       if (groupCode.isNotEmpty) {
@@ -200,6 +214,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (type == 'new_event' && eventId != null) {
       developer.log('Navigating to event: $eventId', name: 'AuthWrapper');
       _navigateToEvent(navigatorContext, eventId);
+    } else if (type == 'announcement' && groupId != null) {
+      developer.log('Navigating to group (from announcement): $groupId', name: 'AuthWrapper');
+      _navigateToGroup(navigatorContext, groupId);
     } else if (type == 'join_approved' && groupId != null) {
       developer.log('Navigating to group: $groupId', name: 'AuthWrapper');
       _navigateToGroup(navigatorContext, groupId);
@@ -330,8 +347,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _analytics.setUserId(user.uid);
           // Set crashlytics user ID
           _crashlytics.setUserId(user.uid);
-          // Initialize notifications when user signs in
-          _notificationService.initNotifications();
+          // Initialize notifications when user signs in (only once)
+          if (!_notificationsInitialized) {
+            _notificationsInitialized = true;
+            _notificationService.initNotifications();
+          }
           return UpgradeAlert(
             upgrader: Upgrader(
               durationUntilAlertAgain: const Duration(days: 1),

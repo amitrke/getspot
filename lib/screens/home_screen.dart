@@ -97,29 +97,31 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: const SafeArea(child: _GroupList()),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => _openJoinGroupModal(context),
-                child: const Text('Join a Group'),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => _openCreateGroupModal(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _openJoinGroupModal(context),
+                  child: const Text('Join a Group'),
                 ),
-                child: const Text('Create a Group'),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _openCreateGroupModal(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Create a Group'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -6,8 +6,8 @@
 	<string>development</string>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:getspot.app</string>
-		<string>applinks:www.getspot.app</string>
+		<string>applinks:getspot.org</string>
+		<string>applinks:www.getspot.org</string>
 	</array>
 </dict>
 </plist>

@@ -179,7 +179,7 @@ UpgradeCard(
 ## Store Requirements
 
 ### iOS (App Store)
-- **Bundle ID**: Must match the one in App Store Connect: `com.getspot.app`
+- **Bundle ID**: Must match the one in App Store Connect (e.g., `com.getspot.app`)
 - **Version Format**: Follows `CFBundleShortVersionString` (e.g., `1.0.1`)
 - **Lookup**: Uses iTunes Search API (no authentication needed)
 

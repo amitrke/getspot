@@ -43,8 +43,8 @@ paths:
    - Deploys to Firebase Hosting
 
 3. **Files are deployed:**
-   - `https://getspot.app/.well-known/apple-app-site-association`
-   - `https://getspot.app/.well-known/assetlinks.json`
+   - `https://getspot.org/.well-known/apple-app-site-association`
+   - `https://getspot.org/.well-known/assetlinks.json`
    - Flutter web app at root
 
 ## When Workflow Triggers
@@ -69,8 +69,8 @@ The workflow copies these files from your repo:
 - `build/web/.well-known/assetlinks.json`
 
 ### Deployed URLs:
-- `https://getspot.app/.well-known/apple-app-site-association`
-- `https://getspot.app/.well-known/assetlinks.json`
+- `https://getspot.org/.well-known/apple-app-site-association`
+- `https://getspot.org/.well-known/assetlinks.json`
 
 ## Updating Deep Link Configuration
 
@@ -97,8 +97,8 @@ If you need to update the deep link configuration:
 
 4. **Verify:**
    ```bash
-   curl https://getspot.app/.well-known/apple-app-site-association
-   curl https://getspot.app/.well-known/assetlinks.json
+   curl https://getspot.org/.well-known/apple-app-site-association
+   curl https://getspot.org/.well-known/assetlinks.json
    ```
 
 ## Testing Before Production
@@ -186,7 +186,7 @@ git status  # Check what files changed
 
 4. Verify deployed files:
    ```bash
-   curl https://getspot.app/.well-known/apple-app-site-association
+   curl https://getspot.org/.well-known/apple-app-site-association
    ```
 
 ## Manual Override
@@ -230,11 +230,11 @@ The workflow uses `FIREBASE_SERVICE_ACCOUNT_GETSPOT01` secret:
 **Test URLs:**
 ```bash
 # Should return JSON (not 404)
-curl https://getspot.app/.well-known/apple-app-site-association
-curl https://getspot.app/.well-known/assetlinks.json
+curl https://getspot.org/.well-known/apple-app-site-association
+curl https://getspot.org/.well-known/assetlinks.json
 
 # Should return HTML (Flutter web app)
-curl https://getspot.app/join/TEST-CODE
+curl https://getspot.org/join/TEST-CODE
 ```
 
 ## Next Steps

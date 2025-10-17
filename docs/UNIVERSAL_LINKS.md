@@ -13,10 +13,10 @@ GetSpot uses native Universal Links and App Links to enable seamless group shari
 ## Deep Link Format
 
 ```
-https://getspot.app/join/{GROUP_CODE}
+https://getspot.org/join/{GROUP_CODE}
 ```
 
-**Example:** `https://getspot.app/join/ABC-DEF-GHI`
+**Example:** `https://getspot.org/join/ABC-DEF-GHI`
 
 ## User Flow
 
@@ -26,7 +26,7 @@ https://getspot.app/join/{GROUP_CODE}
 3. User sees group details and can request to join
 
 ### If App is NOT Installed
-1. User taps link → Opens web page at `https://getspot.app/join/{CODE}`
+1. User taps link → Opens web page at `https://getspot.org/join/{CODE}`
 2. Web page shows:
    - Group code for manual entry
    - Links to App Store / Play Store
@@ -53,13 +53,13 @@ https://getspot.app/join/{GROUP_CODE}
 ```xml
 <key>com.apple.developer.associated-domains</key>
 <array>
-  <string>applinks:getspot.app</string>
+  <string>applinks:getspot.org</string>
 </array>
 ```
 
 **Required:** Host `apple-app-site-association` file at:
 ```
-https://getspot.app/.well-known/apple-app-site-association
+https://getspot.org/.well-known/apple-app-site-association
 ```
 
 #### Android (App Links)
@@ -70,37 +70,37 @@ https://getspot.app/.well-known/apple-app-site-association
   <action android:name="android.intent.action.VIEW"/>
   <category android:name="android.intent.category.DEFAULT"/>
   <category android:name="android.intent.category.BROWSABLE"/>
-  <data android:scheme="https" android:host="getspot.app" android:pathPrefix="/join"/>
+  <data android:scheme="https" android:host="getspot.org" android:pathPrefix="/join"/>
 </intent-filter>
 ```
 
 **Required:** Host `assetlinks.json` file at:
 ```
-https://getspot.app/.well-known/assetlinks.json
+https://getspot.org/.well-known/assetlinks.json
 ```
 
 ## Important: Flutter Web Deployment
 
-**Your Flutter app IS the website!** Since you're deploying the Flutter web build to `getspot.app`, the app will automatically handle `/join/{code}` routes via `onGenerateRoute` in `main.dart`.
+**Your Flutter app IS the website!** Since you're deploying the Flutter web build to `getspot.org`, the app will automatically handle `/join/{code}` routes via `onGenerateRoute` in `main.dart`.
 
 **What this means:**
-- ✅ When users visit `https://getspot.app/join/ABC-DEF-GHI` in a browser, they see your Flutter web app with the JoinGroupScreen
+- ✅ When users visit `https://getspot.org/join/ABC-DEF-GHI` in a browser, they see your Flutter web app with the JoinGroupScreen
 - ✅ On mobile devices with the app installed, the link opens the native app directly
 - ✅ You DON'T need to upload the `join/index.html` file - the Flutter web app handles it!
 
 **Domain Configuration:**
-- The app supports both `getspot.app` and `www.getspot.app`
+- The app supports both `getspot.org` and `www.getspot.org`
 - Make sure your DNS/hosting redirects www to non-www (or vice versa) for consistency
 
 ## Hosting Requirements
 
-### Required Files on getspot.app
+### Required Files on getspot.org
 
 You only need to upload 2 files (not 3!) since Flutter web handles the landing page:
 
 #### 1. Apple App Site Association
 
-**Location:** `https://getspot.app/.well-known/apple-app-site-association`
+**Location:** `https://getspot.org/.well-known/apple-app-site-association`
 
 **File:** `docs/hosting/apple-app-site-association` (no extension)
 
@@ -125,7 +125,7 @@ You only need to upload 2 files (not 3!) since Flutter web handles the landing p
 
 #### 2. Android Asset Links
 
-**Location:** `https://getspot.app/.well-known/assetlinks.json`
+**Location:** `https://getspot.org/.well-known/assetlinks.json`
 
 **File:** `docs/hosting/assetlinks.json`
 
@@ -160,7 +160,7 @@ keytool -list -v -keystore /path/to/release.keystore -alias your-key-alias
 
 #### 3. Landing Page - NOT NEEDED!
 
-~~**Location:** `https://getspot.app/join/index.html`~~
+~~**Location:** `https://getspot.org/join/index.html`~~
 
 **You don't need this!** Your Flutter web app automatically handles `/join/{code}` routes and shows the JoinGroupScreen.
 
@@ -268,7 +268,7 @@ location ~ /.well-known/assetlinks.json {
 ### Handling Deep Links
 
 **Flow:**
-1. User taps link: `https://getspot.app/join/ABC-DEF-GHI`
+1. User taps link: `https://getspot.org/join/ABC-DEF-GHI`
 2. `AppLinks` package detects the link
 3. `_handleDeepLink()` in `main.dart` processes it
 4. Extracts group code from path
@@ -289,22 +289,22 @@ location ~ /.well-known/assetlinks.json {
 #### iOS Simulator/Device:
 ```bash
 # Test deep link handling
-xcrun simctl openurl booted "https://getspot.app/join/ABC-DEF-GHI"
+xcrun simctl openurl booted "https://getspot.org/join/ABC-DEF-GHI"
 ```
 
 #### Android Emulator/Device:
 ```bash
 # Test deep link handling
 adb shell am start -W -a android.intent.action.VIEW \
-  -d "https://getspot.app/join/ABC-DEF-GHI" com.getspot.app
+  -d "https://getspot.org/join/ABC-DEF-GHI" com.getspot.app
 ```
 
 ### Production Testing (After Hosting Files)
 
 1. **Verify Files Are Accessible:**
    ```bash
-   curl https://getspot.app/.well-known/apple-app-site-association
-   curl https://getspot.app/.well-known/assetlinks.json
+   curl https://getspot.org/.well-known/apple-app-site-association
+   curl https://getspot.org/.well-known/assetlinks.json
    ```
 
 2. **Test iOS Universal Links:**
@@ -361,7 +361,7 @@ flutter logs
 
 **Verify file:**
 ```bash
-curl -I https://getspot.app/.well-known/apple-app-site-association
+curl -I https://getspot.org/.well-known/apple-app-site-association
 # Should return: Content-Type: application/json
 ```
 
@@ -379,7 +379,7 @@ curl -I https://getspot.app/.well-known/apple-app-site-association
 4. Check verification status:
    ```bash
    adb shell pm get-app-links com.getspot.app
-   # Should show: verified for domain getspot.app
+   # Should show: verified for domain getspot.org
    ```
 5. Uninstall and reinstall app
 
@@ -430,7 +430,7 @@ Track link performance:
 ### Custom Short URLs
 If you want shorter URLs:
 - Set up URL shortener on your domain
-- Example: `https://getspot.app/j/ABC` → redirects to `/join/ABC-DEF-GHI`
+- Example: `https://getspot.org/j/ABC` → redirects to `/join/ABC-DEF-GHI`
 - Can be implemented with simple server-side redirect
 
 ### QR Codes
