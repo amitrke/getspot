@@ -123,6 +123,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   final AnalyticsService _analytics = AnalyticsService();
   final CrashlyticsService _crashlytics = CrashlyticsService();
   late AppLinks _appLinks;
+  bool _notificationsInitialized = false;
 
   @override
   void initState() {
@@ -213,6 +214,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (type == 'new_event' && eventId != null) {
       developer.log('Navigating to event: $eventId', name: 'AuthWrapper');
       _navigateToEvent(navigatorContext, eventId);
+    } else if (type == 'announcement' && groupId != null) {
+      developer.log('Navigating to group (from announcement): $groupId', name: 'AuthWrapper');
+      _navigateToGroup(navigatorContext, groupId);
     } else if (type == 'join_approved' && groupId != null) {
       developer.log('Navigating to group: $groupId', name: 'AuthWrapper');
       _navigateToGroup(navigatorContext, groupId);
@@ -343,8 +347,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _analytics.setUserId(user.uid);
           // Set crashlytics user ID
           _crashlytics.setUserId(user.uid);
-          // Initialize notifications when user signs in
-          _notificationService.initNotifications();
+          // Initialize notifications when user signs in (only once)
+          if (!_notificationsInitialized) {
+            _notificationsInitialized = true;
+            _notificationService.initNotifications();
+          }
           return UpgradeAlert(
             upgrader: Upgrader(
               durationUntilAlertAgain: const Duration(days: 1),
