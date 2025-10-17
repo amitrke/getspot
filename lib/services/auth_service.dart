@@ -310,10 +310,13 @@ class AuthService {
 
       if (!userDocSnapshot.exists) {
         developer.log('Creating new user document for $uid', name: 'AuthService');
+        // Get photoURL from Firebase Auth user
+        final currentUser = _auth.currentUser;
         await userDoc.set({
           'uid': uid,
           'displayName': displayName,
           'email': email,
+          'photoURL': currentUser?.photoURL,
           'createdAt': FieldValue.serverTimestamp(),
         });
         developer.log('User document created successfully', name: 'AuthService');

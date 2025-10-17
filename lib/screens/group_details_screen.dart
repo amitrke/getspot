@@ -60,6 +60,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       setState(() {
         _isAdmin = true;
         _tabController = TabController(length: 3, vsync: this);
+        _tabController!.addListener(() {
+          // Rebuild to show/hide FAB when tab changes
+          setState(() {});
+        });
       });
     } else {
       developer.log('Admin status DENIED.', name: 'GroupDetailsScreen');
@@ -290,7 +294,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
           ),
         ),
       ),
-      floatingActionButton: _isAdmin
+      floatingActionButton: _isAdmin && (_tabController?.index == 0)
           ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.of(context).push(
@@ -369,79 +373,96 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (widget.isAdmin)
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _announcementController,
-                    decoration: const InputDecoration(
-                      labelText: 'New Announcement',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: null,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _isPosting
-                    ? const CircularProgressIndicator()
-                    : IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: _postAnnouncement,
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside the TextField
+        FocusScope.of(context).unfocus();
+      },
+      child: Column(
+        children: [
+          if (widget.isAdmin)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _announcementController,
+                      decoration: const InputDecoration(
+                        labelText: 'New Announcement',
+                        border: OutlineInputBorder(),
                       ),
-              ],
+                      maxLines: null,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) {
+                        // Dismiss keyboard when user presses "Done" on keyboard
+                        FocusScope.of(context).unfocus();
+                        _postAnnouncement();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _isPosting
+                      ? const CircularProgressIndicator()
+                      : IconButton(
+                          icon: const Icon(Icons.send),
+                          onPressed: () {
+                            // Dismiss keyboard before posting
+                            FocusScope.of(context).unfocus();
+                            _postAnnouncement();
+                          },
+                        ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('groups')
+                  .doc(widget.groupId)
+                  .collection('announcements')
+                  .orderBy('createdAt', descending: true)
+                  .limit(50)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text('Error loading announcements.'),
+                  );
+                }
+                final announcements = snapshot.data?.docs ?? [];
+                if (announcements.isEmpty) {
+                  return const Center(child: Text('No announcements yet.'));
+                }
+                return ListView.builder(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: announcements.length,
+                  itemBuilder: (context, index) {
+                    final announcement = announcements[index].data();
+                    final createdAt = (announcement['createdAt'] as Timestamp?)
+                        ?.toDate();
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 0,
+                      ),
+                      child: ListTile(
+                        title: Text(announcement['content'] ?? ''),
+                        subtitle: Text(
+                          'Posted by ${announcement['authorName'] ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
-        Expanded(
-          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance
-                .collection('groups')
-                .doc(widget.groupId)
-                .collection('announcements')
-                .orderBy('createdAt', descending: true)
-                .limit(50)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Error loading announcements.'),
-                );
-              }
-              final announcements = snapshot.data?.docs ?? [];
-              if (announcements.isEmpty) {
-                return const Center(child: Text('No announcements yet.'));
-              }
-              return ListView.builder(
-                itemCount: announcements.length,
-                itemBuilder: (context, index) {
-                  final announcement = announcements[index].data();
-                  final createdAt = (announcement['createdAt'] as Timestamp?)
-                      ?.toDate();
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 4,
-                      horizontal: 0,
-                    ),
-                    child: ListTile(
-                      title: Text(announcement['content'] ?? ''),
-                      subtitle: Text(
-                        'Posted by ${announcement['authorName'] ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
