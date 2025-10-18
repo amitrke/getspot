@@ -1,0 +1,32 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Login test - Tests the authentication flow with fresh app state
+# Use this to verify login functionality or reset app state
+
+- launchApp:
+    clearState: true
+
+# First, tap the button to reveal the email/password form
+- tapOn: "Sign in with Email"
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen_email_form
+
+# Now, fill in the credentials
+- tapOn: "Email"
+- inputText: "${MAESTRO_USER1_EMAIL}"
+- tapOn: "Password"
+- inputText: "${MAESTRO_USER1_PASSWORD}"
+
+# Take screenshot before submitting
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen_filled
+
+# Tap the final Sign In button
+- tapOn: "Sign In"
+
+# Wait for successful login - should see the home screen
+- assertVisible: "My Groups"
+- takeScreenshot: ${SCREENSHOT_DIR}/home_screen_after_login
+
+# Stop the app
+- stopApp

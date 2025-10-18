@@ -1,0 +1,32 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Login test for User 2 (Member) - Tests authentication flow with fresh app state
+# Use this to switch to User 2 (member role) for testing member-specific features
+
+- launchApp:
+    clearState: true
+
+# First, tap the button to reveal the email/password form
+- tapOn: "Sign in with Email"
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen_user2
+
+# Now, fill in User 2 credentials
+- tapOn: "Email"
+- inputText: "${MAESTRO_USER2_EMAIL}"
+- tapOn: "Password"
+- inputText: "${MAESTRO_USER2_PASSWORD}"
+
+# Take screenshot before submitting
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen_user2_filled
+
+# Tap the final Sign In button
+- tapOn: "Sign In"
+
+# Wait for successful login - should see the home screen
+- assertVisible: "My Groups"
+- takeScreenshot: ${SCREENSHOT_DIR}/home_screen_user2_after_login
+
+# Stop the app
+- stopApp

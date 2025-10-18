@@ -6,7 +6,8 @@
       "Bash(npm run deploy)",
       "Bash(firebase deploy:*)",
       "Bash(flutter pub:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
