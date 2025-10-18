@@ -39,10 +39,10 @@ jobs:
 
       - name: Setup Google Play Service Account
         env:
-          PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+          PLAYSTORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT_JSON }}
         run: |
-          echo "$PLAY_STORE_JSON_KEY" > play_store_key.json
-          echo "SUPPLY_JSON_KEY=play_store_key.json" >> $GITHUB_ENV
+          echo "$PLAYSTORE_SERVICE_ACCOUNT_JSON" > play_store_key.json
+          echo "SUPPLY_JSON_KEY=${{ github.workspace }}/play_store_key.json" >> $GITHUB_ENV
 
       - name: Upload screenshots to Play Store
         env:

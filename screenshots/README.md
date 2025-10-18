@@ -114,8 +114,8 @@ bundle exec fastlane ios upload_screenshots
 Set these secrets in your GitHub repository settings:
 
 **For Android (Play Store):**
-- `PLAY_STORE_JSON_KEY` - Service account JSON key (base64 encoded or raw JSON)
-- `ANDROID_PACKAGE_NAME` - Your app's package name (e.g., `org.getspot`)
+- `PLAYSTORE_SERVICE_ACCOUNT_JSON` - Service account JSON key (raw JSON) - **Already configured if you're using deploy-android workflow**
+- `ANDROID_PACKAGE_NAME` - Your app's package name (set to `org.getspot`)
 
 **For iOS (App Store Connect):**
 - `APP_STORE_CONNECT_API_KEY_ID` - API Key ID
@@ -129,7 +129,7 @@ Set these secrets in your GitHub repository settings:
 2. Navigate to Settings → API access
 3. Create a service account or use existing one
 4. Download the JSON key file
-5. Copy the entire JSON content to `PLAY_STORE_JSON_KEY` secret
+5. Copy the entire JSON content to `PLAYSTORE_SERVICE_ACCOUNT_JSON` secret (if not already set)
 
 ### Getting App Store Connect Credentials
 
@@ -187,7 +187,8 @@ Set these secrets in your GitHub repository settings:
 ## Troubleshooting
 
 **Screenshots not uploading to Play Store:**
-- Verify `PLAY_STORE_JSON_KEY` is properly formatted
+- Verify `PLAYSTORE_SERVICE_ACCOUNT_JSON` secret is properly set (should be raw JSON)
+- Ensure `ANDROID_PACKAGE_NAME` secret is set to `org.getspot`
 - Ensure service account has "Release Manager" role
 - Check screenshot dimensions meet requirements
 

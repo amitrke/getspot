@@ -9,6 +9,7 @@ platform :android do
   lane :upload_screenshots do
     # Upload screenshots from screenshots/store/android/ to Play Store
     upload_to_play_store(
+      json_key: ENV["SUPPLY_JSON_KEY"],
       skip_upload_apk: true,
       skip_upload_aab: true,
       skip_upload_metadata: true,
