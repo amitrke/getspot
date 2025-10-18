@@ -23,6 +23,9 @@ env:
 - tapOn: "Password"
 - inputText: "${MAESTRO_USER1_PASSWORD}"
 
+# Hide the keyboard so Sign In button is visible
+- hideKeyboard
+
 # Take screenshot before submitting
 - takeScreenshot: ${SCREENSHOT_DIR}/login_screen_filled
 
