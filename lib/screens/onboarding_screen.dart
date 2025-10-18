@@ -88,9 +88,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             if (widget.showSkip)
               Align(
                 alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: _completeOnboarding,
-                  child: const Text('Skip'),
+                child: Semantics(
+                  label: 'skip_onboarding_button',
+                  child: TextButton(
+                    onPressed: _completeOnboarding,
+                    child: const Text('Skip'),
+                  ),
                 ),
               ),
             // Page content
@@ -130,30 +133,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   // Back button
                   if (_currentPage > 0)
-                    TextButton(
-                      onPressed: () {
-                        _pageController.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      child: const Text('Back'),
+                    Semantics(
+                      label: 'onboarding_back_button',
+                      child: TextButton(
+                        onPressed: () {
+                          _pageController.previousPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                        child: const Text('Back'),
+                      ),
                     )
                   else
                     const SizedBox(width: 80),
                   // Next/Get Started button
-                  ElevatedButton(
-                    onPressed: _nextPage,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
+                  Semantics(
+                    label: _currentPage == _pages.length - 1
+                        ? 'get_started_button'
+                        : 'onboarding_next_button',
+                    child: ElevatedButton(
+                      onPressed: _nextPage,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      _currentPage == _pages.length - 1
-                          ? 'Get Started'
-                          : 'Next',
+                      child: Text(
+                        _currentPage == _pages.length - 1
+                            ? 'Get Started'
+                            : 'Next',
+                      ),
                     ),
                   ),
                 ],

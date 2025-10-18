@@ -111,20 +111,14 @@ echo "  Test: $TEST_FILE"
 echo "  Screenshots: $SCREENSHOT_DIR"
 echo ""
 
-# Build maestro command with device config
-MAESTRO_CMD="maestro test"
-
-if [ -n "$PLATFORM" ]; then
-    MAESTRO_CMD="$MAESTRO_CMD --platform $PLATFORM"
-fi
-
-if [ "$WIDTH" -gt 0 ] && [ "$HEIGHT" -gt 0 ]; then
-    MAESTRO_CMD="$MAESTRO_CMD --device-width $WIDTH --device-height $HEIGHT"
-fi
-
-MAESTRO_CMD="$MAESTRO_CMD $TEST_PATH"
+# Build maestro command
+# Note: Maestro automatically detects connected devices
+# Device-specific configurations are mainly for documentation/screenshot organization
+MAESTRO_CMD="maestro test $TEST_PATH"
 
 # Run the Maestro test
+# The device dimensions in device configs are for reference only
+# Maestro will use the actual connected device/emulator
 eval $MAESTRO_CMD
 EXIT_CODE=$?
 

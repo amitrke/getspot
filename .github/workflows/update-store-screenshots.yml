@@ -1,0 +1,94 @@
+name: Update Store Screenshots
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to update (android, ios, or both)'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - android
+          - ios
+
+  # Automatic trigger when screenshots are updated
+  push:
+    paths:
+      - 'screenshots/store/**'
+    branches:
+      - main
+
+jobs:
+  upload-android-screenshots:
+    name: Upload Android Screenshots
+    runs-on: ubuntu-latest
+    if: github.event.inputs.platform == 'android' || github.event.inputs.platform == 'both' || github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Setup Google Play Service Account
+        env:
+          PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+        run: |
+          echo "$PLAY_STORE_JSON_KEY" > play_store_key.json
+          echo "SUPPLY_JSON_KEY=play_store_key.json" >> $GITHUB_ENV
+
+      - name: Upload screenshots to Play Store
+        env:
+          ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+        run: |
+          bundle exec fastlane android upload_screenshots
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f play_store_key.json
+
+  upload-ios-screenshots:
+    name: Upload iOS Screenshots
+    runs-on: macos-latest
+    if: github.event.inputs.platform == 'ios' || github.event.inputs.platform == 'both' || github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Setup App Store Connect API Key
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          echo "$APP_STORE_CONNECT_API_KEY" > app_store_api_key.p8
+          echo "APP_STORE_CONNECT_API_KEY_PATH=$(pwd)/app_store_api_key.p8" >> $GITHUB_ENV
+
+      - name: Upload screenshots to App Store Connect
+        env:
+          APP_IDENTIFIER: ${{ secrets.APP_IDENTIFIER }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          bundle exec fastlane ios upload_screenshots
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f app_store_api_key.p8

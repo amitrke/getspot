@@ -4,15 +4,20 @@ env:
 ---
 # Login test for User 2 (Member) - Tests authentication flow with fresh app state
 # Use this to switch to User 2 (member role) for testing member-specific features
+# Note: Onboarding appears AFTER login on first launch
 
 - launchApp:
     clearState: true
 
-# First, tap the button to reveal the email/password form
-- tapOn: "Sign in with Email"
+# App starts on login screen (not onboarding)
+- assertVisible: "Sign in with Email"
 - takeScreenshot: ${SCREENSHOT_DIR}/login_screen_user2
 
-# Now, fill in User 2 credentials
+# Tap the button to reveal the email/password form
+- tapOn: "Sign in with Email"
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen_email_form_user2
+
+# Fill in User 2 credentials (Member)
 - tapOn: "Email"
 - inputText: "${MAESTRO_USER2_EMAIL}"
 - tapOn: "Password"
@@ -25,6 +30,32 @@ env:
 - tapOn: "Sign In"
 
 # Wait for successful login - should see the home screen
+- assertVisible: "My Groups"
+
+# Handle onboarding screens (appears AFTER login on fresh install, after 500ms delay)
+# Wait a bit for onboarding to appear
+- extendedWaitUntil:
+    visible: "skip_onboarding_button"
+    timeout: 2000
+
+# Option 1: Skip onboarding quickly (recommended for fast tests)
+- tapOn: "skip_onboarding_button"
+- takeScreenshot: ${SCREENSHOT_DIR}/onboarding_skipped_user2
+
+# Alternative: Go through all onboarding pages
+# Comment out the "skip" line above and uncomment these lines to test full onboarding
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_1_user2
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_2_user2
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_3_user2
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_4_user2
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_5_user2
+# - tapOn: "get_started_button"
+
+# Back on home screen after onboarding
 - assertVisible: "My Groups"
 - takeScreenshot: ${SCREENSHOT_DIR}/home_screen_user2_after_login
 

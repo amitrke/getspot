@@ -104,22 +104,14 @@ Write-Host "  Test: $TestFile" -ForegroundColor Cyan
 Write-Host "  Screenshots: $screenshotDir" -ForegroundColor Cyan
 Write-Host ""
 
-# Build maestro command with device config
+# Build maestro command
+# Note: Maestro automatically detects connected devices
+# Device-specific configurations are mainly for documentation/screenshot organization
 $maestroArgs = @("test", $testPath)
 
-$config = $deviceConfigs[$DeviceId]
-if ($config.platform -ne "") {
-    $maestroArgs += "--platform"
-    $maestroArgs += $config.platform
-}
-if ($config.width -gt 0 -and $config.height -gt 0) {
-    $maestroArgs += "--device-width"
-    $maestroArgs += $config.width
-    $maestroArgs += "--device-height"
-    $maestroArgs += $config.height
-}
-
 # Run the Maestro test
+# The device dimensions in deviceConfigs are for reference only
+# Maestro will use the actual connected device/emulator
 & maestro $maestroArgs
 
 $exitCode = $LASTEXITCODE

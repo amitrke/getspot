@@ -3,6 +3,41 @@
 
 default_platform(:ios)
 
+# Android Platform
+platform :android do
+  desc "Upload screenshots to Google Play Store"
+  lane :upload_screenshots do
+    # Upload screenshots from screenshots/store/android/ to Play Store
+    upload_to_play_store(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: false,
+      package_name: ENV["ANDROID_PACKAGE_NAME"] || "org.getspot"
+    )
+
+    UI.success("Screenshots uploaded to Google Play Store!")
+  end
+
+  desc "Prepare Maestro screenshots for Play Store"
+  lane :prepare_screenshots do
+    UI.message("Organizing screenshots from Maestro to Play Store format...")
+
+    # Copy screenshots to Play Store expected locations
+    # You can customize these paths based on your needs
+    sh("mkdir -p ../screenshots/store/android/phone")
+    sh("mkdir -p ../screenshots/store/android/tablet-7")
+    sh("mkdir -p ../screenshots/store/android/tablet-10")
+
+    UI.success("Screenshot directories prepared! Copy your Maestro screenshots to:")
+    UI.message("  - screenshots/store/android/phone/")
+    UI.message("  - screenshots/store/android/tablet-7/")
+    UI.message("  - screenshots/store/android/tablet-10/")
+  end
+end
+
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
@@ -132,6 +167,34 @@ platform :ios do
     )
 
     UI.success("✅ Metadata updated on App Store Connect!")
+  end
+
+  desc "Upload screenshots to App Store Connect"
+  lane :upload_screenshots do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"] || "org.getspot",
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      overwrite_screenshots: true,
+      screenshots_path: "./screenshots/store/ios",
+      force: true
+    )
+
+    UI.success("Screenshots uploaded to App Store Connect!")
+  end
+
+  desc "Prepare Maestro screenshots for App Store"
+  lane :prepare_screenshots do
+    UI.message("Organizing screenshots from Maestro to App Store format...")
+
+    # Create directories for App Store required sizes
+    sh("mkdir -p ../screenshots/store/ios/iphone-6.5")
+    sh("mkdir -p ../screenshots/store/ios/ipad-12.9")
+
+    UI.success("Screenshot directories prepared! Copy your Maestro screenshots to:")
+    UI.message("  - screenshots/store/ios/iphone-6.5/")
+    UI.message("  - screenshots/store/ios/ipad-12.9/")
   end
 
   desc "Release the approved build to production"
