@@ -7,19 +7,32 @@ default_platform(:ios)
 platform :android do
   desc "Upload screenshots to Google Play Store"
   lane :upload_screenshots do
-    # First, prepare the screenshots in Fastlane's expected structure
-    # Fastlane runs from the fastlane/ directory, so paths are relative to that
-    metadata_path = "./metadata/android"
+    # Get absolute paths
+    fastlane_dir = File.expand_path("..", Dir.pwd)
+    metadata_path = File.join(fastlane_dir, "fastlane", "metadata", "android")
+    screenshots_source = File.join(fastlane_dir, "screenshots", "store", "android")
+
+    UI.message("Fastlane directory: #{fastlane_dir}")
+    UI.message("Metadata path: #{metadata_path}")
+    UI.message("Screenshots source: #{screenshots_source}")
 
     # Create metadata structure for Play Store
-    sh("mkdir -p #{metadata_path}/en-US/images/phoneScreenshots")
-    sh("mkdir -p #{metadata_path}/en-US/images/sevenInchScreenshots")
-    sh("mkdir -p #{metadata_path}/en-US/images/tenInchScreenshots")
+    FileUtils.mkdir_p(File.join(metadata_path, "en-US", "images", "phoneScreenshots"))
+    FileUtils.mkdir_p(File.join(metadata_path, "en-US", "images", "sevenInchScreenshots"))
+    FileUtils.mkdir_p(File.join(metadata_path, "en-US", "images", "tenInchScreenshots"))
 
     # Copy screenshots from our store directory to Fastlane structure
-    sh("cp -f ../screenshots/store/android/phone/*.png #{metadata_path}/en-US/images/phoneScreenshots/ 2>/dev/null || true")
-    sh("cp -f ../screenshots/store/android/tablet-7/*.png #{metadata_path}/en-US/images/sevenInchScreenshots/ 2>/dev/null || true")
-    sh("cp -f ../screenshots/store/android/tablet-10/*.png #{metadata_path}/en-US/images/tenInchScreenshots/ 2>/dev/null || true")
+    phone_screenshots = Dir.glob(File.join(screenshots_source, "phone", "*.png"))
+    tablet7_screenshots = Dir.glob(File.join(screenshots_source, "tablet-7", "*.png"))
+    tablet10_screenshots = Dir.glob(File.join(screenshots_source, "tablet-10", "*.png"))
+
+    phone_screenshots.each { |f| FileUtils.cp(f, File.join(metadata_path, "en-US", "images", "phoneScreenshots")) }
+    tablet7_screenshots.each { |f| FileUtils.cp(f, File.join(metadata_path, "en-US", "images", "sevenInchScreenshots")) }
+    tablet10_screenshots.each { |f| FileUtils.cp(f, File.join(metadata_path, "en-US", "images", "tenInchScreenshots")) }
+
+    UI.message("Copied #{phone_screenshots.length} phone screenshots")
+    UI.message("Copied #{tablet7_screenshots.length} 7-inch tablet screenshots")
+    UI.message("Copied #{tablet10_screenshots.length} 10-inch tablet screenshots")
 
     # Upload screenshots from screenshots/store/android/ to Play Store
     upload_to_play_store(
