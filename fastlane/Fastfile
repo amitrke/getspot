@@ -7,6 +7,19 @@ default_platform(:ios)
 platform :android do
   desc "Upload screenshots to Google Play Store"
   lane :upload_screenshots do
+    # First, prepare the screenshots in Fastlane's expected structure
+    metadata_path = "../fastlane/metadata/android"
+
+    # Create metadata structure for Play Store
+    sh("mkdir -p #{metadata_path}/en-US/images/phoneScreenshots")
+    sh("mkdir -p #{metadata_path}/en-US/images/sevenInchScreenshots")
+    sh("mkdir -p #{metadata_path}/en-US/images/tenInchScreenshots")
+
+    # Copy screenshots from our store directory to Fastlane structure
+    sh("cp -f ../screenshots/store/android/phone/*.png #{metadata_path}/en-US/images/phoneScreenshots/ 2>/dev/null || true")
+    sh("cp -f ../screenshots/store/android/tablet-7/*.png #{metadata_path}/en-US/images/sevenInchScreenshots/ 2>/dev/null || true")
+    sh("cp -f ../screenshots/store/android/tablet-10/*.png #{metadata_path}/en-US/images/tenInchScreenshots/ 2>/dev/null || true")
+
     # Upload screenshots from screenshots/store/android/ to Play Store
     upload_to_play_store(
       json_key: ENV["SUPPLY_JSON_KEY"],
@@ -16,6 +29,7 @@ platform :android do
       skip_upload_changelogs: true,
       skip_upload_images: true,
       skip_upload_screenshots: false,
+      metadata_path: metadata_path,
       package_name: ENV["ANDROID_PACKAGE_NAME"] || "org.getspot"
     )
 

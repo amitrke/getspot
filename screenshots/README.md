@@ -88,12 +88,17 @@ git push
 ### Automatic Upload (Recommended)
 
 Once you commit screenshots to the `screenshots/store/` directory, GitHub Actions will automatically upload them to:
-- Google Play Store (Android screenshots)
-- App Store Connect (iOS screenshots)
+- **Google Play Store** (Android screenshots) - The workflow automatically converts from `screenshots/store/android/{device-type}/` to Fastlane's expected metadata structure
+- **App Store Connect** (iOS screenshots) - Uploaded directly from `screenshots/store/ios/`
 
 **The workflow triggers on:**
 - Push to `main` branch with changes in `screenshots/store/**`
 - Manual workflow dispatch from GitHub Actions tab
+
+**How it works:**
+- For Android: Fastlane lane automatically copies screenshots from `screenshots/store/android/` to the required `fastlane/metadata/android/en-US/images/` structure before upload
+- For iOS: Fastlane lane uploads directly from `screenshots/store/ios/` path
+- Temporary metadata directories are excluded from git (see `.gitignore`)
 
 ### Manual Upload with Fastlane
 
