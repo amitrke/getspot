@@ -75,4 +75,15 @@ vendor/bundle/
 .bundle/
 Gemfile.lock
 
-screenshots/
+# Maestro test screenshots (temporary test artifacts - don't commit)
+screenshots/android-phone/
+screenshots/android-tablet-7/
+screenshots/android-tablet-10/
+screenshots/iphone-65/
+screenshots/ipad-13/
+screenshots/default/
+screenshots/test-results/
+
+# Store screenshots (COMMIT THESE - used for App Store/Play Store)
+# Located in screenshots/store/ - these should be tracked in git
+!screenshots/store/

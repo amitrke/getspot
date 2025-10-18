@@ -264,105 +264,129 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             key: _formKey,
             child: ListView(
               children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Event Name'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a name.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _locationController,
-                  decoration: const InputDecoration(labelText: 'Location'),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a location.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildDateTimePicker(
-                  label: 'Event Date & Time',
-                  date: _eventDate,
-                  time: _eventTime,
-                  onTap: () => _pickDateTime(isEvent: true),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<CommitmentDeadlineOption>(
-                  value: _deadlineOption,
-                  decoration: const InputDecoration(
-                    labelText: 'Commitment Deadline (relative)',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: CommitmentDeadlineOption.values
-                      .map(
-                        (option) => DropdownMenuItem(
-                          value: option,
-                          child: Text(_labelForOption(option)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() {
-                      _deadlineOption = value;
-                      if (value != CommitmentDeadlineOption.custom) {
-                        _applyRelativeDeadline();
+                Semantics(
+                  label: 'event_name_field',
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(labelText: 'Event Name'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a name.';
                       }
-                    });
-                  },
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  label: 'location_field',
+                  child: TextFormField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(labelText: 'Location'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a location.';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  label: 'event_date_time_picker',
+                  child: _buildDateTimePicker(
+                    label: 'Event Date & Time',
+                    date: _eventDate,
+                    time: _eventTime,
+                    onTap: () => _pickDateTime(isEvent: true),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  label: 'commitment_deadline_dropdown',
+                  child: DropdownButtonFormField<CommitmentDeadlineOption>(
+                    value: _deadlineOption,
+                    decoration: const InputDecoration(
+                      labelText: 'Commitment Deadline (relative)',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: CommitmentDeadlineOption.values
+                        .map(
+                          (option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(_labelForOption(option)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() {
+                        _deadlineOption = value;
+                        if (value != CommitmentDeadlineOption.custom) {
+                          _applyRelativeDeadline();
+                        }
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (_deadlineOption == CommitmentDeadlineOption.custom)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
-                    child: _buildDateTimePicker(
-                      label: 'Commitment Deadline',
-                      date: _deadlineDate,
-                      time: _deadlineTime,
-                      onTap: () => _pickDateTime(isEvent: false),
+                    child: Semantics(
+                      label: 'commitment_deadline_picker',
+                      child: _buildDateTimePicker(
+                        label: 'Commitment Deadline',
+                        date: _deadlineDate,
+                        time: _deadlineTime,
+                        onTap: () => _pickDateTime(isEvent: false),
+                      ),
                     ),
                   ),
-                TextFormField(
-                  controller: _feeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Fee',
-                    helperText: 'Cost of the event in virtual currency.',
+                Semantics(
+                  label: 'fee_field',
+                  child: TextFormField(
+                    controller: _feeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Fee',
+                      helperText: 'Cost of the event in virtual currency.',
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || int.tryParse(value) == null) {
+                        return 'Please enter a valid number.';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || int.tryParse(value) == null) {
-                      return 'Please enter a valid number.';
-                    }
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _maxParticipantsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Max Participants',
+                Semantics(
+                  label: 'max_participants_field',
+                  child: TextFormField(
+                    controller: _maxParticipantsController,
+                    decoration: const InputDecoration(
+                      labelText: 'Max Participants',
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || int.tryParse(value) == null) {
+                        return 'Please enter a valid number.';
+                      }
+                      return null;
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || int.tryParse(value) == null) {
-                      return 'Please enter a valid number.';
-                    }
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 32),
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
                 else
-                  ElevatedButton(
-                    onPressed: _createEvent,
-                    child: const Text('Create Event'),
+                  Semantics(
+                    label: 'create_event_button',
+                    child: ElevatedButton(
+                      onPressed: _createEvent,
+                      child: const Text('Create Event'),
+                    ),
                   ),
               ],
             ),

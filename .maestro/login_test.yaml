@@ -1,0 +1,63 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Login test - Tests the authentication flow with fresh app state
+# Use this to verify login functionality or reset app state
+# Note: Onboarding appears AFTER login on first launch
+
+- launchApp:
+    clearState: true
+
+# App starts on login screen (not onboarding)
+- assertVisible: "Sign in with Email"
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen
+
+# Tap the button to reveal the email/password form
+- tapOn: "Sign in with Email"
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen_email_form
+
+# Fill in the credentials (User 1 - Admin)
+- tapOn: "Email"
+- inputText: "${MAESTRO_USER1_EMAIL}"
+- tapOn: "Password"
+- inputText: "${MAESTRO_USER1_PASSWORD}"
+
+# Hide the keyboard so Sign In button is visible
+- hideKeyboard
+
+# Take screenshot before submitting
+- takeScreenshot: ${SCREENSHOT_DIR}/login_screen_filled
+
+# Tap the final Sign In button
+- tapOn: "Sign In"
+
+# Handle onboarding screens (appears AFTER login on fresh install, after 500ms delay)
+# Wait a bit for onboarding to appear
+- extendedWaitUntil:
+    visible: "skip_onboarding_button"
+    timeout: 2000
+
+# Option 1: Skip onboarding quickly (recommended for fast tests)
+- tapOn: "skip_onboarding_button"
+- takeScreenshot: ${SCREENSHOT_DIR}/onboarding_skipped
+
+# Alternative: Go through all onboarding pages
+# Comment out the "skip" line above and uncomment these lines to test full onboarding
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_1
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_2
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_3
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_4
+# - tapOn: "onboarding_next_button"
+# - takeScreenshot: ${SCREENSHOT_DIR}/onboarding_page_5
+# - tapOn: "get_started_button"
+
+# Back on home screen after onboarding
+- assertVisible: "My Groups"
+- takeScreenshot: ${SCREENSHOT_DIR}/home_screen_after_login
+
+# Stop the app
+- stopApp

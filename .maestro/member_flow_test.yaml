@@ -1,0 +1,69 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Member Flow Test - Tests member (non-admin) features
+# Requires: User 2 to be a regular member (not admin) of test group
+# Use this after running login_user2_test.yaml
+
+- launchApp:
+    clearState: false
+
+# Navigate to home screen
+- assertVisible: "My Groups"
+- assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
+
+# Take screenshot of home screen
+- takeScreenshot: ${SCREENSHOT_DIR}/member_home_screen
+
+# Navigate to the test group
+- tapOn: "group_item_${MAESTRO_TEST_GROUP_ID}"
+
+# Members should NOT see the Create Event FAB
+- assertNotVisible: "Create Event"
+
+# Take screenshot showing member view (no admin features)
+- takeScreenshot: ${SCREENSHOT_DIR}/group_details_member_view
+
+# Members should only see Events and Announcements tabs (NOT Admin tab)
+- tapOn: "Announcements\nTab 2 of 2"
+- takeScreenshot: ${SCREENSHOT_DIR}/announcements_member_view
+
+# Navigate back to Events tab
+- tapOn: "Events\nTab 1 of 2"
+
+# Members should NOT see Members button
+- assertNotVisible: "Members"
+
+# View wallet (members can see their own wallet)
+- assertVisible: "My Wallet"
+- tapOn: "My Wallet"
+- takeScreenshot: ${SCREENSHOT_DIR}/wallet_member_view
+- tapOn: "Back"
+
+# View an event (members should see register/withdraw, not cancel)
+- assertVisible: "event_item_0"
+- tapOn: "event_item_0"
+- assertVisible: "Event Details"
+
+# Members should NOT see cancel event button
+- assertNotVisible: "cancel_event_button"
+
+# Members should see either register or withdraw button
+- assertVisible:
+    text: "Register|Withdraw"
+
+- takeScreenshot: ${SCREENSHOT_DIR}/event_details_member_view
+
+# Back to group details
+- tapOn: "Back"
+
+# View user profile
+- tapOn: "Back"
+- assertVisible: "My Groups"
+- tapOn: "user_profile_button"
+- takeScreenshot: ${SCREENSHOT_DIR}/user_profile_member
+- tapOn: "Back"
+
+# Stop the app
+- stopApp

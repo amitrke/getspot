@@ -1,0 +1,73 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Event registration test suite - WARNING: Modifies user data
+# Tests event registration, withdrawal, and waitlist functionality
+# Requires sufficient wallet balance for test event
+
+- launchApp:
+    clearState: false
+
+# Navigate to the test group
+- assertVisible: "My Groups"
+- assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- tapOn: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- assertVisible: "Sunridge Saturday"
+
+# View current wallet balance
+- tapOn: "My Wallet"
+- takeScreenshot: ${SCREENSHOT_DIR}/wallet_before_registration
+- tapOn: "Back"
+
+# Navigate to an event
+- assertVisible: "event_item_0"
+- tapOn: "event_item_0"
+- assertVisible: "Event Details"
+- takeScreenshot: ${SCREENSHOT_DIR}/event_details_before_registration
+
+# Check if already registered (if status shows "Not Registered")
+- assertVisible: "Register"
+
+# Register for the event
+- tapOn: "Register"
+- takeScreenshot: ${SCREENSHOT_DIR}/event_details_after_registration
+
+# Wait for registration to process
+- assertVisible:
+    text: "Confirmed|Waitlisted"
+    timeout: 5000
+
+# Take screenshot showing registration status
+- takeScreenshot: ${SCREENSHOT_DIR}/registration_status
+
+# Go back and check wallet deduction
+- tapOn: "Back"
+- tapOn: "My Wallet"
+- takeScreenshot: ${SCREENSHOT_DIR}/wallet_after_registration
+- tapOn: "Back"
+
+# Go back to event to withdraw
+- tapOn: "event_item_0"
+- assertVisible: "Event Details"
+
+# Withdraw from event
+- tapOn: "Withdraw"
+- takeScreenshot: ${SCREENSHOT_DIR}/event_details_after_withdrawal
+
+# Verify withdrawal
+- assertVisible: "Register"
+- takeScreenshot: ${SCREENSHOT_DIR}/withdrawal_confirmed
+
+# Check wallet refund
+- tapOn: "Back"
+- tapOn: "My Wallet"
+- takeScreenshot: ${SCREENSHOT_DIR}/wallet_after_withdrawal
+- tapOn: "Back"
+
+# Back to home
+- tapOn: "Back"
+- assertVisible: "My Groups"
+
+# Stop the app
+- stopApp
