@@ -2,7 +2,7 @@
 
 This document consolidates product requirements, implemented features, and future roadmap for GetSpot.
 
-**Last Updated:** 2025-10-13
+**Last Updated:** 2025-01-18
 
 ---
 
@@ -115,6 +115,7 @@ Users who create groups automatically become admins with additional capabilities
 - [x] Cancel events with automatic refunds
 - [x] Send announcements to registered participants
 - [x] Monitor registration counts in real-time
+- [x] **Copy participant lists** (confirmed/waitlist) - Added Jan 2025
 
 **For Participants:**
 - [x] View event details
@@ -129,6 +130,7 @@ Users who create groups automatically become admins with additional capabilities
 - [ ] Clear "denied" status for re-registration
 - [ ] Recurring event templates
 - [ ] View personal registration history
+- [ ] Copy event link for external sharing
 
 **Files:** `lib/screens/event_details_screen.dart`, `functions/src/processEventRegistration.ts`, `functions/src/cancelEvent.ts`
 
@@ -293,7 +295,10 @@ Features organized by priority and implementation complexity.
 - [ ] Pagination for event lists
 - [ ] Lazy loading for user avatars
 - [ ] Incremental data loading for large groups
-- [ ] Query result caching with TTL
+- [x] **Query result caching with TTL** (Implemented: transactions, events, announcements - Jan 2025)
+  - `TransactionCacheService` (30min TTL)
+  - `EventCacheService` (10min TTL)
+  - `AnnouncementsCacheService` (10min TTL)
 - [ ] Optimize Firestore composite indexes
 
 **Rationale:** Critical as groups grow larger
@@ -458,19 +463,20 @@ Can be implemented in 1-2 days each:
 1. [ ] Swipe-to-delete for admin actions
 2. [ ] Haptic feedback on important actions
 3. [ ] Empty state illustrations
-4. [ ] Deep linking for event sharing (see FIREBASE_FEATURES.md)
-5. [ ] "Copy event link" button
-6. [ ] Participant avatar previews in lists
-7. [ ] Event countdown timer
-8. [ ] "Mark as read" for announcements
-9. [ ] Last active time for members
-10. [ ] Undo functionality for common actions
-11. [ ] Share button for group code
-12. [ ] Network status indicator
-13. [ ] App version display in settings
-14. [ ] Splash screen animations
-15. [ ] Onboarding tutorial flow
-16. [ ] "New" badge on announcements
+4. [x] ~~Deep linking for group sharing~~ (DONE - see UNIVERSAL_LINKS.md)
+5. [ ] Deep linking for event sharing (extend existing implementation)
+6. [ ] "Copy event link" button
+7. [ ] Participant avatar previews in lists
+8. [ ] Event countdown timer
+9. [ ] "Mark as read" for announcements
+10. [ ] Last active time for members
+11. [ ] Undo functionality for common actions
+12. [x] ~~Share button for group code~~ (DONE - in group_details_screen.dart)
+13. [ ] Network status indicator
+14. [ ] App version display in settings
+15. [ ] Splash screen animations
+16. [ ] Onboarding tutorial flow
+17. [ ] "New" badge on announcements
 
 ---
 
@@ -594,4 +600,4 @@ Track user-requested features here with dates and source.
 
 ---
 
-**Next Review Date:** 2025-11-13
+**Next Review Date:** 2025-02-18

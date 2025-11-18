@@ -154,6 +154,9 @@ For efficient queries without expensive collection group queries:
   - `notification_service.dart` - Push notification handling
   - `user_cache_service.dart` - User profile caching (15min TTL)
   - `group_cache_service.dart` - Group metadata caching (30min TTL)
+  - `transaction_cache_service.dart` - Transaction history caching (30min TTL)
+  - `event_cache_service.dart` - Event list caching with cache-first streams (10min TTL)
+  - `announcement_cache_service.dart` - Announcement caching with cache-first streams (10min TTL)
   - `analytics_service.dart` - Firebase Analytics event tracking
   - `crashlytics_service.dart` - Error logging and crash reporting
   - `feature_flag_service.dart` - Remote Config/feature flags
@@ -199,9 +202,13 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
 - **Real-time Updates:** Client uses Firestore real-time listeners for UI updates (participants, wallet balance, etc.).
 - **Push Notifications:** FCM tokens stored in `/users/{uid}.fcmTokens` array. Managed by `updateFcmToken` function.
 - **Data Lifecycle:** `dataLifecycle.ts` handles account deletion requests and data retention policies.
-- **Caching:** `UserCacheService` and `GroupCacheService` cache frequently-accessed data with TTL. Always call `invalidate()` after updates:
-  - `UserCacheService().invalidate(userId)` after updating user display name
-  - `GroupCacheService().invalidate(groupId)` after updating group metadata (when implemented)
+- **Caching:** Multiple cache services reduce Firestore reads with TTL-based expiration. Always call `invalidate()` after updates:
+  - `UserCacheService().invalidate(userId)` - after updating user display name
+  - `GroupCacheService().invalidate(groupId)` - after updating group metadata
+  - `TransactionCacheService().invalidate(groupId, userId)` - after creating transactions
+  - `EventCacheService().invalidate(groupId)` - after creating/cancelling events
+  - `AnnouncementCacheService().invalidate(groupId)` - after posting announcements
+  - Cache-first pattern: Events and announcements emit cached data immediately, then stream real-time updates
 - **Crashlytics:**
   - Configured in `lib/main.dart` (lines 37-48) to capture Flutter errors and async errors
   - Collection is **explicitly enabled** via `setCrashlyticsCollectionEnabled(true)` on startup
