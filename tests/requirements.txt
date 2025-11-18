@@ -1,0 +1,18 @@
+# GetSpot Data Integrity Test Suite Requirements
+# Python 3.9+
+
+# Core testing framework
+pytest==7.4.3
+pytest-html==4.1.1        # HTML test reports
+pytest-cov==4.1.0         # Code coverage
+pytest-xdist==3.5.0       # Parallel test execution
+
+# Firebase Admin SDK
+firebase-admin==6.3.0
+google-cloud-firestore==2.13.1
+google-cloud-storage==2.13.0
+
+# Utilities
+python-dotenv==1.0.0      # Environment variable management
+colorama==0.4.6           # Colored terminal output (Windows)
+tabulate==0.9.0           # Pretty table formatting

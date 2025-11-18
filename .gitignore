@@ -87,3 +87,17 @@ screenshots/test-results/
 # Store screenshots (COMMIT THESE - used for App Store/Play Store)
 # Located in screenshots/store/ - these should be tracked in git
 !screenshots/store/
+
+# Python test suite
+tests/venv/
+tests/.pytest_cache/
+tests/__pycache__/
+tests/*.pyc
+tests/report.html
+tests/.coverage
+tests/htmlcov/
+
+# CRITICAL: Test service account keys (NEVER COMMIT!)
+tests/serviceAccountKey.json
+tests/*-firebase-adminsdk-*.json
+tests/credentials.json
