@@ -89,7 +89,11 @@ def test_user_group_memberships_backward_consistency(db, test_config):
     for membership_doc in user_memberships:
         # Extract user_id from document path
         # Path: userGroupMemberships/{userId}/groups/{groupId}
-        user_id = membership_doc.reference.parent.parent.id
+        parent = membership_doc.reference.parent.parent
+        if parent is None:
+            # Skip documents not at expected path
+            continue
+        user_id = parent.id
         group_id = membership_doc.id
         membership_data = membership_doc.to_dict()
         checked_count += 1

@@ -6,15 +6,15 @@ echo GetSpot Data Integrity Test Suite
 echo ====================================
 echo.
 
-REM Check if virtual environment exists
-if not exist "venv\" (
-    echo Virtual environment not found. Creating...
-    python -m venv venv
-    echo.
-)
+@REM REM Check if virtual environment exists
+@REM if not exist "venv\" (
+@REM     echo Virtual environment not found. Creating...
+@REM     python -m venv venv
+@REM     echo.
+@REM )
 
-REM Activate virtual environment
-call venv\Scripts\activate.bat
+@REM REM Activate virtual environment
+@REM call venv\Scripts\activate.bat
 
 REM Check if requirements are installed
 python -c "import pytest" 2>nul

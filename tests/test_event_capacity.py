@@ -72,6 +72,8 @@ def test_participant_status_validity(db, test_config):
     - waitlisted: No spot available, on waitlist
     - withdrawn: User withdrew from event
     - denied: Registration denied (insufficient funds, etc.)
+    - withdrawn_penalty: User withdrew after deadline (with penalty)
+    - refunded_after_event_end: Participant refunded after event completed
 
     Note: Status should be lowercase in Firestore.
 
@@ -80,7 +82,8 @@ def test_participant_status_validity(db, test_config):
     - Schema change not applied
     - Manual database modification
     """
-    valid_statuses = {'requested', 'confirmed', 'waitlisted', 'withdrawn', 'denied'}
+    valid_statuses = {'requested', 'confirmed', 'waitlisted', 'withdrawn', 'denied',
+                      'withdrawn_penalty', 'refunded_after_event_end'}
     failures = []
     checked_count = 0
     max_failures = test_config['max_failures_per_test']
@@ -117,14 +120,17 @@ def test_event_has_valid_max_participants(db):
     maxParticipants should be:
     - Present in all events
     - Positive integer (> 0)
-    - Reasonable value (< 1000 for sports events)
+    - Not exceed group's maxEventCapacity
 
     Failures indicate:
     - Event creation validation missing
     - Manual database modification
+    - Group maxEventCapacity not properly enforced
     """
     failures = []
     checked_count = 0
+    # Cache groups to avoid repeated queries
+    groups_cache = {}
 
     events = db.collection('events').stream()
 
@@ -132,6 +138,7 @@ def test_event_has_valid_max_participants(db):
         event_data = event_doc.to_dict()
         event_id = event_doc.id
         max_participants = event_data.get('maxParticipants')
+        group_id = event_data.get('groupId')
         checked_count += 1
 
         if max_participants is None:
@@ -141,20 +148,35 @@ def test_event_has_valid_max_participants(db):
                 'issue': 'missing_maxParticipants',
                 'value': None
             })
-        elif not isinstance(max_participants, (int, float)) or max_participants <= 0:
+            continue
+
+        if not isinstance(max_participants, (int, float)) or max_participants <= 0:
             failures.append({
                 'event_id': event_id,
                 'event_name': event_data.get('name', 'Unknown'),
                 'issue': 'invalid_maxParticipants',
                 'value': max_participants
             })
-        elif max_participants > 1000:
-            failures.append({
-                'event_id': event_id,
-                'event_name': event_data.get('name', 'Unknown'),
-                'issue': 'unreasonable_maxParticipants',
-                'value': max_participants
-            })
+            continue
+
+        # Get group's maxEventCapacity
+        if group_id:
+            if group_id not in groups_cache:
+                group_doc = db.collection('groups').document(group_id).get()
+                if group_doc.exists:
+                    groups_cache[group_id] = group_doc.to_dict().get('maxEventCapacity', 60)
+                else:
+                    groups_cache[group_id] = 60  # Default
+
+            max_event_capacity = groups_cache[group_id]
+            if max_participants > max_event_capacity:
+                failures.append({
+                    'event_id': event_id,
+                    'event_name': event_data.get('name', 'Unknown'),
+                    'issue': 'exceeds_group_max_capacity',
+                    'value': max_participants,
+                    'group_max_capacity': max_event_capacity
+                })
 
     assert len(failures) == 0, \
         f"Found {len(failures)} events with invalid maxParticipants:\n{format_failures(failures)}"

@@ -101,3 +101,4 @@ tests/htmlcov/
 tests/serviceAccountKey.json
 tests/*-firebase-adminsdk-*.json
 tests/credentials.json
+servicesAccountKey.json

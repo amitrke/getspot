@@ -118,6 +118,7 @@ export const createGroup = onCall(async (request) => {
       groupCodeSearch: rawCode, // Standardized version for searching
       negativeBalanceLimit,
       pendingJoinRequestsCount: 0, // Initialize counter
+      maxEventCapacity: 60, // Default maximum capacity for events
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 

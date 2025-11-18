@@ -1,0 +1,87 @@
+test_event_capacity.py::test_waitlist_ordered_by_registration_time PASSED          [ 63%]
+test_membership_consistency.py::test_user_group_memberships_forward_consistency PASSED [ 66%]
+test_membership_consistency.py::test_user_group_memberships_backward_consistency FAILED [ 70%]
+test_membership_consistency.py::test_no_duplicate_memberships PASSED               [ 73%]
+test_membership_consistency.py::test_admin_is_group_member PASSED                  [ 76%]
+test_membership_consistency.py::test_membership_data_consistency PASSED            [ 80%]
+test_wallet_consistency.py::test_wallet_balance_matches_transaction_sum FAILED     [ 83%]
+test_wallet_consistency.py::test_negative_balance_within_limits PASSED             [ 86%]
+test_wallet_consistency.py::test_transaction_has_required_fields FAILED            [ 90%]
+test_wallet_consistency.py::test_transaction_amounts_are_positive PASSED           [ 93%]
+test_wallet_consistency.py::test_all_members_have_wallet_balance_field PASSED      [ 96%]
+test_wallet_consistency.py::test_transaction_references_valid_group_and_user PASSED [100%]
+
+======================================= FAILURES ======================================== 
+___________________ test_user_group_memberships_backward_consistency ____________________ 
+test_membership_consistency.py:118: in test_user_group_memberships_backward_consistency   
+    assert len(failures) == 0, f"{summary}\n{format_failures(failures)}"
+E   AssertionError: Checked 12 index entries, found 1 orphaned entries
+E     
+E     ================================================================================    
+E     Found 1 failure(s):
+E     ================================================================================    
+E     
+E     [1] Failure:
+E       type: orphaned_user_membership
+E       group_id: CEF0nH3ajo6DjXJs5GY6
+E       group_name: Sunridge Saturday
+E       user_id: 8ulkM3MJ0KeV063HnR303eyVqgo2
+E       message: userGroupMemberships has entry but user not in group/members
+E     
+E     ================================================================================    
+E     
+E   assert 1 == 0
+E    +  where 1 = len([{'group_id': 'CEF0nH3ajo6DjXJs5GY6', 'group_name': 'Sunridge Saturday', 'message': 'userGroupMemberships has entry but user not in group/members', 'type': 'orphaned_user_membership', ...}])
+______________________ test_wallet_balance_matches_transaction_sum ______________________ 
+test_wallet_consistency.py:109: in test_wallet_balance_matches_transaction_sum
+    assert len(failures) == 0, f"{summary}\n{format_failures(failures)}"
+E   AssertionError: Checked 11 wallets, found 1 inconsistencies
+E     
+E     ================================================================================    
+E     Found 1 failure(s):
+E     ================================================================================    
+E     
+E     [1] Failure:
+E       type: unknown_transaction_type
+E       group_id: CEF0nH3ajo6DjXJs5GY6
+E       user_id: OCfj8A8U5XOTQdMMVeHkUo6VNfG2
+E       transaction_id: HfRcaQe8AGIyUYuvyyEV
+E       transaction_type: credit_manual
+E     
+E     ================================================================================    
+E     
+E   assert 1 == 0
+E    +  where 1 = len([{'group_id': 'CEF0nH3ajo6DjXJs5GY6', 'transaction_id': 'HfRcaQe8AGIyUYuvyyEV', 'transaction_type': 'credit_manual', 'type': 'unknown_transaction_type', ...}])
+_________________________ test_transaction_has_required_fields __________________________ 
+test_wallet_consistency.py:214: in test_transaction_has_required_fields
+    assert len(failures) == 0, f"{summary}\n{format_failures(failures)}"
+E   AssertionError: Checked 86 transactions, found 2 with missing fields
+E     
+E     ================================================================================    
+E     Found 2 failure(s):
+E     ================================================================================    
+E     
+E     [1] Failure:
+E       transaction_id: u4VTtmFDtR43OKzA0PKW
+E       missing_fields: ['uid']
+E       type: credit_manual
+E       created_at: 2025-08-28 05:36:59
+E     
+E     [2] Failure:
+E       transaction_id: xM64nWhXfk8YpvRVcHcs
+E       missing_fields: ['uid', 'description']
+E       type: credit_manual
+E       created_at: 2025-08-27 00:17:48
+E     
+E     ================================================================================    
+E     
+E   assert 2 == 0
+E    +  where 2 = len([{'created_at': DatetimeWithNanoseconds(2025, 8, 28, 5, 36, 59, 853000, tzinfo=datetime.timezone.utc), 'missing_fields': ['uid'], 'transaction_id': 'u4VTtmFDtR43OKzA0PKW', 'type': 'credit_manual'}, {'created_at': DatetimeWithNanoseconds(2025, 8, 27, 0, 17, 48, 568000, tzinfo=datetime.timezone.utc), 'missing_fields': ['uid', 'description'], 'transaction_id': 'xM64nWhXfk8YpvRVcHcs', 'type': 'credit_manual'}])
+================================ short test summary info ================================ 
+FAILED test_membership_consistency.py::test_user_group_memberships_backward_consistency - AssertionError: Checked 12 index entries, found 1 orphaned entries
+FAILED test_wallet_consistency.py::test_wallet_balance_matches_transaction_sum - AssertionError: Checked 11 wallets, found 1 inconsistencies
+FAILED test_wallet_consistency.py::test_transaction_has_required_fields - AssertionError: Checked 86 transactions, found 2 with missing fields
+====================== 3 failed, 27 passed, 10 warnings in 17.46s ======================= 
+
+====================================
+Tests complete!

@@ -7,7 +7,7 @@ and common test utilities.
 
 import pytest
 import firebase_admin
-from firebase_admin import credentials, firestore, storage
+from firebase_admin import credentials, firestore, storage, auth
 import os
 import sys
 from pathlib import Path
@@ -98,6 +98,20 @@ def bucket(firebase_app):
         google.cloud.storage.Bucket: Storage bucket
     """
     return storage.bucket()
+
+
+@pytest.fixture
+def auth_client(firebase_app):
+    """
+    Get Firebase Auth client instance.
+
+    Args:
+        firebase_app: Firebase app fixture
+
+    Returns:
+        firebase_admin.auth: Firebase Auth client
+    """
+    return auth
 
 
 @pytest.fixture

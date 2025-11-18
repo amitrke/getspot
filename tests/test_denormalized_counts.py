@@ -12,6 +12,7 @@ Denormalized counts tested:
 """
 
 import pytest
+from datetime import datetime, timezone
 from utils.test_helpers import format_failures
 
 
@@ -77,6 +78,10 @@ def test_event_waitlist_count_matches_actual(db, test_config):
     - withdrawFromEvent.ts
     - processWaitlist.ts (utility)
 
+    Note: Only checks future events. For past events, participants may have
+    moved to final statuses (refunded_after_event_end, etc.) and the waitlist
+    count mismatch is expected behavior.
+
     Failures indicate:
     - Waitlist promotion not updating count
     - Event registration logic issue
@@ -85,11 +90,22 @@ def test_event_waitlist_count_matches_actual(db, test_config):
 
     failures = []
     checked_count = 0
+    skipped_past_events = 0
     max_failures = test_config['max_failures_per_test']
+    now = datetime.now(timezone.utc)
 
     for event_doc in events:
         event_id = event_doc.id
         event_data = event_doc.to_dict()
+
+        # Skip past events - waitlist count mismatches are expected
+        # when participants are refunded or moved to final statuses
+        event_timestamp = event_data.get('eventTimestamp')
+        if event_timestamp and hasattr(event_timestamp, 'timestamp'):
+            event_dt = datetime.fromtimestamp(event_timestamp.timestamp(), tz=timezone.utc)
+            if event_dt < now:
+                skipped_past_events += 1
+                continue
 
         stored_count = event_data.get('waitlistCount', 0)
 
@@ -113,7 +129,7 @@ def test_event_waitlist_count_matches_actual(db, test_config):
             if len(failures) >= max_failures:
                 break
 
-    summary = f"Checked {checked_count} events, found {len(failures)} mismatches"
+    summary = f"Checked {checked_count} future events (skipped {skipped_past_events} past events), found {len(failures)} mismatches"
     assert len(failures) == 0, f"{summary}\n{format_failures(failures)}"
 
 

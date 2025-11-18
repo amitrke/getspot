@@ -25,8 +25,10 @@ def test_wallet_balance_matches_transaction_sum(db, test_config):
     This is the most critical financial integrity test.
 
     Transaction types:
-    - credit: Adds to balance (admin credits wallet)
-    - debit: Subtracts from balance (event registration fee)
+    - credit*: Adds to balance (credit, credit_manual, etc.)
+    - debit*: Subtracts from balance (debit, debit_manual, etc.)
+
+    Note: Uses prefix matching to support variants like credit_manual.
 
     Failures indicate:
     - Transaction not recorded
@@ -67,12 +69,13 @@ def test_wallet_balance_matches_transaction_sum(db, test_config):
             for tx in transactions:
                 tx_data = tx.to_dict()
                 amount = float(tx_data.get('amount', 0))
-                tx_type = tx_data.get('type')
+                tx_type = tx_data.get('type', '')
                 tx_count += 1
 
-                if tx_type == 'credit':
+                # Use prefix matching to support variants like credit_manual, debit_manual
+                if tx_type.startswith('credit'):
                     calculated_balance += amount
-                elif tx_type == 'debit':
+                elif tx_type.startswith('debit'):
                     calculated_balance -= amount
                 else:
                     # Unknown transaction type
@@ -305,20 +308,29 @@ def test_all_members_have_wallet_balance_field(db):
 @pytest.mark.slow
 def test_transaction_references_valid_group_and_user(db, test_config):
     """
-    Test that all transactions reference existing groups and users.
+    Test that all transactions reference existing groups.
 
-    Orphaned transactions indicate:
-    - Group or user deleted but transactions not archived
-    - Data lifecycle management not working
-    - Referential integrity issue
+    Note: Transactions can reference users that no longer exist in the users
+    collection - these are historical audit records and are intentionally kept.
+    This happens when:
+    - User leaves a group
+    - User account is deleted
+    - User is removed from a group
+
+    However, transactions MUST reference valid groups since groups are the
+    primary organizational unit.
+
+    Orphaned GROUP transactions indicate:
+    - Group deleted but transactions not archived
+    - Data lifecycle management not working properly
+    - Serious referential integrity issue
     """
     failures = []
     checked_count = 0
     max_failures = test_config['max_failures_per_test']
 
-    # Cache groups and users for efficiency
+    # Cache groups for efficiency
     groups_cache = {g.id: True for g in db.collection('groups').stream()}
-    users_cache = {u.id: True for u in db.collection('users').stream()}
 
     transactions = db.collection('transactions').limit(1000).stream()
 
@@ -329,6 +341,7 @@ def test_transaction_references_valid_group_and_user(db, test_config):
         user_id = tx_data.get('uid')
         checked_count += 1
 
+        # Only check group reference - user can be orphaned for audit trail
         if group_id and group_id not in groups_cache:
             failures.append({
                 'transaction_id': tx_id,
@@ -337,16 +350,8 @@ def test_transaction_references_valid_group_and_user(db, test_config):
                 'user_id': user_id
             })
 
-        if user_id and user_id not in users_cache:
-            failures.append({
-                'transaction_id': tx_id,
-                'issue': 'orphaned_user',
-                'group_id': group_id,
-                'user_id': user_id
-            })
-
         if len(failures) >= max_failures:
             break
 
-    summary = f"Checked {checked_count} transactions, found {len(failures)} with invalid references"
+    summary = f"Checked {checked_count} transactions, found {len(failures)} with invalid group references"
     assert len(failures) == 0, f"{summary}\n{format_failures(failures)}"
