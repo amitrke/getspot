@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/services/event_cache_service.dart';
 import 'package:getspot/services/transaction_cache_service.dart';
@@ -923,6 +924,74 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
+  Future<void> _copyParticipantList(String status, String title) async {
+    try {
+      // Fetch participants from Firestore
+      final snapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.eventId)
+          .collection('participants')
+          .where('status', isEqualTo: status)
+          .orderBy('registeredAt', descending: false)
+          .get();
+
+      final participants = snapshot.docs;
+
+      if (participants.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No participants to copy'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Format the list
+      final buffer = StringBuffer();
+      buffer.writeln(title);
+      buffer.writeln('=' * title.length);
+      buffer.writeln();
+
+      for (int i = 0; i < participants.length; i++) {
+        final participant = participants[i].data();
+        final displayName = participant['displayName'] ?? 'No Name';
+        buffer.writeln('${i + 1}. $displayName');
+      }
+
+      // Copy to clipboard
+      await Clipboard.setData(ClipboardData(text: buffer.toString()));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Copied ${participants.length} ${participants.length == 1 ? 'participant' : 'participants'} to clipboard'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, st) {
+      developer.log(
+        'Error copying participant list',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error copying list: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildParticipantList({
     required String title,
     required String status,
@@ -943,6 +1012,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
+            if (_isAdmin) ...[
+              IconButton(
+                onPressed: () => _copyParticipantList(status, title),
+                icon: const Icon(Icons.copy, size: 20),
+                tooltip: 'Copy list',
+                style: IconButton.styleFrom(
+                  foregroundColor: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
             if (showUpdateButton)
               ElevatedButton.icon(
                 onPressed: isUpdating ? null : onUpdatePressed,
