@@ -17,9 +17,6 @@ set -e  # Exit on error
 DEVICE_ID="${1:-default}"
 TEST_FILE="${2:-smoke_test.yaml}"
 
-# Device configuration mapping
-declare -A DEVICE_CONFIGS
-
 # Function to set device config
 set_device_config() {
     case "$1" in
