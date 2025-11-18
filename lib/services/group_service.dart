@@ -31,14 +31,27 @@ class GroupService {
         .where('status', isEqualTo: 'pending')
         .snapshots();
 
-    return CombineLatestStream.combine2(
+    // Listen to participant status changes for this user
+    // This ensures the UI updates when user registers/withdraws from events
+    final participantsStream = _firestore
+        .collectionGroup('participants')
+        .where('uid', isEqualTo: user.uid)
+        .snapshots();
+
+    return CombineLatestStream.combine3(
       membershipsStream,
       pendingRequestsStream,
+      participantsStream,
       (
         QuerySnapshot<Map<String, dynamic>> memberships,
         QuerySnapshot<Map<String, dynamic>> pendingRequests,
+        QuerySnapshot<Map<String, dynamic>> participants,
       ) {
-        return {'memberships': memberships, 'pendingRequests': pendingRequests};
+        return {
+          'memberships': memberships,
+          'pendingRequests': pendingRequests,
+          'participants': participants
+        };
       },
     ).asyncMap((data) async {
       final memberships =
