@@ -7,8 +7,9 @@ This folder contains historical documentation from completed tasks and projects.
 ### Database Optimization Project (2025-10)
 - `TASK-Database-Optimization.md` - Original task specification
 - `SUMMARY-Database-Optimization.md` - Implementation summary
-- `MIGRATION-PendingJoinRequestsCount.md` - Migration details
+- `MIGRATION-PendingJoinRequestsCount.md` - Migration details (✅ Completed 2025-10-07)
 - `DEPLOYMENT-Checklist-Database-Optimization.md` - Deployment checklist
+- `DEPLOYMENT-GUIDE.md` - Quick deployment guide for optimization (archived 2025-10-24)
 
 ### Completed Feature Tasks
 - `TASK-Implement-Event-Cancellation.md` - Event cancellation feature (✅ Completed)

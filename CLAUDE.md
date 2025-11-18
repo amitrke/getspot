@@ -82,7 +82,7 @@ Used for asynchronous, multi-step operations:
 - Function updates document with final status (`"Confirmed"`, `"Waitlisted"`, etc.)
 - Client's real-time listener updates UI automatically
 
-**Key Functions:** `processEventRegistration`, `withdrawFromEvent`, `processWaitlist`
+**Key Functions:** `processEventRegistration`, `withdrawFromEvent` (calls `processWaitlist` utility internally)
 
 ### 2. Callable Function Pattern (Group Creation)
 Used for atomic, synchronous operations requiring transactionality:
@@ -136,13 +136,27 @@ For efficient queries without expensive collection group queries:
 ### Flutter (`lib/`)
 - `main.dart` - App entry point
 - `firebase_options.dart` - Firebase configuration
-- `screens/` - UI screens (home, login, group details, event details, etc.)
+- `screens/` - UI screens
+  - `home_screen.dart` - Home/dashboard with group list
+  - `login_screen.dart` - Authentication UI
+  - `group_details_screen.dart` - Group information and events
+  - `event_details_screen.dart` - Event information and participant list
+  - `create_event_screen.dart` - Event creation form
+  - `group_members_screen.dart` - Members list and management
+  - `join_group_screen.dart` - Join group by code
+  - `wallet_screen.dart` - User wallet and transaction history
+  - `member_profile_screen.dart` - Member profile details
+  - `onboarding_screen.dart` - New user onboarding flow
+  - `faq_screen.dart` - FAQ and help screen
 - `services/` - Business logic services
   - `auth_service.dart` - Authentication logic
   - `group_service.dart` - Group and membership queries
   - `notification_service.dart` - Push notification handling
   - `user_cache_service.dart` - User profile caching (15min TTL)
   - `group_cache_service.dart` - Group metadata caching (30min TTL)
+  - `analytics_service.dart` - Firebase Analytics event tracking
+  - `crashlytics_service.dart` - Error logging and crash reporting
+  - `feature_flag_service.dart` - Remote Config/feature flags
 - `widgets/` - Reusable UI components
 - `models/` - Data models
 - `helpers/` - Utility functions
