@@ -3,6 +3,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/services/event_cache_service.dart';
+import 'package:getspot/services/transaction_cache_service.dart';
 import 'dart:developer' as developer;
 import 'dart:math' as math;
 
@@ -442,7 +444,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Future<void> _cancelEvent() async {
+  Future<void> _cancelEvent(String groupId) async {
     setState(() {
       _isCancelling = true;
     });
@@ -451,6 +453,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
       final callable = functions.httpsCallable('cancelEvent');
       final result = await callable.call({'eventId': widget.eventId});
+
+      // Invalidate event cache for this group
+      EventCacheService().invalidate(groupId);
+      // Invalidate transaction cache for the entire group (refunds created for all participants)
+      TransactionCacheService().invalidateGroup(groupId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -683,7 +690,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  void _showCancelConfirmationDialog() {
+  void _showCancelConfirmationDialog(String groupId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -702,7 +709,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               child: const Text('Confirm Cancellation'),
               onPressed: () {
                 Navigator.of(context).pop();
-                _cancelEvent();
+                _cancelEvent(groupId);
               },
             ),
           ],
@@ -1016,11 +1023,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     List<Widget> buttons = [];
 
     if (_isAdmin && !isCancelled) {
+      final groupId = eventData['groupId'] as String;
       buttons.add(
         Semantics(
           label: 'cancel_event_button',
           child: ElevatedButton(
-            onPressed: _isCancelling ? null : _showCancelConfirmationDialog,
+            onPressed: _isCancelling ? null : () => _showCancelConfirmationDialog(groupId),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: _isCancelling
                 ? const CircularProgressIndicator(color: Colors.white)

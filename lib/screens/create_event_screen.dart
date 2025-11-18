@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/services/event_cache_service.dart';
 import 'dart:developer' as developer;
 
 enum CommitmentDeadlineOption {
@@ -251,6 +252,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         'isCleanedUp': false,
         'status': 'active', // Add default status
       });
+
+      // Invalidate event cache to ensure fresh data
+      EventCacheService().invalidate(widget.groupId);
 
       if (mounted) {
         Navigator.of(context).pop();

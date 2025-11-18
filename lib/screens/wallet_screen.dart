@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/services/transaction_cache_service.dart';
 
 class WalletScreen extends StatefulWidget {
   final String groupId;
@@ -14,7 +15,8 @@ class WalletScreen extends StatefulWidget {
 
 class _WalletScreenState extends State<WalletScreen> {
   late Future<DocumentSnapshot<Map<String, dynamic>>> _balanceFuture;
-  late Future<QuerySnapshot<Map<String, dynamic>>> _transactionsFuture;
+  late Future<List<CachedTransaction>?> _transactionsFuture;
+  final _transactionCache = TransactionCacheService();
 
   @override
   void initState() {
@@ -31,14 +33,17 @@ class _WalletScreenState extends State<WalletScreen> {
           .doc(widget.userId)
           .get();
 
-      _transactionsFuture = FirebaseFirestore.instance
-          .collection('transactions')
-          .where('groupId', isEqualTo: widget.groupId)
-          .where('uid', isEqualTo: widget.userId)
-          .orderBy('createdAt', descending: true)
-          .limit(100)
-          .get();
+      // Use cache service for transactions
+      _transactionsFuture = _transactionCache.getTransactions(
+        widget.groupId,
+        widget.userId,
+      );
     });
+  }
+
+  void _invalidateCache() {
+    // Invalidate transaction cache when user explicitly refreshes
+    _transactionCache.invalidate(widget.groupId, widget.userId);
   }
 
   @override
@@ -49,7 +54,10 @@ class _WalletScreenState extends State<WalletScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
+            onPressed: () {
+              _invalidateCache();
+              _loadData();
+            },
             tooltip: 'Refresh',
           ),
         ],
@@ -57,6 +65,7 @@ class _WalletScreenState extends State<WalletScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
+            _invalidateCache();
             _loadData();
             // Wait a bit to ensure data is refreshed
             await Future.delayed(const Duration(milliseconds: 500));
@@ -144,12 +153,12 @@ class _BalanceCard extends StatelessWidget {
 }
 
 class _TransactionList extends StatelessWidget {
-  final Future<QuerySnapshot<Map<String, dynamic>>> future;
+  final Future<List<CachedTransaction>?> future;
   const _TransactionList({required this.future});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    return FutureBuilder<List<CachedTransaction>?>(
       future: future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -158,21 +167,20 @@ class _TransactionList extends StatelessWidget {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-        final docs = snapshot.data?.docs ?? [];
-        if (docs.isEmpty) {
+        final transactions = snapshot.data ?? [];
+        if (transactions.isEmpty) {
           return const Center(child: Text('No transactions yet.'));
         }
 
         return ListView.separated(
-          itemCount: docs.length,
+          itemCount: transactions.length,
           separatorBuilder: (_, __) => const Divider(indent: 16, endIndent: 16),
           itemBuilder: (context, index) {
-            final doc = docs[index];
-            final data = doc.data();
-            final type = data['type'] ?? '';
-            final amount = data['amount'] ?? 0;
-            final description = data['description'] ?? 'No description';
-            final timestamp = (data['createdAt'] as Timestamp?)?.toDate();
+            final transaction = transactions[index];
+            final type = transaction.type;
+            final amount = transaction.amount;
+            final description = transaction.description;
+            final timestamp = transaction.createdAt;
 
             final isCredit = type == 'credit';
             final amountText = '${isCredit ? '+' : '-'}${NumberFormat.currency(symbol: '', decimalDigits: 2).format(amount)}';

@@ -8,6 +8,8 @@ import 'package:getspot/screens/event_details_screen.dart';
 import 'package:getspot/providers/participant_provider.dart';
 import 'package:getspot/services/group_cache_service.dart';
 import 'package:getspot/services/user_cache_service.dart';
+import 'package:getspot/services/event_cache_service.dart';
+import 'package:getspot/services/announcement_cache_service.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
 import 'package:getspot/screens/wallet_screen.dart';
@@ -38,15 +40,19 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   Future<void> _handleRefresh() async {
     developer.log('Pull-to-refresh triggered on Group Details Screen', name: 'GroupDetailsScreen');
 
-    // Invalidate cache for this specific group
-    GroupCacheService().invalidate(widget.group['groupId']);
+    final groupId = widget.group['groupId'];
+
+    // Invalidate caches for this specific group
+    GroupCacheService().invalidate(groupId);
+    EventCacheService().invalidate(groupId);
+    AnnouncementCacheService().invalidate(groupId);
     // Clear user cache to refresh member display names and photos
     UserCacheService().clear();
 
     // Wait a bit to allow the stream to pick up fresh data
     await Future.delayed(const Duration(milliseconds: 500));
 
-    developer.log('Cache invalidated for group ${widget.group['groupId']}', name: 'GroupDetailsScreen');
+    developer.log('All caches invalidated for group $groupId', name: 'GroupDetailsScreen');
   }
 
   void _checkAdminStatus() {
@@ -352,6 +358,10 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
             'createdAt': FieldValue.serverTimestamp(),
           });
 
+      // Invalidate announcement cache to ensure fresh data
+      // (Real-time stream will update, but invalidation ensures consistency)
+      AnnouncementCacheService().invalidate(widget.groupId);
+
       _announcementController.clear();
     } catch (e) {
       if (mounted) {
@@ -416,16 +426,10 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
               ),
             ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance
-                  .collection('groups')
-                  .doc(widget.groupId)
-                  .collection('announcements')
-                  .orderBy('createdAt', descending: true)
-                  .limit(50)
-                  .snapshots(),
+            child: StreamBuilder<List<CachedAnnouncement>>(
+              stream: AnnouncementCacheService().getAnnouncementsStream(widget.groupId),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
@@ -433,7 +437,7 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                     child: Text('Error loading announcements.'),
                   );
                 }
-                final announcements = snapshot.data?.docs ?? [];
+                final announcements = snapshot.data ?? [];
                 if (announcements.isEmpty) {
                   return const Center(child: Text('No announcements yet.'));
                 }
@@ -441,18 +445,17 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                   keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   itemCount: announcements.length,
                   itemBuilder: (context, index) {
-                    final announcement = announcements[index].data();
-                    final createdAt = (announcement['createdAt'] as Timestamp?)
-                        ?.toDate();
+                    final announcement = announcements[index];
+                    final createdAt = announcement.createdAt;
                     return Card(
                       margin: const EdgeInsets.symmetric(
                         vertical: 4,
                         horizontal: 0,
                       ),
                       child: ListTile(
-                        title: Text(announcement['content'] ?? ''),
+                        title: Text(announcement.content),
                         subtitle: Text(
-                          'Posted by ${announcement['authorName'] ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
+                          'Posted by ${announcement.authorName ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
                         ),
                       ),
                     );
@@ -497,16 +500,12 @@ class _EventListState extends State<_EventList> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('events')
-          .where('groupId', isEqualTo: widget.groupId)
-          .where('status', isEqualTo: 'active')
-          .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
-          .orderBy('eventTimestamp', descending: false)
-          .snapshots(),
+    final eventCache = EventCacheService();
+
+    return StreamBuilder<List<CachedEvent>>(
+      stream: eventCache.getEventsStream(widget.groupId),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -520,7 +519,7 @@ class _EventListState extends State<_EventList> {
           return const Center(child: Text('Error loading events.'));
         }
 
-        final events = snapshot.data?.docs ?? [];
+        final events = snapshot.data ?? [];
 
         if (events.isEmpty) {
           return const Center(child: Text('No upcoming events.'));
@@ -545,7 +544,8 @@ class _EventListState extends State<_EventList> {
                     label: 'event_item_$index',
                     child: _EventListItem(
                       key: ValueKey(event.id),
-                      event: event,
+                      eventId: event.id,
+                      eventData: event.toMap(),
                       isAdmin: widget.isAdmin,
                       participantProvider: _participantProvider,
                     ),
@@ -561,13 +561,15 @@ class _EventListState extends State<_EventList> {
 }
 
 class _EventListItem extends StatefulWidget {
-  final QueryDocumentSnapshot<Map<String, dynamic>> event;
+  final String eventId;
+  final Map<String, dynamic> eventData;
   final bool isAdmin;
   final ParticipantProvider? participantProvider;
 
   const _EventListItem({
     super.key,
-    required this.event,
+    required this.eventId,
+    required this.eventData,
     required this.isAdmin,
     this.participantProvider,
   });
@@ -581,7 +583,7 @@ class _EventListItemState extends State<_EventListItem> {
   void initState() {
     super.initState();
     // Subscribe to participant updates for this event
-    widget.participantProvider?.subscribeToEvent(widget.event.id);
+    widget.participantProvider?.subscribeToEvent(widget.eventId);
   }
 
   Widget _getStatusIcon(String? status) {
@@ -597,7 +599,7 @@ class _EventListItemState extends State<_EventListItem> {
 
   @override
   Widget build(BuildContext context) {
-    final eventData = widget.event.data();
+    final eventData = widget.eventData;
     final eventTimestamp = eventData['eventTimestamp'] as Timestamp?;
     final formattedDate = eventTimestamp != null
         ? DateFormat.yMMMEd().add_jm().format(eventTimestamp.toDate())
@@ -605,7 +607,7 @@ class _EventListItemState extends State<_EventListItem> {
 
     return Card(
       child: ListTile(
-        title: Text(eventData['name'] ?? 'Unnamed Event'),
+        title: Text(eventData['title'] ?? eventData['name'] ?? 'Unnamed Event'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -631,7 +633,7 @@ class _EventListItemState extends State<_EventListItem> {
                     listenable: widget.participantProvider!,
                     builder: (context, child) {
                       final participantData = widget.participantProvider!
-                          .getParticipantStatus(widget.event.id);
+                          .getParticipantStatus(widget.eventId);
                       final status = participantData?['status'] as String?;
 
                       if (participantData == null) {
@@ -672,7 +674,7 @@ class _EventListItemState extends State<_EventListItem> {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => EventDetailsScreen(
-                eventId: widget.event.id,
+                eventId: widget.eventId,
                 isGroupAdmin: widget.isAdmin,
               ),
             ),
