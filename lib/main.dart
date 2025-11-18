@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,26 @@ void main() async {
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialize Firebase App Check for security
+  // Protects backend resources from abuse and unauthorized access
+  await FirebaseAppCheck.instance.activate(
+    // iOS: Use DeviceCheck for production, Debug provider for development
+    // Android: Use Play Integrity for production, Debug provider for development
+    // Web: Use ReCAPTCHA v3
+    androidProvider: kDebugMode
+        ? AndroidProvider.debug
+        : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode
+        ? AppleProvider.debug
+        : AppleProvider.deviceCheck,
+    webProvider: ReCaptchaV3Provider('6LcNYKYqAAAAADQGaWv-f3W8kVxaFT84HMO9JfSX'),
+  );
+
+  developer.log(
+    'App Check activated - Provider: ${kDebugMode ? 'Debug' : 'Production'}',
+    name: 'AppCheck',
   );
 
   // Initialize Firebase Crashlytics

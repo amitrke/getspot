@@ -183,6 +183,43 @@ if (FeatureFlagService().canAccessCrashTest(userId)) {
 
 ---
 
+### 9. Firebase App Check
+**Status:** Production (Metrics-Only) | **Added:** 2025-01-18
+
+**Purpose:** Protect backend from abuse and unauthorized access
+
+**Implementation:**
+- Platform-specific attestation providers
+- iOS: DeviceCheck (production), Debug (development)
+- Android: Play Integrity API (production), Debug (development)
+- Web: ReCAPTCHA v3
+- **NOT enforced** on backend yet (metrics-only mode)
+
+**Files:**
+- `lib/main.dart:56-74` - Client initialization
+- `functions/src/index.ts:44-60` - Backend enforcement (commented)
+- `docs/FIREBASE_APP_CHECK.md` - Complete setup guide
+
+**Security Benefits:**
+- Verifies requests come from legitimate app
+- Prevents bot abuse of Cloud Functions
+- Rate limiting and traffic analysis
+- Essential before scaling
+
+**Current Status:**
+- ✅ Client-side App Check active
+- ✅ Collecting metrics in Firebase Console
+- ⏳ Backend enforcement pending (monitor first)
+- 📊 Target: >95% valid token rate before enforcement
+
+**Next Steps:**
+1. Register debug tokens for development
+2. Monitor metrics for 1-2 weeks
+3. Enable enforcement on security-critical functions
+4. Full enforcement after validation
+
+---
+
 ## Recommended Additions 🎯
 
 ### Priority 1: High Impact, Easy to Implement
@@ -212,32 +249,24 @@ if (FeatureFlagService().canAccessCrashTest(userId)) {
 
 ---
 
-#### 2. Firebase App Check
-**Effort:** Medium (4-8 hours) | **Impact:** High (Security)
+#### 2. ~~Firebase App Check~~ (IMPLEMENTED)
+**Status:** ✅ **COMPLETED** (Metrics-Only Mode) | **Added:** 2025-01-18
 
-**Why:** Protect backend from abuse and unauthorized access
+**What You Have:**
+- ✅ Client-side App Check active on all platforms
+- ✅ iOS: DeviceCheck (production) / Debug (development)
+- ✅ Android: Play Integrity API (production) / Debug (development)
+- ✅ Web: ReCAPTCHA v3
+- ✅ Backend prepared for enforcement (commented out)
 
-**Benefits:**
-- Verify requests come from legitimate app
-- Prevent bot abuse of Cloud Functions
-- Protect Firestore from unauthorized clients
-- Essential for production security
+**Documentation:** See `docs/FIREBASE_APP_CHECK.md`
 
-**Implementation Plan:**
-1. Enable App Check in Firebase Console
-2. Add dependency: `firebase_app_check: ^0.3.0`
-3. Configure attestation providers:
-   - iOS: DeviceCheck (production), Debug (development)
-   - Android: Play Integrity API (production), Debug (development)
-   - Web: reCAPTCHA v3
-4. Enforce App Check in Cloud Functions
-5. Enable Firestore App Check enforcement
+**Next Steps:**
+1. Register debug tokens in Firebase Console
+2. Monitor metrics (target >95% valid tokens)
+3. Enable enforcement on Cloud Functions after validation
 
-**Estimated Cost:** Free (within generous limits)
-
-**Priority:** ⭐⭐⭐⭐⭐ (Critical before scaling)
-
-**Security Note:** Prevents malicious actors from calling your Cloud Functions directly
+**Priority:** ✅ **DONE** - Now in monitoring phase
 
 ---
 
@@ -393,12 +422,12 @@ Several pre-built extensions could be useful:
 
 ## Implementation Roadmap
 
-### Phase 1: Performance & Security (This Month)
-**Total Time:** 6-12 hours
+### Phase 1: Performance & Security
+**Status:** ✅ **MOSTLY COMPLETE**
 
 1. ✅ Firebase Remote Config (Completed 2025-10-13)
-2. 🎯 Firebase Performance Monitoring (2-4 hours)
-3. 🎯 Firebase App Check (4-8 hours)
+2. ✅ Firebase App Check (Completed 2025-01-18 - Metrics-Only)
+3. 🎯 Firebase Performance Monitoring (Next - 2-4 hours)
 
 **Rationale:** Foundation for scaling safely
 

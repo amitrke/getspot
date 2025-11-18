@@ -41,6 +41,23 @@ const db = admin.firestore();
 // Set global options for all functions
 setGlobalOptions({maxInstances: 10, region: "us-east4"});
 
+/**
+ * App Check enforcement configuration
+ *
+ * IMPORTANT: App Check is currently in METRICS-ONLY mode (not enforced).
+ * This allows monitoring of token validity before blocking requests.
+ *
+ * To enable enforcement:
+ * 1. Monitor metrics in Firebase Console for 1-2 weeks
+ * 2. Ensure >95% of requests have valid tokens
+ * 3. Uncomment `consumeAppCheckToken: true` in security-critical functions
+ * 4. Test thoroughly in staging before production
+ *
+ * See docs/FIREBASE_APP_CHECK.md for detailed enforcement strategy.
+ */
+// const appCheckOptions = {
+//   consumeAppCheckToken: true, // Enforces App Check - blocks requests without valid token
+// };
 
 /**
  * Creates a new group, generates a unique group code, and adds the creator
@@ -63,7 +80,10 @@ setGlobalOptions({maxInstances: 10, region: "us-east4"});
  * @throws {HttpsError} Throws an error if the user is not authenticated, if
  * the data is invalid, or if an internal error occurs.
  */
-export const createGroup = onCall(async (request) => {
+export const createGroup = onCall(
+  // To enforce App Check, uncomment the options below:
+  // { ...appCheckOptions },
+  async (request) => {
   const {customAlphabet} = await import("nanoid");
   // 1. Authentication: Ensure the user is authenticated.
   if (!request.auth) {
@@ -153,7 +173,8 @@ export const createGroup = onCall(async (request) => {
       "An error occurred while creating the group.",
     );
   }
-});
+  },
+);
 
 export const processEventRegistration = processEventRegistrationHandler(db);
 export const manageJoinRequest = manageJoinRequestHandler(db);

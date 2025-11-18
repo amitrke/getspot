@@ -198,7 +198,10 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
 
 ## Important Notes
 
-- **Security:** Firestore Security Rules enforce read/write permissions. Functions operate in trusted environment with admin SDK.
+- **Security:**
+  - Firestore Security Rules enforce read/write permissions. Functions operate in trusted environment with admin SDK.
+  - **App Check:** Active on client-side (metrics-only mode). See `docs/FIREBASE_APP_CHECK.md` for enforcement details.
+  - Register debug tokens in Firebase Console for development builds.
 - **Real-time Updates:** Client uses Firestore real-time listeners for UI updates (participants, wallet balance, etc.).
 - **Push Notifications:** FCM tokens stored in `/users/{uid}.fcmTokens` array. Managed by `updateFcmToken` function.
 - **Data Lifecycle:** `dataLifecycle.ts` handles account deletion requests and data retention policies.
