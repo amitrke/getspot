@@ -335,7 +335,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 Semantics(
                   label: 'commitment_deadline_dropdown',
                   child: DropdownButtonFormField<CommitmentDeadlineOption>(
-                    value: _deadlineOption,
+                    initialValue: _deadlineOption,
                     decoration: const InputDecoration(
                       labelText: 'Commitment Deadline (relative)',
                       border: OutlineInputBorder(),

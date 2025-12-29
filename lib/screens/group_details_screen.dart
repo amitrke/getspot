@@ -137,10 +137,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
           ? box.localToGlobal(Offset.zero) & box.size
           : null;
 
-      await Share.share(
-        message.toString(),
-        subject: 'Join ${name ?? "our group"} on GetSpot',
-        sharePositionOrigin: sharePositionOrigin,
+      await SharePlus.instance.share(
+        ShareParams(
+          text: message.toString(),
+          subject: 'Join ${name ?? "our group"} on GetSpot',
+          sharePositionOrigin: sharePositionOrigin,
+        ),
       );
 
       developer.log('Group shared successfully', name: 'GroupDetailsScreen');

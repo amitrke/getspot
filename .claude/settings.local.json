@@ -8,7 +8,11 @@
       "Bash(flutter pub:*)",
       "Bash(powershell:*)",
       "Bash(dir:*)",
-      "Bash(flutter:*)"
+      "Bash(flutter:*)",
+      "WebSearch",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm run lint:fix:*)",
+      "Bash(pnpm run build)"
     ],
     "deny": [],
     "ask": []

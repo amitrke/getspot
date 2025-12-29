@@ -59,13 +59,13 @@ void main() async {
     // iOS: Use DeviceCheck for production, Debug provider for development
     // Android: Use Play Integrity for production, Debug provider for development
     // Web: Use ReCAPTCHA v3
-    androidProvider: kDebugMode
-        ? AndroidProvider.debug
-        : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode
-        ? AppleProvider.debug
-        : AppleProvider.deviceCheck,
-    webProvider: ReCaptchaV3Provider('6LcNYKYqAAAAADQGaWv-f3W8kVxaFT84HMO9JfSX'),
+    providerAndroid: kDebugMode
+        ? const AndroidDebugProvider()
+        : const AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode
+        ? const AppleDebugProvider()
+        : const AppleDeviceCheckProvider(),
+    providerWeb: ReCaptchaV3Provider('6LcNYKYqAAAAADQGaWv-f3W8kVxaFT84HMO9JfSX'),
   );
 
   developer.log(
