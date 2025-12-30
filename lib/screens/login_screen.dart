@@ -52,6 +52,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return false;
   }
 
+  bool _shouldShowAppleSignIn() {
+    // Show Apple Sign-In on web and iOS, hide on Android
+    if (kIsWeb) {
+      return true; // Works via Firebase popup on web
+    }
+    return defaultTargetPlatform == TargetPlatform.iOS; // Only show on iOS native, not Android
+  }
+
   Future<void> _launchAppStore() async {
     final Uri url =
         Uri.parse('https://apps.apple.com/app/getspot/6752911639');
@@ -161,48 +169,50 @@ class _LoginScreenState extends State<LoginScreen> {
                     _buildAndroidAppButton(),
                     const SizedBox(height: 24),
                   ],
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.apple),
-                    onPressed: _isLoading ? null : () async {
-                      setState(() {
-                        _isLoading = true;
-                      });
-                      try {
-                        final result = await _authService.signInWithApple();
-                        if (!mounted) return;
-
-                        // On web, signInWithPopup doesn't reliably trigger auth streams
-                        // Navigate manually if sign-in was successful
-                        if (result != null && result.user != null) {
-                          if (mounted) {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (context) => const HomeScreen()),
-                            );
-                          }
-                        }
-                      } catch (e) {
-                        if (!mounted) return;
+                  if (_shouldShowAppleSignIn()) ...[
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.apple),
+                      onPressed: _isLoading ? null : () async {
                         setState(() {
-                          _isLoading = false;
+                          _isLoading = true;
                         });
-                        final messenger = ScaffoldMessenger.of(context);
-                        final colorScheme = Theme.of(context).colorScheme;
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to sign in: $e'),
-                            backgroundColor: colorScheme.error,
-                          ),
-                        );
-                      }
-                    },
-                    label: const Text('Sign in with Apple'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
+                        try {
+                          final result = await _authService.signInWithApple();
+                          if (!mounted) return;
+
+                          // On web, signInWithPopup doesn't reliably trigger auth streams
+                          // Navigate manually if sign-in was successful
+                          if (result != null && result.user != null) {
+                            if (mounted) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          if (!mounted) return;
+                          setState(() {
+                            _isLoading = false;
+                          });
+                          final messenger = ScaffoldMessenger.of(context);
+                          final colorScheme = Theme.of(context).colorScheme;
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to sign in: $e'),
+                              backgroundColor: colorScheme.error,
+                            ),
+                          );
+                        }
+                      },
+                      label: const Text('Sign in with Apple'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
+                  ],
                   ElevatedButton.icon(
                     icon: const Icon(Icons.login), // Replace with a proper Google icon
                     onPressed: _isLoading ? null : () async {
