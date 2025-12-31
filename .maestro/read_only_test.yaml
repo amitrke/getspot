@@ -1,0 +1,56 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Read-only test suite - safe to run anytime without creating data
+# This test only views existing data and navigates through the app
+
+- launchApp:
+    clearState: false
+
+# Wait for the group list to load
+- assertVisible: "My Groups"
+
+# User profile screen
+- assertVisible: "user_profile_button"
+- tapOn: "user_profile_button"
+- takeScreenshot: ${SCREENSHOT_DIR}/user_profile_screen
+- tapOn: "Back"
+
+# Verify groups exist
+- assertNotVisible: "No groups found."
+- assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
+
+# Home screen with groups
+- takeScreenshot: ${SCREENSHOT_DIR}/home_screen_with_groups
+
+# Navigate to group details
+- tapOn: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- assertVisible: "Sunridge Saturday"
+- takeScreenshot: ${SCREENSHOT_DIR}/group_details_screen
+
+# View Announcements tab
+- tapOn: "Announcements\nTab 2 of 2"
+- takeScreenshot: ${SCREENSHOT_DIR}/announcements_tab_screen
+
+# Back to Events tab
+- tapOn: "Events\nTab 1 of 2"
+- assertVisible: "event_item_0"
+
+# View wallet (read-only)
+- assertVisible: "My Wallet"
+- tapOn: "My Wallet"
+- takeScreenshot: ${SCREENSHOT_DIR}/my_wallet_screen
+- tapOn: "Back"
+
+# View event details
+- tapOn: "event_item_0"
+- assertVisible: "Event Details"
+- takeScreenshot: ${SCREENSHOT_DIR}/event_details_screen
+
+# Back to group details
+- tapOn: "Back"
+- assertVisible: "Sunridge Saturday"
+
+# Stop the app
+- stopApp

@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+**/build/
 
 # Symbolication related
 app.*.symbols
@@ -54,7 +55,50 @@ GoogleService-Info.plist
 key.properties
 *.jks
 ""  
-"# Environment variables"  
+"# Environment variables
 .env
+fastlane/.env
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output
 
-screenshots/
+# App Store Connect API Key (NEVER COMMIT THIS)
+fastlane/app_store_connect_api_key.json
+*.p8
+
+# Fastlane metadata downloads
+fastlane/metadata
+fastlane/screenshots
+
+# Ruby/Bundler
+vendor/bundle/
+.bundle/
+Gemfile.lock
+
+# Maestro test screenshots (temporary test artifacts - don't commit)
+screenshots/android-phone/
+screenshots/android-tablet-7/
+screenshots/android-tablet-10/
+screenshots/iphone-65/
+screenshots/ipad-13/
+screenshots/default/
+screenshots/test-results/
+
+# Store screenshots (COMMIT THESE - used for App Store/Play Store)
+# Located in screenshots/store/ - these should be tracked in git
+!screenshots/store/
+
+# Python test suite
+tests/venv/
+tests/.pytest_cache/
+tests/__pycache__/
+tests/*.pyc
+tests/report.html
+tests/.coverage
+tests/htmlcov/
+
+# CRITICAL: Test service account keys (NEVER COMMIT!)
+tests/serviceAccountKey.json
+tests/*-firebase-adminsdk-*.json
+tests/credentials.json
+servicesAccountKey.json

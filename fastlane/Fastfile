@@ -1,0 +1,257 @@
+# This file contains the fastlane configuration
+# You can find the documentation at https://docs.fastlane.tools
+
+default_platform(:ios)
+
+# Android Platform
+platform :android do
+  desc "Upload screenshots to Google Play Store"
+  lane :upload_screenshots do
+    # Get absolute paths
+    fastlane_dir = File.expand_path("..", Dir.pwd)
+    metadata_path = File.join(fastlane_dir, "fastlane", "metadata", "android")
+    screenshots_source = File.join(fastlane_dir, "screenshots", "store", "android")
+
+    UI.message("Fastlane directory: #{fastlane_dir}")
+    UI.message("Metadata path: #{metadata_path}")
+    UI.message("Screenshots source: #{screenshots_source}")
+
+    # Create metadata structure for Play Store
+    FileUtils.mkdir_p(File.join(metadata_path, "en-US", "images", "phoneScreenshots"))
+    FileUtils.mkdir_p(File.join(metadata_path, "en-US", "images", "sevenInchScreenshots"))
+    FileUtils.mkdir_p(File.join(metadata_path, "en-US", "images", "tenInchScreenshots"))
+
+    # Copy screenshots from our store directory to Fastlane structure
+    phone_screenshots = Dir.glob(File.join(screenshots_source, "phone", "*.png"))
+    tablet7_screenshots = Dir.glob(File.join(screenshots_source, "tablet-7", "*.png"))
+    tablet10_screenshots = Dir.glob(File.join(screenshots_source, "tablet-10", "*.png"))
+
+    phone_screenshots.each { |f| FileUtils.cp(f, File.join(metadata_path, "en-US", "images", "phoneScreenshots")) }
+    tablet7_screenshots.each { |f| FileUtils.cp(f, File.join(metadata_path, "en-US", "images", "sevenInchScreenshots")) }
+    tablet10_screenshots.each { |f| FileUtils.cp(f, File.join(metadata_path, "en-US", "images", "tenInchScreenshots")) }
+
+    UI.message("Copied #{phone_screenshots.length} phone screenshots")
+    UI.message("Copied #{tablet7_screenshots.length} 7-inch tablet screenshots")
+    UI.message("Copied #{tablet10_screenshots.length} 10-inch tablet screenshots")
+
+    # Upload screenshots from screenshots/store/android/ to Play Store
+    upload_to_play_store(
+      json_key: ENV["SUPPLY_JSON_KEY"],
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: false,
+      metadata_path: metadata_path,
+      package_name: ENV["ANDROID_PACKAGE_NAME"] || "org.getspot"
+    )
+
+    UI.success("Screenshots uploaded to Google Play Store!")
+  end
+
+  desc "Prepare Maestro screenshots for Play Store"
+  lane :prepare_screenshots do
+    UI.message("Organizing screenshots from Maestro to Play Store format...")
+
+    # Copy screenshots to Play Store expected locations
+    # You can customize these paths based on your needs
+    sh("mkdir -p ../screenshots/store/android/phone")
+    sh("mkdir -p ../screenshots/store/android/tablet-7")
+    sh("mkdir -p ../screenshots/store/android/tablet-10")
+
+    UI.success("Screenshot directories prepared! Copy your Maestro screenshots to:")
+    UI.message("  - screenshots/store/android/phone/")
+    UI.message("  - screenshots/store/android/tablet-7/")
+    UI.message("  - screenshots/store/android/tablet-10/")
+  end
+end
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Ensure we're on a clean git state
+    ensure_git_status_clean
+
+    # Increment build number
+    increment_build_number(
+      xcodeproj: "ios/Runner.xcodeproj"
+    )
+
+    # Build the app (Xcode Cloud handles this, but kept for manual runs)
+    build_app(
+      workspace: "ios/Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "com.yourcompany.getspot" => "match AppStore com.yourcompany.getspot"
+        }
+      }
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: "Bug fixes and improvements"
+    )
+  end
+
+  desc "Promote the latest TestFlight build to App Store Review"
+  lane :promote_to_review do
+    # Load API key from JSON file
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: false,
+      in_house: false
+    )
+
+    # Get the latest build number from TestFlight
+    latest_build = latest_testflight_build_number(
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      api_key: api_key
+    )
+
+    UI.message("Latest TestFlight build: #{latest_build}")
+
+    # Deliver the build to App Store Review
+    deliver(
+      api_key: api_key,
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      build_number: latest_build.to_s,
+      submit_for_review: true,
+      automatic_release: false, # Set to true if you want auto-release after approval
+      force: true, # Skip verification of HTML preview file
+      skip_metadata: false,
+      skip_screenshots: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      }
+    )
+
+    UI.success("✅ Build #{latest_build} submitted for App Store Review!")
+  end
+
+  desc "Promote specific build number to App Store Review"
+  lane :promote_build do |options|
+    build_number = options[:build_number]
+
+    if build_number.nil?
+      UI.user_error!("Please provide a build number: fastlane promote_build build_number:123")
+    end
+
+    # Load API key from environment
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: false,
+      in_house: false
+    )
+
+    UI.message("Promoting build #{build_number} to App Store Review")
+
+    deliver(
+      api_key: api_key,
+      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      build_number: build_number.to_s,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        export_compliance_encryption_updated: false
+      }
+    )
+
+    UI.success("✅ Build #{build_number} submitted for App Store Review!")
+  end
+
+  desc "Download metadata and screenshots from App Store Connect"
+  lane :download_metadata do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"],
+      download_metadata: true,
+      download_screenshots: true,
+      force: true
+    )
+
+    UI.success("✅ Metadata downloaded to fastlane/metadata")
+  end
+
+  desc "Update App Store metadata only (no build submission)"
+  lane :update_metadata do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"],
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      force: true
+    )
+
+    UI.success("✅ Metadata updated on App Store Connect!")
+  end
+
+  desc "Upload screenshots to App Store Connect"
+  lane :upload_screenshots do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"] || "org.getspot",
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      overwrite_screenshots: true,
+      screenshots_path: "./screenshots/store/ios",
+      force: true
+    )
+
+    UI.success("Screenshots uploaded to App Store Connect!")
+  end
+
+  desc "Prepare Maestro screenshots for App Store"
+  lane :prepare_screenshots do
+    UI.message("Organizing screenshots from Maestro to App Store format...")
+
+    # Create directories for App Store required sizes
+    sh("mkdir -p ../screenshots/store/ios/iphone-6.5")
+    sh("mkdir -p ../screenshots/store/ios/ipad-12.9")
+
+    UI.success("Screenshot directories prepared! Copy your Maestro screenshots to:")
+    UI.message("  - screenshots/store/ios/iphone-6.5/")
+    UI.message("  - screenshots/store/ios/ipad-12.9/")
+  end
+
+  desc "Release the approved build to production"
+  lane :release do
+    deliver(
+      app_identifier: ENV["APP_IDENTIFIER"],
+      release_build: true
+    )
+
+    # Optional: Tag the release in git
+    add_git_tag(
+      tag: "v#{get_version_number(xcodeproj: "ios/Runner.xcodeproj")}-#{get_build_number(xcodeproj: "ios/Runner.xcodeproj")}"
+    )
+
+    UI.success("✅ Build released to App Store!")
+  end
+
+  desc "Get app version and build number"
+  lane :version_info do
+    version = get_version_number(xcodeproj: "ios/Runner.xcodeproj")
+    build = get_build_number(xcodeproj: "ios/Runner.xcodeproj")
+
+    UI.message("Version: #{version}")
+    UI.message("Build: #{build}")
+  end
+
+  # Error handling
+  error do |lane, exception|
+    UI.error("Error in lane #{lane}: #{exception.message}")
+  end
+end

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(npm run build)",
+      "Bash(npm run deploy)",
+      "Bash(firebase deploy:*)",
+      "Bash(flutter pub:*)",
+      "Bash(powershell:*)",
+      "Bash(dir:*)",
+      "Bash(flutter:*)",
+      "WebSearch",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm run lint:fix:*)",
+      "Bash(pnpm run build)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

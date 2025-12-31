@@ -2,13 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/services/event_cache_service.dart';
+import 'package:getspot/services/transaction_cache_service.dart';
 import 'dart:developer' as developer;
+import 'dart:math' as math;
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
+  final bool isGroupAdmin;
 
-  const EventDetailsScreen({super.key, required this.eventId});
+  const EventDetailsScreen({
+    super.key,
+    required this.eventId,
+    this.isGroupAdmin = false,
+  });
 
   @override
   State<EventDetailsScreen> createState() => _EventDetailsScreenState();
@@ -18,46 +27,308 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   bool _isRegistering = false;
   bool _isWithdrawing = false;
   bool _isCancelling = false;
-  bool _isAdmin = false;
+  bool _isUpdatingCapacity = false;
+
+  bool get _isAdmin => widget.isGroupAdmin;
 
   @override
   void initState() {
     super.initState();
-    _fetchGroupAdminStatus();
+    // No longer need to fetch admin status - it's passed as a parameter
   }
 
-  Future<void> _fetchGroupAdminStatus() async {
+  Future<void> _showRegistrationConfirmationDialog(Map<String, dynamic> eventData) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     try {
-      final eventSnapshot = await FirebaseFirestore.instance
-          .collection('events')
-          .doc(widget.eventId)
+      // Fetch user's wallet balance from the group
+      final groupId = eventData['groupId'] as String;
+      final fee = (eventData['fee'] as num?)?.toDouble() ?? 0.0;
+
+      final memberDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .collection('members')
+          .doc(user.uid)
           .get();
 
-      if (!eventSnapshot.exists) return;
+      if (!memberDoc.exists) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('You are not a member of this group.'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+        return;
+      }
 
-      final eventData = eventSnapshot.data()!;
-      final groupId = eventData['groupId'];
-      if (groupId == null) return;
+      final walletBalance = (memberDoc.data()?['walletBalance'] as num?)?.toDouble() ?? 0.0;
+      final newBalance = walletBalance - fee;
 
-      final groupSnapshot = await FirebaseFirestore.instance
+      // Fetch group's negative balance limit
+      final groupDoc = await FirebaseFirestore.instance
           .collection('groups')
           .doc(groupId)
           .get();
 
-      if (mounted && groupSnapshot.exists) {
-        final groupData = groupSnapshot.data()!;
-        final currentUser = FirebaseAuth.instance.currentUser;
-        setState(() {
-          _isAdmin = currentUser?.uid == groupData['admin'];
-        });
+      final negativeBalanceLimit = (groupDoc.data()?['negativeBalanceLimit'] as num?)?.toDouble() ?? 0.0;
+
+      // Check if event is full
+      final confirmedCount = eventData['confirmedCount'] ?? 0;
+      final maxParticipants = eventData['maxParticipants'] ?? 0;
+      final isFull = confirmedCount >= maxParticipants;
+
+      if (!mounted) return;
+
+      // Show appropriate dialog
+      if (isFull) {
+        _showWaitlistConfirmationDialog(
+          eventData: eventData,
+          fee: fee,
+          currentBalance: walletBalance,
+          newBalance: newBalance,
+        );
+      } else if (newBalance < -negativeBalanceLimit) {
+        // Insufficient balance
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Insufficient Balance'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Current Balance: \$${walletBalance.toStringAsFixed(2)}'),
+                  Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+                  Text('New Balance: \$${newBalance.toStringAsFixed(2)}'),
+                  const SizedBox(height: 16),
+                  Text('Allowed Negative Limit: \$${negativeBalanceLimit.toStringAsFixed(2)}'),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'You do not have sufficient balance to register for this event. Please contact your group admin to add funds.',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else if (newBalance < 0) {
+        // Balance will be negative but within limit
+        _showNegativeBalanceConfirmationDialog(
+          eventData: eventData,
+          fee: fee,
+          currentBalance: walletBalance,
+          newBalance: newBalance,
+          negativeLimit: negativeBalanceLimit,
+        );
+      } else {
+        // Normal registration
+        _showNormalRegistrationDialog(
+          eventData: eventData,
+          fee: fee,
+          currentBalance: walletBalance,
+          newBalance: newBalance,
+        );
       }
-    } catch (e) {
+    } catch (e, st) {
       developer.log(
-        'Error fetching admin status',
+        'Error showing registration dialog',
         name: 'EventDetailsScreen',
         error: e,
+        stackTrace: st,
       );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
+  }
+
+  void _showNormalRegistrationDialog({
+    required Map<String, dynamic> eventData,
+    required double fee,
+    required double currentBalance,
+    required double newBalance,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Register for Event?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eventData['name'] ?? 'Event',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              const Divider(height: 24),
+              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(
+                'New Balance: \$${newBalance.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _registerForEvent();
+              },
+              child: const Text('Confirm Registration'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showNegativeBalanceConfirmationDialog({
+    required Map<String, dynamic> eventData,
+    required double fee,
+    required double currentBalance,
+    required double newBalance,
+    required double negativeLimit,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Low Balance Warning'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eventData['name'] ?? 'Event',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              const Divider(height: 24),
+              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(
+                'New Balance: \$${newBalance.toStringAsFixed(2)} (negative)',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+              ),
+              Text('Allowed Limit: \$${negativeLimit.toStringAsFixed(2)}'),
+              const SizedBox(height: 16),
+              const Text(
+                'You\'ll have a negative balance after registration. Please coordinate payment with your group admin.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _registerForEvent();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('I Understand, Register'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showWaitlistConfirmationDialog({
+    required Map<String, dynamic> eventData,
+    required double fee,
+    required double currentBalance,
+    required double newBalance,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.list, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Join Waitlist?'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This event is full. You\'ll be added to the waitlist.',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text('Fee: \$${fee.toStringAsFixed(2)} (charged now, refunded if not confirmed)'),
+              const Divider(height: 24),
+              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(
+                'New Balance: \$${newBalance.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'You\'ll be automatically confirmed if a spot opens.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _registerForEvent();
+              },
+              child: const Text('Join Waitlist'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _registerForEvent() async {
@@ -80,7 +351,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       await participantRef.set({
         'uid': user.uid,
         'displayName': user.displayName ?? 'No Name',
-        'photoURL': user.photoURL, // Add this line
+        'photoURL': user.photoURL,
         'status': 'requested',
         'registeredAt': FieldValue.serverTimestamp(),
       });
@@ -174,7 +445,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  Future<void> _cancelEvent() async {
+  Future<void> _cancelEvent(String groupId) async {
     setState(() {
       _isCancelling = true;
     });
@@ -183,6 +454,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
       final callable = functions.httpsCallable('cancelEvent');
       final result = await callable.call({'eventId': widget.eventId});
+
+      // Invalidate event cache for this group
+      EventCacheService().invalidate(groupId);
+      // Invalidate transaction cache for the entire group (refunds created for all participants)
+      TransactionCacheService().invalidateGroup(groupId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -231,7 +507,191 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     }
   }
 
-  void _showCancelConfirmationDialog() {
+  Future<void> _updateEventCapacity(int newCapacity) async {
+    setState(() {
+      _isUpdatingCapacity = true;
+    });
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
+      final callable = functions.httpsCallable('updateEventCapacity');
+      final result = await callable.call({
+        'eventId': widget.eventId,
+        'newMaxParticipants': newCapacity,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.data['message'] ?? 'Capacity updated successfully.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseFunctionsException catch (e, st) {
+      developer.log(
+        'Error updating event capacity',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'An unknown error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (e, st) {
+      developer.log(
+        'Generic error updating event capacity',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('An unexpected error occurred.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingCapacity = false;
+        });
+      }
+    }
+  }
+
+  void _showUpdateCapacityDialog(Map<String, dynamic> eventData) {
+    final currentCapacity = eventData['maxParticipants'] ?? 0;
+    final confirmedCount = eventData['confirmedCount'] ?? 0;
+    final waitlistCount = eventData['waitlistCount'] ?? 0;
+    final capacityController = TextEditingController(text: currentCapacity.toString());
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Update Event Capacity'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Current capacity: $currentCapacity'),
+              Text('Confirmed participants: $confirmedCount'),
+              Text('Waitlisted participants: $waitlistCount'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: capacityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'New Capacity',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Note: Cannot reduce below $confirmedCount (current confirmed count)',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Update'),
+              onPressed: () {
+                final newCapacity = int.tryParse(capacityController.text);
+                if (newCapacity == null || newCapacity <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Please enter a valid positive number.'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.of(dialogContext).pop();
+                _showConfirmCapacityChangeDialog(
+                  currentCapacity,
+                  newCapacity,
+                  confirmedCount,
+                  waitlistCount,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showConfirmCapacityChangeDialog(
+    int oldCapacity,
+    int newCapacity,
+    int confirmedCount,
+    int waitlistCount,
+  ) {
+    final isIncreasing = newCapacity > oldCapacity;
+    final change = (newCapacity - oldCapacity).abs();
+
+    String message;
+    if (isIncreasing) {
+      final canPromote = math.min(change, waitlistCount);
+      if (canPromote > 0) {
+        message = 'Increasing capacity by $change spots.\n\n'
+            '$canPromote user(s) will be automatically promoted from the waitlist.\n\n'
+            'Continue?';
+      } else {
+        message = 'Increasing capacity by $change spots.\n\n'
+            'No waitlisted users to promote.\n\n'
+            'Continue?';
+      }
+    } else {
+      message = 'Decreasing capacity by $change spots (from $oldCapacity to $newCapacity).\n\n'
+          'This will not affect current confirmed participants.\n\n'
+          'Continue?';
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirm Capacity Change'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Confirm'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _updateEventCapacity(newCapacity);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showCancelConfirmationDialog(String groupId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -250,7 +710,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               child: const Text('Confirm Cancellation'),
               onPressed: () {
                 Navigator.of(context).pop();
-                _cancelEvent();
+                _cancelEvent(groupId);
               },
             ),
           ],
@@ -261,9 +721,25 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   void _showWithdrawConfirmationDialog(Map<String, dynamic> eventData) {
     final deadlineTimestamp = eventData['commitmentDeadline'] as Timestamp?;
+    final fee = (eventData['fee'] as num?)?.toDouble() ?? 0.0;
     bool isAfterDeadline = false;
+
     if (deadlineTimestamp != null) {
       isAfterDeadline = DateTime.now().isAfter(deadlineTimestamp.toDate());
+    }
+
+    String refundInfo;
+    Color refundColor;
+    IconData refundIcon;
+
+    if (isAfterDeadline) {
+      refundInfo = 'Refund: May be forfeited (depends on waitlist)';
+      refundColor = Colors.orange;
+      refundIcon = Icons.warning;
+    } else {
+      refundInfo = 'Refund: \$${fee.toStringAsFixed(2)} (full refund)';
+      refundColor = Colors.green;
+      refundIcon = Icons.check_circle;
     }
 
     showDialog(
@@ -271,9 +747,48 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirm Withdrawal'),
-          content: Text(isAfterDeadline
-              ? 'The commitment deadline has passed. If you withdraw now, your fee may be forfeited unless someone from the waitlist takes your spot. Are you sure you want to withdraw?'
-              : 'Are you sure you want to withdraw from this event?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eventData['name'] ?? 'Event',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              const Divider(height: 24),
+              Row(
+                children: [
+                  Icon(refundIcon, color: refundColor, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      refundInfo,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: refundColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (deadlineTimestamp != null) ...[
+                Text(
+                  'Commitment Deadline: ${DateFormat.yMMMd().add_jm().format(deadlineTimestamp.toDate())}',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                isAfterDeadline
+                    ? 'The commitment deadline has passed. If you withdraw now, your fee will only be refunded if someone from the waitlist takes your spot.'
+                    : 'You are withdrawing before the commitment deadline. You will receive a full refund of your fee.',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -281,12 +796,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: const Text('Withdraw'),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isAfterDeadline ? Colors.orange : Colors.red,
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 _withdrawFromEvent();
               },
+              child: const Text('Confirm Withdrawal'),
             ),
           ],
         );
@@ -300,118 +818,229 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       appBar: AppBar(
         title: const Text('Event Details'),
       ),
-      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('events')
-            .doc(widget.eventId)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('Error loading event details.'));
-          }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text('Event not found.'));
-          }
+      body: SafeArea(
+        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('events')
+              .doc(widget.eventId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text('Error loading event details.'));
+            }
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return const Center(child: Text('Event not found.'));
+            }
 
-          final event = snapshot.data!.data()!;
-          final eventTimestamp = event['eventTimestamp'] as Timestamp?;
-          final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
-          final isCancelled = event['status'] == 'cancelled';
+            final event = snapshot.data!.data()!;
+            final eventTimestamp = event['eventTimestamp'] as Timestamp?;
+            final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
+            final isCancelled = event['status'] == 'cancelled';
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (isCancelled)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withAlpha((255 * 0.1).round()),
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: Border.all(color: Colors.red),
-                    ),
-                    child: const Text(
-                      'Event Cancelled',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isCancelled)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withAlpha((255 * 0.1).round()),
+                        borderRadius: BorderRadius.circular(8.0),
+                        border: Border.all(color: Colors.red),
                       ),
+                      child: const Text(
+                        'Event Cancelled',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  if (isCancelled) const SizedBox(height: 16),
+                  Text(
+                    event['name'] ?? 'Unnamed Event',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCompactDetailRow(
+                    icon: Icons.location_on,
+                    value: event['location'] ?? 'No location set',
+                  ),
+                  _buildCompactDetailRow(
+                    icon: Icons.calendar_today,
+                    value: eventTimestamp != null
+                        ? DateFormat.yMMMd()
+                            .add_jm()
+                            .format(eventTimestamp.toDate())
+                        : 'No date set',
+                  ),
+                  _buildCompactDetailRow(
+                    icon: Icons.attach_money,
+                    value: '${event['fee'] ?? 0} credits',
+                  ),
+                  _buildCompactDetailRow(
+                    icon: Icons.timer,
+                    value: deadlineTimestamp != null
+                        ? DateFormat.yMMMd()
+                            .add_jm()
+                            .format(deadlineTimestamp.toDate())
+                        : 'No deadline',
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _buildParticipantList(
+                          title:
+                              'Confirmed (${event['confirmedCount'] ?? 0}/${event['maxParticipants'] ?? 'N/A'})',
+                          status: 'confirmed',
+                          showUpdateButton: _isAdmin && !isCancelled,
+                          onUpdatePressed: () => _showUpdateCapacityDialog(event),
+                          isUpdating: _isUpdatingCapacity,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildParticipantList(
+                          title: 'Waitlist (${event['waitlistCount'] ?? 0})',
+                          status: 'waitlisted',
+                        ),
+                      ],
                     ),
                   ),
-                if (isCancelled) const SizedBox(height: 16),
-                Text(
-                  event['name'] ?? 'Unnamed Event',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                _buildDetailRow(
-                  icon: Icons.location_on,
-                  label: 'Location',
-                  value: event['location'] ?? 'No location set',
-                ),
-                _buildDetailRow(
-                  icon: Icons.calendar_today,
-                  label: 'Time',
-                  value: eventTimestamp != null
-                      ? DateFormat.yMMMd()
-                          .add_jm()
-                          .format(eventTimestamp.toDate())
-                      : 'No date set',
-                ),
-                _buildDetailRow(
-                  icon: Icons.attach_money,
-                  label: 'Fee',
-                  value: '${event['fee'] ?? 0} credits',
-                ),
-                _buildDetailRow(
-                  icon: Icons.timer,
-                  label: 'Commitment Deadline',
-                  value: deadlineTimestamp != null
-                      ? DateFormat.yMMMd()
-                          .add_jm()
-                          .format(deadlineTimestamp.toDate())
-                      : 'No deadline set',
-                ),
-                const SizedBox(height: 24),
-                const Divider(),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      _buildParticipantList(
-                        title:
-                            'Confirmed (${event['confirmedCount'] ?? 0}/${event['maxParticipants'] ?? 'N/A'})',
-                        status: 'confirmed',
-                      ),
-                      const SizedBox(height: 16),
-                      _buildParticipantList(
-                        title: 'Waitlist (${event['waitlistCount'] ?? 0})',
-                        status: 'waitlisted',
-                      ),
-                    ],
-                  ),
-                ),
-                _buildActionButton(event),
-              ],
-            ),
-          );
-        },
+                  _buildActionButton(event),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildParticipantList({required String title, required String status}) {
+  Future<void> _copyParticipantList(String status, String title) async {
+    try {
+      // Fetch participants from Firestore
+      final snapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .doc(widget.eventId)
+          .collection('participants')
+          .where('status', isEqualTo: status)
+          .orderBy('registeredAt', descending: false)
+          .get();
+
+      final participants = snapshot.docs;
+
+      if (participants.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No participants to copy'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Format the list
+      final buffer = StringBuffer();
+      buffer.writeln(title);
+      buffer.writeln('=' * title.length);
+      buffer.writeln();
+
+      for (int i = 0; i < participants.length; i++) {
+        final participant = participants[i].data();
+        final displayName = participant['displayName'] ?? 'No Name';
+        buffer.writeln('${i + 1}. $displayName');
+      }
+
+      // Copy to clipboard
+      await Clipboard.setData(ClipboardData(text: buffer.toString()));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Copied ${participants.length} ${participants.length == 1 ? 'participant' : 'participants'} to clipboard'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, st) {
+      developer.log(
+        'Error copying participant list',
+        name: 'EventDetailsScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error copying list: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildParticipantList({
+    required String title,
+    required String status,
+    bool showUpdateButton = false,
+    VoidCallback? onUpdatePressed,
+    bool isUpdating = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            if (_isAdmin) ...[
+              IconButton(
+                onPressed: () => _copyParticipantList(status, title),
+                icon: const Icon(Icons.copy, size: 20),
+                tooltip: 'Copy list',
+                style: IconButton.styleFrom(
+                  foregroundColor: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(width: 4),
+            ],
+            if (showUpdateButton)
+              ElevatedButton.icon(
+                onPressed: isUpdating ? null : onUpdatePressed,
+                icon: isUpdating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Update'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -474,11 +1103,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     List<Widget> buttons = [];
 
     if (_isAdmin && !isCancelled) {
+      final groupId = eventData['groupId'] as String;
       buttons.add(
         Semantics(
           label: 'cancel_event_button',
           child: ElevatedButton(
-            onPressed: _isCancelling ? null : _showCancelConfirmationDialog,
+            onPressed: _isCancelling ? null : () => _showCancelConfirmationDialog(groupId),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: _isCancelling
                 ? const CircularProgressIndicator(color: Colors.white)
@@ -533,7 +1163,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               button = Semantics(
                 label: 'register_button',
                 child: ElevatedButton(
-                  onPressed: _isRegistering ? null : _registerForEvent,
+                  onPressed: _isRegistering ? null : () => _showRegistrationConfirmationDialog(eventData),
                   child: _isRegistering
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text('Register'),
@@ -565,24 +1195,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
-  Widget _buildDetailRow({
+  Widget _buildCompactDetailRow({
     required IconData icon,
-    required String label,
     required String value,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.secondary),
-          const SizedBox(width: 16),
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.secondary),
+          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: Theme.of(context).textTheme.bodySmall),
-                Text(value, style: Theme.of(context).textTheme.bodyLarge),
-              ],
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
         ],

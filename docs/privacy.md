@@ -1,6 +1,6 @@
 # Privacy Policy for GetSpot
 
-**Last Updated: September 9, 2025**
+**Last Updated: October 1, 2025**
 
 Thank you for using GetSpot. This Privacy Policy explains how we collect, use, and share information about you when you use our mobile application and related services (collectively, the "Services").
 

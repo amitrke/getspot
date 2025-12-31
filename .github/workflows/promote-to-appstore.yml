@@ -1,0 +1,71 @@
+name: Promote to App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Build number to promote (leave empty for latest)'
+        required: false
+        type: string
+
+jobs:
+  promote:
+    name: Promote Build to App Store Review
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: |
+          bundle install
+          gem install fastlane
+
+      - name: Create App Store Connect API Key file
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+        run: |
+          mkdir -p ./fastlane
+          cat <<EOF > ./fastlane/app_store_connect_api_key.json
+          {
+            "key_id": "$APP_STORE_CONNECT_API_KEY_ID",
+            "issuer_id": "$APP_STORE_CONNECT_API_ISSUER_ID",
+            "key": "$APP_STORE_CONNECT_API_KEY",
+            "in_house": false
+          }
+          EOF
+
+      - name: Create .env file
+        env:
+          APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
+        run: |
+          cat > ./fastlane/.env << EOF
+          APP_IDENTIFIER=com.getspot.app
+          APP_STORE_CONNECT_API_KEY_PATH=./fastlane/app_store_connect_api_key.json
+          APP_APPLE_ID=$APP_APPLE_ID
+          EOF
+
+      - name: Promote latest build to App Store
+        if: ${{ github.event.inputs.build_number == '' }}
+        run: |
+          cd fastlane
+          fastlane promote_to_review
+
+      - name: Promote specific build to App Store
+        if: ${{ github.event.inputs.build_number != '' }}
+        run: |
+          cd fastlane
+          fastlane promote_build build_number:${{ github.event.inputs.build_number }}
+
+      - name: Clean up API Key
+        if: always()
+        run: rm -f ./fastlane/app_store_connect_api_key.json

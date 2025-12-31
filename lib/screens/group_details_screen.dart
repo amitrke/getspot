@@ -5,9 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:getspot/screens/create_event_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
+import 'package:getspot/providers/participant_provider.dart';
+import 'package:getspot/services/group_cache_service.dart';
+import 'package:getspot/services/user_cache_service.dart';
+import 'package:getspot/services/event_cache_service.dart';
+import 'package:getspot/services/announcement_cache_service.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
 import 'package:getspot/screens/wallet_screen.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:developer' as developer;
 
 class GroupDetailsScreen extends StatefulWidget {
@@ -23,11 +29,30 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     with SingleTickerProviderStateMixin {
   bool _isAdmin = false;
   TabController? _tabController;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
     super.initState();
     _checkAdminStatus();
+  }
+
+  Future<void> _handleRefresh() async {
+    developer.log('Pull-to-refresh triggered on Group Details Screen', name: 'GroupDetailsScreen');
+
+    final groupId = widget.group['groupId'];
+
+    // Invalidate caches for this specific group
+    GroupCacheService().invalidate(groupId);
+    EventCacheService().invalidate(groupId);
+    AnnouncementCacheService().invalidate(groupId);
+    // Clear user cache to refresh member display names and photos
+    UserCacheService().clear();
+
+    // Wait a bit to allow the stream to pick up fresh data
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    developer.log('All caches invalidated for group $groupId', name: 'GroupDetailsScreen');
   }
 
   void _checkAdminStatus() {
@@ -41,6 +66,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       setState(() {
         _isAdmin = true;
         _tabController = TabController(length: 3, vsync: this);
+        _tabController!.addListener(() {
+          // Rebuild to show/hide FAB when tab changes
+          setState(() {});
+        });
       });
     } else {
       developer.log('Admin status DENIED.', name: 'GroupDetailsScreen');
@@ -71,12 +100,78 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     );
   }
 
+  Future<void> _shareGroup() async {
+    final code = widget.group['groupCode'] as String?;
+    final name = widget.group['name'] as String?;
+    final description = widget.group['description'] as String?;
+
+    if (code == null || code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Group code not available.')),
+      );
+      return;
+    }
+
+    try {
+      // Create the deep link URL
+      final deepLink = 'https://getspot.org/join/$code';
+
+      // Build share message
+      final StringBuffer message = StringBuffer();
+      message.writeln('Join our group on GetSpot!');
+      message.writeln();
+      if (name != null && name.isNotEmpty) {
+        message.writeln('Group: $name');
+      }
+      if (description != null && description.isNotEmpty) {
+        message.writeln(description);
+      }
+      message.writeln();
+      message.writeln('Tap to join: $deepLink');
+      message.writeln();
+      message.writeln('Or use code: $code in the GetSpot app');
+
+      // Get the share button position for iPad popover
+      final box = context.findRenderObject() as RenderBox?;
+      final sharePositionOrigin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+
+      await SharePlus.instance.share(
+        ShareParams(
+          text: message.toString(),
+          subject: 'Join ${name ?? "our group"} on GetSpot',
+          sharePositionOrigin: sharePositionOrigin,
+        ),
+      );
+
+      developer.log('Group shared successfully', name: 'GroupDetailsScreen');
+    } catch (e) {
+      developer.log('Error sharing group', name: 'GroupDetailsScreen', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sharing: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     developer.log('Building GroupDetailsScreen.', name: 'GroupDetailsScreen');
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.group['name'] ?? 'Group Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share Group',
+            onPressed: _shareGroup,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: _isAdmin
@@ -91,111 +186,123 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                 ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Text(
-            //   widget.group['name'] ?? 'Unnamed Group',
-            //   style: Theme.of(context).textTheme.headlineSmall,
-            // ),
-            const SizedBox(height: 8),
-            Text(
-              widget.group['description'] ?? '',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
-            if ((widget.group['groupCode'] as String?)?.isNotEmpty ?? false)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Group Code: ${widget.group['groupCode']}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(width: 4),
-                    IconButton(
-                      tooltip: 'Copy group code',
-                      onPressed: _copyGroupCode,
-                      icon: const Icon(Icons.copy),
-                    ),
-                  ],
-                ),
-              )
-            else
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Text(
+              //   widget.group['name'] ?? 'Unnamed Group',
+              //   style: Theme.of(context).textTheme.headlineSmall,
+              // ),
+              const SizedBox(height: 8),
               Text(
-                'Group Code unavailable',
+                widget.group['description'] ?? '',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-            const SizedBox(height: 24),
-            const Divider(),
-            Row(
-              children: [
-                if (_isAdmin) ...[
+              const SizedBox(height: 8),
+              if ((widget.group['groupCode'] as String?)?.isNotEmpty ?? false)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Group Code: ${widget.group['groupCode']}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        tooltip: 'Copy group code',
+                        onPressed: _copyGroupCode,
+                        icon: const Icon(Icons.copy),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Text(
+                  'Group Code unavailable',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              const SizedBox(height: 24),
+              const Divider(),
+              Row(
+                children: [
+                  if (_isAdmin) ...[
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => GroupMembersScreen(
+                              groupId: widget.group['groupId'],
+                              adminUid: widget.group['admin'],
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.group),
+                      label: const Text('Members'),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => GroupMembersScreen(
-                            groupId: widget.group['groupId'],
-                            adminUid: widget.group['admin'],
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => WalletScreen(
+                              groupId: widget.group['groupId'],
+                              userId: user.uid,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
-                    icon: const Icon(Icons.group),
-                    label: const Text('Members'),
+                    icon: const Icon(Icons.wallet),
+                    label: const Text('My Wallet'),
                   ),
-                  const SizedBox(width: 8),
                 ],
-                ElevatedButton.icon(
-                  onPressed: () {
-                    final user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => WalletScreen(
-                            groupId: widget.group['groupId'],
-                            userId: user.uid,
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.wallet),
-                  label: const Text('My Wallet'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: _isAdmin
-                    ? [
-                        _EventList(groupId: widget.group['groupId']),
-                        _AnnouncementsTab(
-                          groupId: widget.group['groupId'],
-                          isAdmin: _isAdmin,
-                        ),
-                        _AdminManagementTab(groupId: widget.group['groupId']),
-                      ]
-                    : [
-                        _EventList(groupId: widget.group['groupId']),
-                        _AnnouncementsTab(
-                          groupId: widget.group['groupId'],
-                          isAdmin: _isAdmin,
-                        ),
-                      ],
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Expanded(
+                child: RefreshIndicator(
+                  key: _refreshIndicatorKey,
+                  onRefresh: _handleRefresh,
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: _isAdmin
+                        ? [
+                            _EventList(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                            _AnnouncementsTab(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                            _AdminManagementTab(groupId: widget.group['groupId']),
+                          ]
+                        : [
+                            _EventList(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                            _AnnouncementsTab(
+                              groupId: widget.group['groupId'],
+                              isAdmin: _isAdmin,
+                            ),
+                          ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      floatingActionButton: _isAdmin
+      floatingActionButton: _isAdmin && (_tabController?.index == 0)
           ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.of(context).push(
@@ -253,6 +360,10 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
             'createdAt': FieldValue.serverTimestamp(),
           });
 
+      // Invalidate announcement cache to ensure fresh data
+      // (Real-time stream will update, but invalidation ensures consistency)
+      AnnouncementCacheService().invalidate(widget.groupId);
+
       _announcementController.clear();
     } catch (e) {
       if (mounted) {
@@ -274,99 +385,129 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (widget.isAdmin)
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _announcementController,
-                    decoration: const InputDecoration(
-                      labelText: 'New Announcement',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: null,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _isPosting
-                    ? const CircularProgressIndicator()
-                    : IconButton(
-                        icon: const Icon(Icons.send),
-                        onPressed: _postAnnouncement,
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside the TextField
+        FocusScope.of(context).unfocus();
+      },
+      child: Column(
+        children: [
+          if (widget.isAdmin)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _announcementController,
+                      decoration: const InputDecoration(
+                        labelText: 'New Announcement',
+                        border: OutlineInputBorder(),
                       ),
-              ],
+                      maxLines: null,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) {
+                        // Dismiss keyboard when user presses "Done" on keyboard
+                        FocusScope.of(context).unfocus();
+                        _postAnnouncement();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _isPosting
+                      ? const CircularProgressIndicator()
+                      : IconButton(
+                          icon: const Icon(Icons.send),
+                          onPressed: () {
+                            // Dismiss keyboard before posting
+                            FocusScope.of(context).unfocus();
+                            _postAnnouncement();
+                          },
+                        ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: StreamBuilder<List<CachedAnnouncement>>(
+              stream: AnnouncementCacheService().getAnnouncementsStream(widget.groupId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(
+                    child: Text('Error loading announcements.'),
+                  );
+                }
+                final announcements = snapshot.data ?? [];
+                if (announcements.isEmpty) {
+                  return const Center(child: Text('No announcements yet.'));
+                }
+                return ListView.builder(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: announcements.length,
+                  itemBuilder: (context, index) {
+                    final announcement = announcements[index];
+                    final createdAt = announcement.createdAt;
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 0,
+                      ),
+                      child: ListTile(
+                        title: Text(announcement.content),
+                        subtitle: Text(
+                          'Posted by ${announcement.authorName ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
-        Expanded(
-          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: FirebaseFirestore.instance
-                .collection('groups')
-                .doc(widget.groupId)
-                .collection('announcements')
-                .orderBy('createdAt', descending: true)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Error loading announcements.'),
-                );
-              }
-              final announcements = snapshot.data?.docs ?? [];
-              if (announcements.isEmpty) {
-                return const Center(child: Text('No announcements yet.'));
-              }
-              return ListView.builder(
-                itemCount: announcements.length,
-                itemBuilder: (context, index) {
-                  final announcement = announcements[index].data();
-                  final createdAt = (announcement['createdAt'] as Timestamp?)
-                      ?.toDate();
-                  return Card(
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 4,
-                      horizontal: 0,
-                    ),
-                    child: ListTile(
-                      title: Text(announcement['content'] ?? ''),
-                      subtitle: Text(
-                        'Posted by ${announcement['authorName'] ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _EventList extends StatelessWidget {
+class _EventList extends StatefulWidget {
   final String groupId;
+  final bool isAdmin;
 
-  const _EventList({required this.groupId});
+  const _EventList({required this.groupId, required this.isAdmin});
+
+  @override
+  State<_EventList> createState() => _EventListState();
+}
+
+class _EventListState extends State<_EventList> {
+  ParticipantProvider? _participantProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _participantProvider = ParticipantProvider(userId: user.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    _participantProvider?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('events')
-          .where('groupId', isEqualTo: groupId)
-          .where('status', isEqualTo: 'active')
-          .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
-          .orderBy('eventTimestamp', descending: false)
-          .snapshots(),
+    final eventCache = EventCacheService();
+
+    return StreamBuilder<List<CachedEvent>>(
+      stream: eventCache.getEventsStream(widget.groupId),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -380,7 +521,7 @@ class _EventList extends StatelessWidget {
           return const Center(child: Text('Error loading events.'));
         }
 
-        final events = snapshot.data?.docs ?? [];
+        final events = snapshot.data ?? [];
 
         if (events.isEmpty) {
           return const Center(child: Text('No upcoming events.'));
@@ -405,7 +546,10 @@ class _EventList extends StatelessWidget {
                     label: 'event_item_$index',
                     child: _EventListItem(
                       key: ValueKey(event.id),
-                      event: event,
+                      eventId: event.id,
+                      eventData: event.toMap(),
+                      isAdmin: widget.isAdmin,
+                      participantProvider: _participantProvider,
                     ),
                   );
                 },
@@ -419,29 +563,29 @@ class _EventList extends StatelessWidget {
 }
 
 class _EventListItem extends StatefulWidget {
-  final QueryDocumentSnapshot<Map<String, dynamic>> event;
+  final String eventId;
+  final Map<String, dynamic> eventData;
+  final bool isAdmin;
+  final ParticipantProvider? participantProvider;
 
-  const _EventListItem({super.key, required this.event});
+  const _EventListItem({
+    super.key,
+    required this.eventId,
+    required this.eventData,
+    required this.isAdmin,
+    this.participantProvider,
+  });
 
   @override
   State<_EventListItem> createState() => _EventListItemState();
 }
 
 class _EventListItemState extends State<_EventListItem> {
-  Stream<DocumentSnapshot<Map<String, dynamic>>>? _participantStream;
-
   @override
   void initState() {
     super.initState();
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _participantStream = FirebaseFirestore.instance
-          .collection('events')
-          .doc(widget.event.id)
-          .collection('participants')
-          .doc(user.uid)
-          .snapshots();
-    }
+    // Subscribe to participant updates for this event
+    widget.participantProvider?.subscribeToEvent(widget.eventId);
   }
 
   Widget _getStatusIcon(String? status) {
@@ -457,7 +601,7 @@ class _EventListItemState extends State<_EventListItem> {
 
   @override
   Widget build(BuildContext context) {
-    final eventData = widget.event.data();
+    final eventData = widget.eventData;
     final eventTimestamp = eventData['eventTimestamp'] as Timestamp?;
     final formattedDate = eventTimestamp != null
         ? DateFormat.yMMMEd().add_jm().format(eventTimestamp.toDate())
@@ -465,7 +609,7 @@ class _EventListItemState extends State<_EventListItem> {
 
     return Card(
       child: ListTile(
-        title: Text(eventData['name'] ?? 'Unnamed Event'),
+        title: Text(eventData['title'] ?? eventData['name'] ?? 'Unnamed Event'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -486,40 +630,55 @@ class _EventListItemState extends State<_EventListItem> {
               ],
             ),
             const SizedBox(height: 4),
-            StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: _participantStream,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Row(
+            widget.participantProvider != null
+                ? ListenableBuilder(
+                    listenable: widget.participantProvider!,
+                    builder: (context, child) {
+                      final participantData = widget.participantProvider!
+                          .getParticipantStatus(widget.eventId);
+                      final status = participantData?['status'] as String?;
+
+                      if (participantData == null) {
+                        return const Row(
+                          children: [
+                            Icon(Icons.help_outline,
+                                color: Colors.grey, size: 16),
+                            SizedBox(width: 4),
+                            Text('Not Registered'),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          _getStatusIcon(status),
+                          const SizedBox(width: 4),
+                          Text(
+                            status != null
+                                ? '${status[0].toUpperCase()}${status.substring(1)}'
+                                : 'Not Registered',
+                          ),
+                        ],
+                      );
+                    },
+                  )
+                : const Row(
                     children: [
                       Icon(Icons.help_outline, color: Colors.grey, size: 16),
                       SizedBox(width: 4),
                       Text('Not Registered'),
                     ],
-                  );
-                }
-                final status = snapshot.data!.data()?['status'] as String?;
-                return Row(
-                  children: [
-                    _getStatusIcon(status),
-                    const SizedBox(width: 4),
-                    Text(
-                      status != null
-                          ? '${status[0].toUpperCase()}${status.substring(1)}'
-                          : 'Not Registered',
-                    ),
-                  ],
-                );
-              },
-            ),
+                  ),
           ],
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) =>
-                  EventDetailsScreen(eventId: widget.event.id),
+              builder: (context) => EventDetailsScreen(
+                eventId: widget.eventId,
+                isGroupAdmin: widget.isAdmin,
+              ),
             ),
           );
         },

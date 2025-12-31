@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "org.getspot",
+      "sha256_cert_fingerprints":
+        ["4A:82:05:BA:71:E2:71:71:7D:A5:35:F6:91:6C:F1:71:CD:F8:5B:D6:7C:2E:10:AF:63:B9:EF:B2:86:A1:83:91"]
+    }
+  }
+]

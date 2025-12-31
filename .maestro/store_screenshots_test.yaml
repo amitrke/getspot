@@ -1,0 +1,68 @@
+appId: org.getspot
+---
+# Store Screenshots Test
+#
+# This test generates high-quality screenshots for App Store and Play Store listings.
+#
+# IMPORTANT SETUP BEFORE RUNNING:
+# 1. Ensure you're logged in as User 1 (admin)
+# 2. Ensure test group has:
+#    - At least 1 upcoming event with confirmed participants
+#    - At least 1 announcement
+#    - Clean, presentable data (no test data visible)
+# 3. Run with specific device configurations for store requirements
+#
+# Usage:
+#   Android Phone:  ./run-maestro-test.sh android-phone store_screenshots_test.yaml
+#   Android Tablet: ./run-maestro-test.sh android-tablet-10 store_screenshots_test.yaml
+#   iPhone:         ./run-maestro-test.sh iphone-65 store_screenshots_test.yaml
+#   iPad:           ./run-maestro-test.sh ipad-13 store_screenshots_test.yaml
+#
+# Note: Screenshots will be saved to screenshots/{device-id}/
+# You'll need to manually move/rename them to screenshots/store/{platform}/{size}/
+# following the naming conventions required by each store.
+
+- launchApp:
+    clearState: false  # Assumes already logged in with good test data
+
+# Screenshot 1: Home Screen with Groups
+- assertVisible: "My Groups"
+- takeScreenshot: 01_home_screen
+
+# Screenshot 2: Group Details - Events Tab
+- assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- tapOn: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- extendedWaitUntil:
+    visible: "event_item_0"
+    timeout: 3000
+- takeScreenshot: 02_group_events
+
+# Screenshot 3: Event Details
+- tapOn: "event_item_0"
+- extendedWaitUntil:
+    visible: "Event Details"
+    timeout: 3000
+- takeScreenshot: 03_event_details
+- tapOn: "Back"
+
+# Screenshot 4: Announcements Tab
+- tapOn: "Announcements\nTab 2 of 3"
+- takeScreenshot: 04_announcements
+- tapOn: "Events\nTab 1 of 3"
+
+# Screenshot 5: Wallet Screen
+- tapOn: "My Wallet"
+- extendedWaitUntil:
+    visible: "Wallet"
+    timeout: 3000
+- takeScreenshot: 05_wallet
+- tapOn: "Back"
+
+# Screenshot 6: User Profile
+- tapOn: "Back"
+- assertVisible: "My Groups"
+- tapOn: "user_profile_button"
+- takeScreenshot: 06_user_profile
+
+# Done - screenshots saved to screenshots/{device-id}/
+- stopApp

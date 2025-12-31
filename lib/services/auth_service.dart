@@ -4,27 +4,37 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 import 'dart:developer' as developer;
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:getspot/services/analytics_service.dart';
+import 'package:getspot/services/crashlytics_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AnalyticsService _analytics = AnalyticsService();
+  final CrashlyticsService _crashlytics = CrashlyticsService();
 
-  GoogleSignIn _getGoogleSignIn() {
+  // GoogleSignIn is now a singleton in v7.x
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
+  // Initialize GoogleSignIn with platform-specific configuration
+  Future<void> _initializeGoogleSignIn() async {
     if (kIsWeb) {
-      return GoogleSignIn(
+      await _googleSignIn.initialize(
         clientId: "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
       );
     } else if (Platform.isAndroid) {
-      return GoogleSignIn(
+      await _googleSignIn.initialize(
         serverClientId: "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
       );
     } else {
       // For iOS and other platforms, the configuration is often handled via plist files
-      return GoogleSignIn();
+      await _googleSignIn.initialize();
     }
   }
-
-  late final GoogleSignIn _googleSignIn = _getGoogleSignIn();
 
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
@@ -32,30 +42,186 @@ class AuthService {
       if (kIsWeb) {
         // On web, use the Firebase popup flow so Firebase gets a valid idToken
         final provider = GoogleAuthProvider();
-        return await _auth.signInWithPopup(provider);
+        final userCredential = await _auth.signInWithPopup(provider);
+        final user = userCredential.user;
+
+        if (user != null) {
+          developer.log('Web sign-in successful: ${user.uid}', name: 'AuthService');
+          developer.log('Current auth user: ${_auth.currentUser?.uid}', name: 'AuthService');
+
+          // Check if this is a new user
+          final userDoc = await _firestore.collection('users').doc(user.uid).get();
+          final isNewUser = !userDoc.exists;
+
+          // Create user document in Firestore if it doesn't exist (non-blocking)
+          _createUserDocumentIfNeeded(user.uid, user.displayName ?? '', user.email);
+
+          // Track analytics
+          if (isNewUser) {
+            await _analytics.logSignUp('google');
+          } else {
+            await _analytics.logLogin('google');
+          }
+        }
+
+        return userCredential;
       }
 
       // Trigger the authentication flow (mobile)
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      developer.log('Starting Google Sign-In flow', name: 'AuthService');
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
+      // Initialize GoogleSignIn (required in v7.x)
+      await _initializeGoogleSignIn();
+
+      // Sign out first to ensure clean state
+      await _googleSignIn.signOut();
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+
+      if (googleUser == null) {
+        developer.log('Google Sign-In cancelled by user', name: 'AuthService');
+        return null;
+      }
+
+      developer.log('Google account selected: ${googleUser.email}', name: 'AuthService');
+
+      // Obtain the auth details from the request (property in v7.x, not async)
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      // In v7.x, accessToken is obtained from authorizationClient if needed
+      // For Firebase Auth, idToken is the primary requirement
+      String? accessToken;
+      try {
+        final authorization = await googleUser.authorizationClient
+            .authorizationForScopes(const []);
+        accessToken = authorization?.accessToken;
+      } catch (e) {
+        developer.log('Could not get access token: $e', name: 'AuthService');
+      }
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: accessToken,
+        idToken: googleAuth.idToken,
       );
 
       // Once signed in, return the UserCredential
+      developer.log('Signing in with Firebase credential', name: 'AuthService');
       final userCredential = await _auth.signInWithCredential(credential);
-      await FirebaseAuth.instance.currentUser?.reload();
+      final user = userCredential.user;
+
+      if (user != null) {
+        developer.log('Firebase sign-in successful: ${user.uid}', name: 'AuthService');
+
+        // Force reload to ensure auth state is updated
+        await user.reload();
+        await _auth.currentUser?.reload();
+
+        developer.log('User reloaded, current user: ${_auth.currentUser?.uid}', name: 'AuthService');
+
+        // Check if this is a new user
+        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+        final isNewUser = !userDoc.exists;
+
+        // Create user document in Firestore if it doesn't exist (non-blocking)
+        _createUserDocumentIfNeeded(user.uid, user.displayName ?? '', user.email);
+
+        // Track analytics
+        if (isNewUser) {
+          await _analytics.logSignUp('google');
+        } else {
+          await _analytics.logLogin('google');
+        }
+      }
+
       return userCredential;
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Handle error
       developer.log('Error during Google Sign-In: $e', name: 'AuthService');
+      await _crashlytics.logAuthError('google', e, stackTrace);
       return null;
+    }
+  }
+
+  // Sign in with Apple
+  Future<UserCredential?> signInWithApple() async {
+    try {
+      if (kIsWeb) {
+        // For web platform, use Firebase's signInWithPopup
+        final appleProvider = OAuthProvider("apple.com");
+        appleProvider.addScope('email');
+        appleProvider.addScope('name');
+
+        // Use popup for web
+        final userCredential = await _auth.signInWithPopup(appleProvider);
+        final user = userCredential.user;
+
+        if (user != null) {
+          developer.log('Web Apple sign-in successful: ${user.uid}', name: 'AuthService');
+          // For the first sign-in, create a new user document in Firestore
+          _createUserDocumentIfNeeded(user.uid, user.displayName ?? '', user.email);
+        }
+
+        return userCredential;
+      } else {
+        // For mobile platforms (iOS/Android), use sign_in_with_apple package
+        final rawNonce = _generateNonce();
+        final nonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+        developer.log('Starting Apple Sign-In for mobile platform', name: 'AuthService');
+        developer.log('Generated nonce (hashed): $nonce', name: 'AuthService');
+
+        final appleCredential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+          nonce: nonce,
+        );
+
+        if (appleCredential.identityToken == null) {
+          throw FirebaseAuthException(
+            code: 'missing-identity-token',
+            message: 'Apple Sign-In failed: Identity token is null',
+          );
+        }
+
+        final oAuthProvider = OAuthProvider("apple.com");
+        final credential = oAuthProvider.credential(
+          idToken: appleCredential.identityToken,
+          rawNonce: rawNonce,
+          accessToken: appleCredential.authorizationCode, // Add authorization code
+        );
+
+        developer.log('Attempting to sign in with Firebase credential', name: 'AuthService');
+        final userCredential = await _auth.signInWithCredential(credential);
+        final user = userCredential.user;
+
+        if (user != null) {
+          // For the first sign-in, create a new user document in Firestore
+          final userDoc = _firestore.collection('users').doc(user.uid);
+          final userDocSnapshot = await userDoc.get();
+
+          if (!userDocSnapshot.exists) {
+            await userDoc.set({
+              'uid': user.uid,
+              'displayName': appleCredential.givenName ?? user.displayName ?? '',
+              'email': appleCredential.email ?? user.email,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+
+        return userCredential;
+      }
+    } on FirebaseAuthException catch (e) {
+      developer.log('Firebase Auth Error during Apple Sign-In: ${e.code} - ${e.message}', name: 'AuthService');
+      developer.log('Error details: ${e.toString()}', name: 'AuthService');
+      rethrow;
+    } catch (e, stackTrace) {
+      developer.log('Error during Apple Sign-In: $e', name: 'AuthService');
+      developer.log('Stack trace: $stackTrace', name: 'AuthService');
+      rethrow;
     }
   }
 
@@ -118,7 +284,66 @@ class AuthService {
 
   // Sign out
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    try {
+      developer.log('Signing out user', name: 'AuthService');
+
+      // Track analytics
+      await _analytics.logLogout();
+
+      // Clear crashlytics user ID
+      await _crashlytics.clearUserId();
+
+      // Sign out from Google first
+      await _googleSignIn.signOut();
+
+      // Disconnect Google account to ensure fresh sign-in next time
+      // In v7.x, we can safely call disconnect without checking
+      if (!kIsWeb) {
+        try {
+          await _googleSignIn.disconnect();
+        } catch (e) {
+          // Disconnect may fail if not signed in, which is fine
+          developer.log('Google disconnect note: $e', name: 'AuthService');
+        }
+      }
+
+      // Sign out from Firebase
+      await _auth.signOut();
+
+      developer.log('Sign out successful', name: 'AuthService');
+    } catch (e) {
+      developer.log('Error during sign out: $e', name: 'AuthService');
+      rethrow;
+    }
+  }
+
+  String _generateNonce([int length = 32]) {
+    const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._~';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)]).join();
+  }
+
+  // Helper method to create user document asynchronously
+  void _createUserDocumentIfNeeded(String uid, String displayName, String? email) async {
+    try {
+      final userDoc = _firestore.collection('users').doc(uid);
+      final userDocSnapshot = await userDoc.get();
+
+      if (!userDocSnapshot.exists) {
+        developer.log('Creating new user document for $uid', name: 'AuthService');
+        // Get photoURL from Firebase Auth user
+        final currentUser = _auth.currentUser;
+        await userDoc.set({
+          'uid': uid,
+          'displayName': displayName,
+          'email': email,
+          'photoURL': currentUser?.photoURL,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        developer.log('User document created successfully', name: 'AuthService');
+      }
+    } catch (e) {
+      developer.log('Error creating user document: $e', name: 'AuthService');
+    }
   }
 }

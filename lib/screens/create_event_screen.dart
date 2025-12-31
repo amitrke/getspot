@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/services/event_cache_service.dart';
 import 'dart:developer' as developer;
 
 enum CommitmentDeadlineOption {
@@ -35,11 +36,37 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   TimeOfDay? _deadlineTime;
   bool _isLoading = false;
   CommitmentDeadlineOption _deadlineOption = CommitmentDeadlineOption.twoDays;
+  int _maxEventCapacity = 60; // Default value
 
   @override
   void initState() {
     super.initState();
+    _fetchGroupMaxCapacity();
     _prefillFromPreviousEvent();
+  }
+
+  Future<void> _fetchGroupMaxCapacity() async {
+    try {
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .get();
+
+      if (groupDoc.exists && mounted) {
+        final groupData = groupDoc.data();
+        setState(() {
+          _maxEventCapacity = groupData?['maxEventCapacity'] ?? 60;
+        });
+      }
+    } catch (e, st) {
+      developer.log(
+        'Error fetching group max capacity',
+        name: 'CreateEventScreen',
+        error: e,
+        stackTrace: st,
+      );
+      // Use default value if fetch fails
+    }
   }
 
   Future<void> _prefillFromPreviousEvent() async {
@@ -226,6 +253,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         'status': 'active', // Add default status
       });
 
+      // Invalidate event cache to ensure fresh data
+      EventCacheService().invalidate(widget.groupId);
+
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -257,143 +287,149 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Create New Event')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Event Name'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Location'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a location.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildDateTimePicker(
-                label: 'Event Date & Time',
-                date: _eventDate,
-                time: _eventTime,
-                onTap: () => _pickDateTime(isEvent: true),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<CommitmentDeadlineOption>(
-                value: _deadlineOption,
-                decoration: const InputDecoration(
-                  labelText: 'Commitment Deadline (relative)',
-                  border: OutlineInputBorder(),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                Semantics(
+                  label: 'event_name_field',
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(labelText: 'Event Name'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a name.';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-                items: CommitmentDeadlineOption.values
-                    .map(
-                      (option) => DropdownMenuItem(
-                        value: option,
-                        child: Text(_labelForOption(option)),
+                const SizedBox(height: 16),
+                Semantics(
+                  label: 'location_field',
+                  child: TextFormField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(labelText: 'Location'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a location.';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  label: 'event_date_time_picker',
+                  child: _buildDateTimePicker(
+                    label: 'Event Date & Time',
+                    date: _eventDate,
+                    time: _eventTime,
+                    onTap: () => _pickDateTime(isEvent: true),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Semantics(
+                  label: 'commitment_deadline_dropdown',
+                  child: DropdownButtonFormField<CommitmentDeadlineOption>(
+                    initialValue: _deadlineOption,
+                    decoration: const InputDecoration(
+                      labelText: 'Commitment Deadline (relative)',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: CommitmentDeadlineOption.values
+                        .map(
+                          (option) => DropdownMenuItem(
+                            value: option,
+                            child: Text(_labelForOption(option)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() {
+                        _deadlineOption = value;
+                        if (value != CommitmentDeadlineOption.custom) {
+                          _applyRelativeDeadline();
+                        }
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (_deadlineOption == CommitmentDeadlineOption.custom)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Semantics(
+                      label: 'commitment_deadline_picker',
+                      child: _buildDateTimePicker(
+                        label: 'Commitment Deadline',
+                        date: _deadlineDate,
+                        time: _deadlineTime,
+                        onTap: () => _pickDateTime(isEvent: false),
                       ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _deadlineOption = value;
-                    if (value != CommitmentDeadlineOption.custom) {
-                      _applyRelativeDeadline();
-                    }
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              if (_deadlineOption == CommitmentDeadlineOption.custom)
-                _buildDateTimePicker(
-                  label: 'Commitment Deadline',
-                  date: _deadlineDate,
-                  time: _deadlineTime,
-                  onTap: () => _pickDateTime(isEvent: false),
-                )
-              else
-                _buildDeadlineSummary(),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _feeController,
-                decoration: const InputDecoration(
-                  labelText: 'Fee',
-                  helperText: 'Cost of the event in virtual currency.',
+                    ),
+                  ),
+                Semantics(
+                  label: 'fee_field',
+                  child: TextFormField(
+                    controller: _feeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Fee',
+                      helperText: 'Cost of the event in virtual currency.',
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || int.tryParse(value) == null) {
+                        return 'Please enter a valid number.';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || int.tryParse(value) == null) {
-                    return 'Please enter a valid number.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _maxParticipantsController,
-                decoration: const InputDecoration(
-                  labelText: 'Max Participants',
+                const SizedBox(height: 16),
+                Semantics(
+                  label: 'max_participants_field',
+                  child: TextFormField(
+                    controller: _maxParticipantsController,
+                    decoration: InputDecoration(
+                      labelText: 'Max Participants',
+                      helperText: 'Maximum allowed: $_maxEventCapacity',
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || int.tryParse(value) == null) {
+                        return 'Please enter a valid number.';
+                      }
+                      final maxParticipants = int.parse(value);
+                      if (maxParticipants <= 0) {
+                        return 'Must be greater than 0.';
+                      }
+                      if (maxParticipants > _maxEventCapacity) {
+                        return 'Cannot exceed $_maxEventCapacity (group limit).';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || int.tryParse(value) == null) {
-                    return 'Please enter a valid number.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 32),
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                ElevatedButton(
-                  onPressed: _createEvent,
-                  child: const Text('Create Event'),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeadlineSummary() {
-    final theme = Theme.of(context);
-    final deadlineSet = _deadlineDate != null && _deadlineTime != null;
-    final formatted = deadlineSet
-        ? '${DateFormat.yMMMd().format(_deadlineDate!)} at ${_deadlineTime!.format(context)}'
-        : 'Select event date & time to calculate the deadline.';
-
-    return InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Commitment Deadline',
-        border: OutlineInputBorder(),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _labelForOption(_deadlineOption),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+                const SizedBox(height: 32),
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  Semantics(
+                    label: 'create_event_button',
+                    child: ElevatedButton(
+                      onPressed: _createEvent,
+                      child: const Text('Create Event'),
+                    ),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(formatted),
-        ],
+        ),
       ),
     );
   }
@@ -406,7 +442,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }) {
     final formattedDate = date != null ? DateFormat.yMMMd().format(date) : '';
     final formattedTime = time != null ? time.format(context) : '';
-    final value = date != null ? '$formattedDate at $formattedTime' : '';
+    final value = date != null
+        ? '$formattedDate at $formattedTime'
+        : 'Select event date to calculate';
 
     return InkWell(
       onTap: onTap,
@@ -415,7 +453,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           labelText: label,
           border: const OutlineInputBorder(),
         ),
-        child: Text(value.isEmpty ? 'Select a date and time' : value),
+        child: Text(
+          value.isEmpty ? 'Select a date and time' : value,
+        ),
       ),
     );
   }

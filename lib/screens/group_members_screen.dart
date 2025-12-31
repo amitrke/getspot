@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/services/user_cache_service.dart';
 
 class GroupMembersScreen extends StatelessWidget {
   final String groupId;
@@ -21,43 +22,59 @@ class GroupMembersScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Members'),
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: membersQuery.snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-            final docs = snapshot.data?.docs ?? [];
-            if (docs.isEmpty) {
-              return const Center(child: Text('No members yet.'));
+      body: SafeArea(
+        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: membersQuery.snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
             }
-            return ListView.separated(
-              itemCount: docs.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final d = docs[index];
-                final data = d.data();
-                final uid = data['uid'] ?? d.id;
-                final name = data['displayName'] ?? 'No Name';
-                final balance = (data['walletBalance'] ?? 0).toString();
-                final isOwner = uid == adminUid; // single admin model
-                return ListTile(
-                  title: Text(name),
-                  subtitle: Text('Balance: $balance'),
-                  trailing: isAdmin ? _AdminActions(
-                    groupId: groupId,
-                    targetUid: uid,
-                    name: name,
-                    isOwner: isOwner,
-                    balance: double.tryParse(balance) ?? 0,
-                  ) : null,
-                );
-              },
-            );
-        },
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+              final docs = snapshot.data?.docs ?? [];
+              if (docs.isEmpty) {
+                return const Center(child: Text('No members yet.'));
+              }
+              return ListView.separated(
+                itemCount: docs.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final d = docs[index];
+                  final data = d.data();
+                  final uid = data['uid'] ?? d.id;
+                  final name = data['displayName'] ?? 'No Name';
+                  final balance = (data['walletBalance'] ?? 0).toString();
+                  final isOwner = uid == adminUid; // single admin model
+
+                  return FutureBuilder(
+                    future: UserCacheService().getUser(uid),
+                    builder: (context, snapshot) {
+                      final photoURL = snapshot.data?.photoURL;
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
+                          child: photoURL == null
+                              ? Text(name.isNotEmpty ? name[0].toUpperCase() : '?')
+                              : null,
+                        ),
+                        title: Text(name),
+                        subtitle: Text('Balance: $balance'),
+                        trailing: isAdmin ? _AdminActions(
+                          groupId: groupId,
+                          targetUid: uid,
+                          name: name,
+                          isOwner: isOwner,
+                          balance: double.tryParse(balance) ?? 0,
+                        ) : null,
+                      );
+                    },
+                  );
+                },
+              );
+          },
+        ),
       ),
     );
   }

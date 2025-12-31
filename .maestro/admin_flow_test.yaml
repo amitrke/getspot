@@ -1,0 +1,63 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Admin Flow Test - Tests admin-specific features
+# Requires: User 1 to be admin of test group
+# Assumes: Already logged in as User 1 (admin)
+
+- launchApp:
+    clearState: false
+
+# Navigate to home screen
+- assertVisible: "My Groups"
+- assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
+
+# Take screenshot of home screen
+- takeScreenshot: ${SCREENSHOT_DIR}/admin_home_screen
+
+# Navigate to the test group
+- tapOn: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- assertVisible: "Create Event"  # Only admins see this FAB
+
+# Take screenshot showing admin features
+- takeScreenshot: ${SCREENSHOT_DIR}/group_details_admin_view
+
+# Check Admin tab (only visible to admins)
+- tapOn: "Admin\nTab 3 of 3"
+- takeScreenshot: ${SCREENSHOT_DIR}/admin_tab
+
+# Navigate back to Events tab
+- tapOn: "Events\nTab 1 of 3"
+
+# View Members button (admin feature)
+- assertVisible: "Members"
+- tapOn: "Members"
+- takeScreenshot: ${SCREENSHOT_DIR}/members_screen_admin
+
+# Back to group details
+- tapOn: "Back"
+
+# View wallet
+- tapOn: "My Wallet"
+- takeScreenshot: ${SCREENSHOT_DIR}/wallet_admin_view
+- tapOn: "Back"
+
+# View an event (admin should see cancel button)
+- assertVisible: "event_item_0"
+- tapOn: "event_item_0"
+- assertVisible: "Event Details"
+
+# Admins should see the cancel event button
+- assertVisible: "cancel_event_button"
+- takeScreenshot: ${SCREENSHOT_DIR}/event_details_admin_view
+
+# Back to group details
+- tapOn: "Back"
+
+# Back to home
+- tapOn: "Back"
+- assertVisible: "My Groups"
+
+# Stop the app
+- stopApp

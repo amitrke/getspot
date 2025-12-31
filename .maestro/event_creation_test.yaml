@@ -1,0 +1,80 @@
+appId: org.getspot
+env:
+  SCREENSHOT_DIR: ${MAESTRO_SCREENSHOT_DIR}
+---
+# Event creation test suite - WARNING: Creates new data
+# Only run this when you want to test event creation functionality
+# Requires admin access to a test group
+
+- launchApp:
+    clearState: false
+
+# Navigate to the test group
+- assertVisible: "My Groups"
+- assertVisible: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- tapOn: "group_item_${MAESTRO_TEST_GROUP_ID}"
+- assertVisible: "Sunridge Saturday"
+
+# Take screenshot of group details before creating event
+- takeScreenshot: ${SCREENSHOT_DIR}/group_details_before_event_creation
+
+# Tap the Create Event FAB (Floating Action Button)
+- tapOn: "Create Event"
+- assertVisible: "Create Event"
+
+# Take screenshot of empty event creation form
+- takeScreenshot: ${SCREENSHOT_DIR}/event_creation_form_empty
+
+# Fill in event details
+- tapOn: "Event Name"
+- inputText: "Test Event ${DATE}"
+
+- tapOn: "Location"
+- inputText: "Test Location"
+
+# Select date and time (tap on the date/time pickers)
+- tapOn: "Select Date"
+# Note: Date/time picker interaction may need adjustment based on platform
+- scroll:
+    direction: DOWN
+- tapOn: "OK"
+
+- tapOn: "Select Time"
+- tapOn: "OK"
+
+# Set capacity
+- tapOn: "Max Participants"
+- inputText: "8"
+
+# Set entry fee
+- tapOn: "Entry Fee"
+- inputText: "5"
+
+# Take screenshot of filled form
+- takeScreenshot: ${SCREENSHOT_DIR}/event_creation_form_filled
+
+# Create the event
+- tapOn: "Create Event"
+
+# Wait for navigation back to group details
+- assertVisible: "Sunridge Saturday"
+
+# Verify the new event appears in the list
+- takeScreenshot: ${SCREENSHOT_DIR}/group_details_after_event_creation
+
+# Navigate to the newly created event
+- tapOn: "Test Event"
+- assertVisible: "Event Details"
+- takeScreenshot: ${SCREENSHOT_DIR}/newly_created_event_details
+
+# Clean up: Cancel the test event (if admin)
+# Note: This assumes there's a cancel/delete button for admins
+- tapOn: "Cancel Event"
+- tapOn: "Yes"  # Confirm cancellation
+
+# Back to home
+- tapOn: "Back"
+- assertVisible: "My Groups"
+
+# Stop the app
+- stopApp

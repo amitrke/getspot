@@ -12,13 +12,26 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read, create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId && request.resource.data.keys().hasOnly(['fcmTokens', 'displayName', 'photoURL']);
+      // Allow update if user is updating their own document and only modifying allowed fields
+      allow update: if request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmTokens', 'displayName', 'photoURL', 'notificationsEnabled']);
     }
 
     // New collection for simplified group lookups.
     // A user can only read their own list of groups.
     match /userGroupMemberships/{userId}/groups/{groupId} {
       allow read: if request.auth.uid == userId;
+    }
+
+    // Allows the collectionGroup query in the app for a user to find their own join requests.
+    // The document ID ({userId}) must match the authenticated user's UID.
+    match /{path=**}/joinRequests/{requestId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // Allows collection group queries for participants so users can find all events they've registered for.
+    match /{path=**}/participants/{participantId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
     match /groups/{groupId} {
@@ -49,7 +62,10 @@ service cloud.firestore {
 
     match /events/{eventId} {
       allow read: if exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
-      allow create: if exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(request.auth.uid));
+      allow create: if exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(request.auth.uid))
+                    && request.resource.data.maxParticipants > 0
+                    && request.resource.data.maxParticipants <= get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.maxEventCapacity;
+      // Admin can update/delete events. Note: maxParticipants updates are handled via Cloud Function for safety
       allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.admin;
 
       //--- SUBCOLLECTIONS ---//
