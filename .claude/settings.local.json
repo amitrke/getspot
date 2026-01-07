@@ -12,7 +12,8 @@
       "WebSearch",
       "Bash(pnpm run lint:*)",
       "Bash(pnpm run lint:fix:*)",
-      "Bash(pnpm run build)"
+      "Bash(pnpm run build)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

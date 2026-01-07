@@ -33,10 +33,12 @@ class CachedTransaction {
 class CachedTransactionList {
   final List<CachedTransaction> transactions;
   final DateTime timestamp;
+  final DocumentSnapshot? lastDocument; // For cursor-based pagination
 
   CachedTransactionList({
     required this.transactions,
     required this.timestamp,
+    this.lastDocument,
   });
 }
 
@@ -117,6 +119,7 @@ class TransactionCacheService {
       _cache[cacheKey] = CachedTransactionList(
         transactions: transactions,
         timestamp: DateTime.now(),
+        lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
       );
 
       developer.log(
@@ -133,6 +136,97 @@ class TransactionCacheService {
       );
     }
     return null;
+  }
+
+  /// Load more transactions using cursor-based pagination.
+  ///
+  /// Returns additional transactions after the last loaded document.
+  /// Returns empty list if no more transactions are available.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// // Initial load
+  /// final transactions = await cache.getTransactions(groupId, userId);
+  ///
+  /// // Load more when user scrolls to bottom
+  /// if (cache.hasMore(groupId, userId)) {
+  ///   final more = await cache.loadMore(groupId, userId);
+  ///   // Append to existing list
+  /// }
+  /// ```
+  Future<List<CachedTransaction>> loadMore(
+    String groupId,
+    String userId, {
+    int limit = 50,
+  }) async {
+    final cacheKey = _getCacheKey(groupId, userId);
+    final cached = _cache[cacheKey];
+
+    if (cached == null || cached.lastDocument == null) {
+      developer.log(
+        'No cached data or cursor for $cacheKey, returning empty',
+        name: 'TransactionCacheService',
+      );
+      return [];
+    }
+
+    developer.log(
+      'Loading more transactions for $cacheKey',
+      name: 'TransactionCacheService',
+    );
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('transactions')
+          .where('groupId', isEqualTo: groupId)
+          .where('uid', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .startAfterDocument(cached.lastDocument!)
+          .limit(limit)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        developer.log(
+          'No more transactions for $cacheKey',
+          name: 'TransactionCacheService',
+        );
+        return [];
+      }
+
+      final newTransactions = snapshot.docs
+          .map((doc) => CachedTransaction.fromFirestore(doc))
+          .toList();
+
+      // Update cache with combined transactions
+      _cache[cacheKey] = CachedTransactionList(
+        transactions: [...cached.transactions, ...newTransactions],
+        timestamp: DateTime.now(),
+        lastDocument: snapshot.docs.last,
+      );
+
+      developer.log(
+        'Loaded ${newTransactions.length} more transactions for $cacheKey',
+        name: 'TransactionCacheService',
+      );
+
+      return newTransactions;
+    } catch (e) {
+      developer.log(
+        'Error loading more transactions for $cacheKey',
+        name: 'TransactionCacheService',
+        error: e,
+      );
+      return [];
+    }
+  }
+
+  /// Check if more transactions are available for pagination.
+  ///
+  /// Returns true if a cursor exists for loading more data.
+  bool hasMore(String groupId, String userId) {
+    final cacheKey = _getCacheKey(groupId, userId);
+    final cached = _cache[cacheKey];
+    return cached?.lastDocument != null;
   }
 
   /// Invalidate cache for a specific user in a specific group

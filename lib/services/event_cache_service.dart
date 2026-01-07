@@ -129,12 +129,14 @@ class EventCacheService {
     );
 
     try {
+      // Limited to 100 events to prevent unbounded queries at scale
       final snapshot = await FirebaseFirestore.instance
           .collection('events')
           .where('groupId', isEqualTo: groupId)
           .where('status', isEqualTo: 'active')
           .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
           .orderBy('eventTimestamp', descending: false)
+          .limit(100)
           .get();
 
       final events = snapshot.docs
@@ -184,6 +186,7 @@ class EventCacheService {
     }
 
     // Then subscribe to real-time updates
+    // Limited to 100 events to prevent unbounded queries at scale
     developer.log(
       'Stream: Subscribing to real-time events for group: $groupId',
       name: 'EventCacheService',
@@ -195,6 +198,7 @@ class EventCacheService {
         .where('status', isEqualTo: 'active')
         .where('eventTimestamp', isGreaterThanOrEqualTo: Timestamp.now())
         .orderBy('eventTimestamp', descending: false)
+        .limit(100)
         .snapshots()) {
       final events = snapshot.docs
           .map((doc) => CachedEvent.fromFirestore(doc))

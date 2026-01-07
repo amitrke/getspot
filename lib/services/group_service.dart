@@ -33,9 +33,11 @@ class GroupService {
 
     // Listen to participant status changes for this user
     // This ensures the UI updates when user registers/withdraws from events
+    // Limited to 100 to prevent unbounded queries at scale
     final participantsStream = _firestore
         .collectionGroup('participants')
         .where('uid', isEqualTo: user.uid)
+        .limit(100)
         .snapshots();
 
     return CombineLatestStream.combine3(
