@@ -29,9 +29,9 @@ import * as logger from "firebase-functions/logger";
 /**
  * Handle and normalize errors for Cloud Functions.
  *
- * @param error - The caught error
- * @param functionName - Name of the function for logging context
- * @returns HttpsError to be thrown to the client
+ * @param {unknown} error - The caught error
+ * @param {string} functionName - Name of the function for logging context
+ * @return {HttpsError} HttpsError to be thrown to the client
  */
 export function handleError(error: unknown, functionName: string): HttpsError {
   // Log the error with context
@@ -43,9 +43,9 @@ export function handleError(error: unknown, functionName: string): HttpsError {
   }
 
   // For other errors, wrap in a generic internal error
-  const message = error instanceof Error
-    ? error.message
-    : "An unexpected error occurred.";
+  const message = error instanceof Error ?
+    error.message :
+    "An unexpected error occurred.";
 
   return new HttpsError("internal", message);
 }
@@ -53,10 +53,11 @@ export function handleError(error: unknown, functionName: string): HttpsError {
 /**
  * Create a standardized HttpsError with logging.
  *
- * @param code - The error code (e.g., "unauthenticated", "permission-denied")
- * @param message - User-facing error message
- * @param functionName - Optional function name for logging
- * @param details - Optional additional details to log
+ * @param {FunctionsErrorCode} code - The error code (e.g., "unauthenticated", "permission-denied")
+ * @param {string} message - User-facing error message
+ * @param {string} [functionName] - Optional function name for logging
+ * @param {unknown} [details] - Optional additional details to log
+ * @return {HttpsError} The created HttpsError
  */
 export function createError(
   code: FunctionsErrorCode,
@@ -73,8 +74,8 @@ export function createError(
 /**
  * Validate that the request is authenticated.
  *
- * @param request - The callable request object
- * @throws HttpsError if not authenticated
+ * @param {Object} request - The callable request object
+ * @throws {HttpsError} HttpsError if not authenticated
  */
 export function validateAuth(request: {auth?: {uid: string}}): void {
   if (!request.auth) {
@@ -88,9 +89,9 @@ export function validateAuth(request: {auth?: {uid: string}}): void {
 /**
  * Validate that required arguments are present.
  *
- * @param data - The request data object
- * @param requiredFields - Array of required field names
- * @throws HttpsError if any required field is missing
+ * @param {Record<string, unknown>} data - The request data object
+ * @param {string[]} requiredFields - Array of required field names
+ * @throws {HttpsError} HttpsError if any required field is missing
  */
 export function validateArgs(
   data: Record<string, unknown>,
@@ -111,9 +112,9 @@ export function validateArgs(
 /**
  * Validate that a document exists.
  *
- * @param doc - The Firestore document snapshot
- * @param entityName - Name of the entity for error message (e.g., "group", "event")
- * @throws HttpsError if document doesn't exist
+ * @param {{exists: boolean}} doc - The Firestore document snapshot
+ * @param {string} entityName - Name of the entity for error message (e.g., "group", "event")
+ * @throws {HttpsError} HttpsError if document doesn't exist
  */
 export function validateDocExists(
   doc: {exists: boolean},
@@ -130,10 +131,10 @@ export function validateDocExists(
 /**
  * Validate that the user has admin permission for a group.
  *
- * @param groupData - The group document data
- * @param uid - The user's UID
- * @param action - Description of the action for error message
- * @throws HttpsError if user is not the admin
+ * @param {Object|undefined} groupData - The group document data
+ * @param {string} uid - The user's UID
+ * @param {string} [action] - Description of the action for error message
+ * @throws {HttpsError} HttpsError if user is not the admin
  */
 export function validateGroupAdmin(
   groupData: {admin?: string} | undefined,
@@ -153,6 +154,10 @@ export function validateGroupAdmin(
  *
  * This is a higher-order function that wraps your function logic
  * and automatically handles errors.
+ *
+ * @param {string} functionName - Name of the function for error context
+ * @param {Function} handler - The async handler function to wrap
+ * @return {Function} Wrapped function with error handling
  *
  * Usage:
  * ```typescript
