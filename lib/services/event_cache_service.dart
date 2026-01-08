@@ -32,7 +32,7 @@ class CachedEvent {
     return CachedEvent(
       id: doc.id,
       groupId: data['groupId'] ?? '',
-      title: data['title'] ?? 'Untitled Event',
+      title: data['name'] ?? 'Untitled Event',
       description: data['description'],
       eventTimestamp: (data['eventTimestamp'] as Timestamp?)?.toDate(),
       location: data['location'],
@@ -48,7 +48,7 @@ class CachedEvent {
     return {
       'id': id,
       'groupId': groupId,
-      'title': title,
+      'name': title,
       'description': description,
       'eventTimestamp': eventTimestamp != null
           ? Timestamp.fromDate(eventTimestamp!)
