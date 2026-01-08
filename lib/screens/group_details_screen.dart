@@ -609,7 +609,7 @@ class _EventListItemState extends State<_EventListItem> {
 
     return Card(
       child: ListTile(
-        title: Text(eventData['title'] ?? eventData['name'] ?? 'Unnamed Event'),
+        title: Text(eventData['name'] ?? 'Unnamed Event'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
