@@ -1,3 +1,7 @@
+import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 const features = [
   {
     title: "Groups",
@@ -19,15 +23,7 @@ const features = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
-      <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-6">
-        <span className="text-lg font-bold tracking-tight">GetSpot</span>
-        <a
-          href="https://app.getspot.org"
-          className="text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-        >
-          Open App →
-        </a>
-      </header>
+      <Header />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center px-5 py-16 text-center sm:py-24">
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -70,14 +66,16 @@ export default function Home() {
             </div>
           ))}
         </div>
+
+        <Link
+          href="/features"
+          className="mt-10 text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
+        >
+          See all features →
+        </Link>
       </main>
 
-      <footer className="mx-auto w-full max-w-3xl px-5 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        © 2026 GetSpot ·{" "}
-        <a href="https://app.getspot.org" className="hover:underline">
-          app.getspot.org
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }

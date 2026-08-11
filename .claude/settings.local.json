@@ -37,7 +37,15 @@
       "Bash(xargs -n1 basename)",
       "Bash(python3 -)",
       "Bash(python3 -c \"print\\('hello'\\)\")",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(echo \"started with pid $!\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(break)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/features)",
+      "Bash(curl -s http://localhost:3000/faq)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"next dev\")"
     ],
     "deny": [],
     "ask": []
