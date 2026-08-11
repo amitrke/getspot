@@ -199,7 +199,7 @@ See section below on updating functions.
 
 **To update reCAPTCHA key:**
 1. Go to [Google reCAPTCHA Admin](https://www.google.com/recaptcha/admin)
-2. Register `getspot.org` and `www.getspot.org`
+2. Register `app.getspot.org` and `www.getspot.org`
 3. Copy the site key
 4. Update in `lib/main.dart:68`
 

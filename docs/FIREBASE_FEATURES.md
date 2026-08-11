@@ -144,15 +144,15 @@ await CrashlyticsService().setCustomKey('group_id', groupId);
 ### 7. Firebase Hosting
 **Status:** Production | **Added:** Launch
 
-**Purpose:** Web app hosting
+**Purpose:** Web app + marketing site hosting (two Firebase Hosting sites in one project)
 
 **Implementation:**
-- Hosts Flutter web build
-- Custom domain: www.getspot.org
-- Serves from `build/web`
+- `app` target (`getspot01` site) - Flutter web build, custom domain `app.getspot.org`, serves from `build/web`
+- `main` target (`getspot01-main` site) - marketing site (Next.js, static export), custom domain `www.getspot.org`/`getspot.org`, serves from `main/out`, redirects old `/join/{code}` links to `app.getspot.org`
 
 **Files:**
 - `firebase.json` - Hosting configuration
+- `.firebaserc` - Hosting target mapping
 
 ---
 
@@ -278,7 +278,7 @@ if (FeatureFlagService().canAccessCrashTest(userId)) {
 **Current Implementation:** Native Universal Links (iOS) + App Links (Android)
 
 **What You Have:**
-- ✅ Group sharing via `https://getspot.org/join/{GROUP_CODE}`
+- ✅ Group sharing via `https://app.getspot.org/join/{GROUP_CODE}`
 - ✅ Native deep linking (no third-party dependency)
 - ✅ Flutter web fallback for non-app users
 - ✅ Share functionality in group details screen

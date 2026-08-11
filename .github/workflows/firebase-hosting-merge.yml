@@ -9,12 +9,13 @@ on:
     paths:
       - 'lib/**'
       - 'web/**'
+      - 'main/**'
       - 'pubspec.yaml'
       - 'analysis_options.yaml'
       - 'docs/hosting/**'
       - 'firebase.json'
 jobs:
-  build_and_deploy:
+  build_and_deploy_app:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,3 +36,24 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}
           channelId: live
           projectId: getspot01
+          target: app
+  build_and_deploy_main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: main/package-lock.json
+      - run: npm ci
+        working-directory: main
+      - run: npm run build
+        working-directory: main
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}
+          channelId: live
+          projectId: getspot01
+          target: main

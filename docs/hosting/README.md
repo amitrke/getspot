@@ -5,14 +5,14 @@ This directory contains configuration files needed for deep linking to work.
 ## Files in This Directory
 
 ### 1. `apple-app-site-association` (iOS)
-**Must be hosted at:** `https://getspot.org/.well-known/apple-app-site-association`
+**Must be hosted at:** `https://app.getspot.org/.well-known/apple-app-site-association`
 
 **Before deploying:**
 - Replace `TEAM_ID` with your Apple Developer Team ID
 - Find at: https://developer.apple.com/account → Membership
 
 ### 2. `assetlinks.json` (Android)
-**Must be hosted at:** `https://getspot.org/.well-known/assetlinks.json`
+**Must be hosted at:** `https://app.getspot.org/.well-known/assetlinks.json`
 
 **Before deploying:**
 - Replace `REPLACE_WITH_YOUR_RELEASE_SHA256_FINGERPRINT` with your release key fingerprint
@@ -60,21 +60,19 @@ After deployment, verify files are accessible:
 
 ```bash
 # iOS configuration
-curl https://getspot.org/.well-known/apple-app-site-association
+curl https://app.getspot.org/.well-known/apple-app-site-association
 
 # Android configuration
-curl https://getspot.org/.well-known/assetlinks.json
+curl https://app.getspot.org/.well-known/assetlinks.json
 ```
 
 Both should return JSON (not 404 or HTML).
 
 ## Domain Support
 
-The app supports both:
-- `https://getspot.org`
-- `https://www.getspot.org`
+The app is served exclusively from `https://app.getspot.org` — this is the only domain configured in the iOS associated domains and Android intent filters.
 
-Make sure your DNS/hosting redirects www to non-www (or vice versa) for consistency.
+`www.getspot.org` / `getspot.org` now serve a separate marketing site (see `main/`). Old `/join/{code}` links on those domains 302-redirect to `app.getspot.org/join/{code}` (configured in `firebase.json`'s `main` hosting target) so previously-shared invite links keep working.
 
 ## Important Notes
 
@@ -127,12 +125,12 @@ Quick test:
 ## Troubleshooting
 
 ### iOS: Link Opens Safari Instead of App
-- Verify file is accessible: `curl https://getspot.org/.well-known/apple-app-site-association`
+- Verify file is accessible: `curl https://app.getspot.org/.well-known/apple-app-site-association`
 - Check Team ID is correct
 - Uninstall and reinstall app
 
 ### Android: Link Opens Browser Instead of App
-- Verify file is accessible: `curl https://getspot.org/.well-known/assetlinks.json`
+- Verify file is accessible: `curl https://app.getspot.org/.well-known/assetlinks.json`
 - Check SHA-256 fingerprint is correct
 - Verify App Links: `adb shell pm get-app-links com.getspot.app`
 

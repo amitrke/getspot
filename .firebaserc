@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "getspot01"
-  }
+  },
+  "targets": {
+    "getspot01": {
+      "hosting": {
+        "app": [
+          "getspot01"
+        ],
+        "main": [
+          "getspot01-main"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
