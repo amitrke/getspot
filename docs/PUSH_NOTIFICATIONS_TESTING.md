@@ -25,8 +25,8 @@ GetSpot uses Firebase Cloud Messaging (FCM) to send push notifications to users.
 When a user signs into the app, the `NotificationService` automatically:
 1. Requests notification permission from the device (iOS/Android)
 2. Retrieves the FCM token from Firebase
-3. Calls the `updateFcmToken` Cloud Function to save it
-4. Function saves token to `/users/{userId}.fcmTokens` array in Firestore
+3. Writes the token directly to Firestore via `FieldValue.arrayUnion` (as of 2025-10-13, this is a direct client-side write, not a Cloud Function call - see below)
+4. Token is saved to `/users/{userId}.fcmTokens` array in Firestore
 
 **Check if your token is registered:**
 ```
@@ -37,10 +37,9 @@ Look for the `fcmTokens` field - it should contain an array with at least one to
 
 **If fcmTokens field is missing:**
 1. Check app logs for "FCM Token:" - verify token was retrieved
-2. Check app logs for "Successfully updated FCM token" - verify function call succeeded
-3. Check Firebase Console → Functions → Logs for `updateFcmToken` errors
-4. Ensure Cloud Function is deployed: `firebase deploy --only functions:updateFcmToken`
-5. Force refresh by restarting app while signed in
+2. Check app logs for "Successfully updated FCM token" - verify the Firestore write succeeded
+3. Verify Firestore Security Rules allow the signed-in user to update their own `fcmTokens` field
+4. Force refresh by restarting app while signed in
 
 ### 2. Notifications Must Be Enabled
 
@@ -264,6 +263,39 @@ FirebaseMessaging.onMessage.listen((RemoteMessage message) {
 
 ---
 
+## Platform Setup Verification
+
+### iOS: Xcode Capabilities
+
+1. Open `ios/Runner.xcworkspace` in Xcode
+2. Select the `Runner` target → **Signing & Capabilities**
+3. Confirm these capabilities are present (add via "+ Capability" if missing):
+   - **Push Notifications**
+   - **Background Modes** → "Remote notifications" checked
+
+### iOS: APNs Configuration in Firebase Console
+
+Without this, iOS push notifications will not work at all, even with correct app-side setup:
+
+1. Firebase Console → Project Settings → your iOS app → **Cloud Messaging** section
+2. Confirm either an **APNs Authentication Key** (recommended) or **APNs Certificate** is uploaded
+
+### Android: Runtime Permission (Android 13+)
+
+Handled automatically by `firebase_messaging`'s `requestPermission()`, but the user must approve the system permission dialog. If previously denied: device Settings → Apps → GetSpot → Notifications → enable.
+
+### Verbose FCM Logging
+
+**iOS** — add to the Xcode scheme's launch arguments: `-FIRDebugEnabled`
+
+**Android:**
+```bash
+adb shell setprop log.tag.FCM VERBOSE
+adb logcat -s FCM
+```
+
+---
+
 ## Manual Testing with Firebase Console
 
 You can send test notifications directly:
@@ -326,11 +358,7 @@ If you see an error instead:
 [NotificationService] Error updating FCM token: [error message]
 ```
 
-### Step 2: Verify FCM Token Registration
-
-**Note:** As of 2025-10-13, FCM tokens are written directly to Firestore from the client (not via Cloud Function) to avoid authentication issues on emulators and ensure reliable token registration.
-
-### Step 3: Common Fixes
+### Step 2: Common Fixes
 
 1. **FCM Token not appearing in Firestore:**
    - Check app logs for "Successfully updated FCM token"

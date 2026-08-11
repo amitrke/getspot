@@ -1,5 +1,7 @@
 # GetSpot - Organize Your Sports Meetups Effortlessly
 
+> **Note:** This is marketing/promotional copy (feature pitch, FAQ, testimonials) — a content reference for the website and app store listings, not a technical index of `docs/`. For the developer documentation entry point, see the root [`README.md`](../README.md). This file was previously named `index.md`, which was misleading since it isn't an index of this directory.
+
 **The smart way to manage recurring sports games with your group.**
 
 ---

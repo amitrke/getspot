@@ -39,7 +39,7 @@ These were created for specific implementation tasks that are now complete:
 
 **Consider archiving (move to `docs/archive/`)**:
 - [ ] `docs/TASK-Database-Optimization.md` - Completed optimization task
-- [ ] `docs/TASK-Implement-Email-Password-Auth.md` - Not yet implemented (keep or move to PRODUCT.md backlog)
+- [x] `docs/TASK-Implement-Email-Password-Auth.md` - Actually implemented (verified 2026-08-10: `signUpWithEmailAndPassword`/`signInWithEmailAndPassword`/`sendPasswordResetEmail` in `lib/services/auth_service.dart`, wired into `lib/screens/login_screen.dart`); correctly archived, `docs/archive/README.md` was just mis-categorizing it as pending
 - [ ] `docs/TASK-Implement-Event-Cancellation.md` - Completed (event cancellation is live)
 - [ ] `docs/TASK-Implement-Push-Notifications.md` - Completed (push notifications are live)
 
@@ -71,17 +71,10 @@ Well-organized deployment docs:
 Multiple files providing context to AI tools:
 
 **Current files:**
-- `CLAUDE.md` - For Claude Code (comprehensive)
-- `COPILOT_CONTEXT.md` - For GitHub Copilot
-- `GEMINI.md` - For Google Gemini
+- `CLAUDE.md` - For Claude Code (comprehensive, canonical)
+- `GEMINI.md` - For Google Gemini (`COPILOT_CONTEXT.md` was deleted, see Phase 3 below)
 
-**Recommendation:**
-- [ ] Keep `CLAUDE.md` as the primary AI context file (most comprehensive)
-- [ ] Review `COPILOT_CONTEXT.md` and `GEMINI.md`:
-  - If they duplicate CLAUDE.md: delete or add note pointing to CLAUDE.md
-  - If they have tool-specific instructions: keep but sync with CLAUDE.md
-
-**Action:** Audit and reduce duplication
+**Status (2026-08-10):** Done. `GEMINI.md` was trimmed to just the Gemini-specific prompting guide, with everything else (architecture, data model, functions, status) replaced by a pointer to `CLAUDE.md` as the single canonical source — removes the drift risk instead of just documenting it.
 
 ---
 
@@ -347,10 +340,27 @@ We're archiving completed task documents instead of deleting them.
 ---
 
 **Status:** Nearly complete
-**Last Updated:** 2025-10-24
+**Last Updated:** 2026-08-10
 **Recent Updates:**
 - Deleted COPILOT_CONTEXT.md (essentially empty)
 - Consolidated GEMINI.md to reduce redundancy with CLAUDE.md
 - Updated CLAUDE.md Code Structure section with all 8 services and 11 screens
 - Fixed processWaitlist documentation (marked as utility function)
 - Archived DEPLOYMENT-GUIDE.md to docs/archive/
+
+### 2026-08-10 Cleanup Pass
+
+Full audit of every doc against live code/config, then fixes applied:
+- **Live bug found and fixed:** `docs/hosting/apple-app-site-association` (the deployed file, not just docs) had the wrong iOS bundle ID (`com.getspot.app` instead of `org.getspot`) — likely broke iOS Universal Links entirely. Fixed; needs a hosting redeploy to take effect.
+- **Consolidated** `GITHUB_ACTIONS_DEEP_LINKS.md` + `SETUP_DEEP_LINKS.md` + `UNIVERSAL_LINKS.md` (4-way overlapping content) into a single `docs/DEEP_LINKS.md`; trimmed `docs/hosting/README.md` to a short directory-scoped pointer.
+- **Stale bundle ID / version references** fixed across `IOS_RELEASE_AUTOMATION.md`, `FIREBASE_ANALYTICS.md`, `FIREBASE_CRASHLYTICS.md`, `IN_APP_UPDATES.md`.
+- **Dead file references** fixed in `FIREBASE_FEATURES.md` (`sendNotification.ts` doesn't exist) and `CODE_REVIEW.md` (`createGroup.ts` doesn't exist — it's inline in `index.ts`).
+- **Rewrote `DEPLOYMENT.md`** — it described fully manual Android/iOS releases; both are now automated via `deploy-android.yml`, `deploy-ios-manual.yml`, `promote-to-appstore.yml`. Also removed a dead reference to a nonexistent PR-preview workflow.
+- **Fixed self-contradiction** in `PUSH_NOTIFICATIONS_TESTING.md` about how FCM tokens are saved (direct Firestore write, not a Cloud Function — the doc said both in different places).
+- **De-duplicated** `WIREFRAMES.md` (its content was accidentally pasted twice).
+- **Renamed** `docs/index.md` → `docs/MARKETING_COPY.md` — it was marketing/FAQ copy, not a docs index.
+- **Corrected a false-negative:** `TASK-Implement-Email-Password-Auth.md` was listed as "not started" — it's actually fully implemented; fixed `docs/archive/README.md`'s categorization instead of moving the file out of `archive/`.
+- **Archived** `FIX_IOS_CRASHLYTICS.md` (fix already applied) and `NOTIFICATION_DEBUGGING.md` (superseded point-in-time fix log; its unique diagnostic content was merged into `PUSH_NOTIFICATIONS_TESTING.md` first).
+- **Replaced** `main/README.md`'s unedited `create-next-app` boilerplate with real marketing-site documentation.
+- **Rewrote `LOCAL_DEVELOPMENT.md`** to actually be the detailed guide `README.md` points to, instead of a shorter duplicate of it.
+- **Not fixed (flagged, needs separate follow-up):** `.github/workflows/promote-to-appstore.yml` hardcodes `APP_IDENTIFIER=com.getspot.app` — same stale-bundle-ID issue found elsewhere, but in a live CI/CD workflow rather than a doc, so it was left for deliberate review rather than changed as part of a doc-cleanup pass.

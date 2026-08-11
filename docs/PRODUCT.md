@@ -2,7 +2,7 @@
 
 This document consolidates product requirements, implemented features, and future roadmap for GetSpot.
 
-**Last Updated:** 2025-01-18
+**Last Updated:** 2026-08-10
 
 ---
 
@@ -124,9 +124,9 @@ Users who create groups automatically become admins with additional capabilities
 - [x] Join waitlist when full
 - [x] Real-time status updates
 - [x] Confirmation dialogs for withdrawals
+- [x] Adjust capacity after creation
 
 **Not Yet Implemented:**
-- [ ] Adjust capacity after creation
 - [ ] Clear "denied" status for re-registration
 - [ ] Recurring event templates
 - [ ] View personal registration history
@@ -262,7 +262,7 @@ Users who create groups automatically become admins with additional capabilities
 **Status:** Required for App Stores | **Priority:** High
 
 - [ ] Terms of Service document
-- [ ] Privacy Policy document
+- [x] Privacy Policy document (see `docs/privacy.md`)
 - [ ] Accept ToS checkbox during signup
 - [ ] Links in app settings
 - [ ] GDPR data export functionality
@@ -463,7 +463,7 @@ Can be implemented in 1-2 days each:
 1. [ ] Swipe-to-delete for admin actions
 2. [ ] Haptic feedback on important actions
 3. [ ] Empty state illustrations
-4. [x] ~~Deep linking for group sharing~~ (DONE - see UNIVERSAL_LINKS.md)
+4. [x] ~~Deep linking for group sharing~~ (DONE - see docs/DEEP_LINKS.md)
 5. [ ] Deep linking for event sharing (extend existing implementation)
 6. [ ] "Copy event link" button
 7. [ ] Participant avatar previews in lists

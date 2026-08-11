@@ -31,7 +31,13 @@
       "Bash(npx --yes create-next-app@latest main --ts --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --disable-git --yes)",
       "Bash(npm run *)",
       "Bash(curl -s -o /dev/null -w \"homepage: %{http_code}\\\\n\" https://getspot01-main.web.app/)",
-      "Bash(curl -s -o /dev/null -w \"join redirect: %{http_code} \" https://getspot01-main.web.app/join/TEST123)"
+      "Bash(curl -s -o /dev/null -w \"join redirect: %{http_code} \" https://getspot01-main.web.app/join/TEST123)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(xargs -n1 basename)",
+      "Bash(python3 -)",
+      "Bash(python3 -c \"print\\('hello'\\)\")",
+      "Bash(git mv *)"
     ],
     "deny": [],
     "ask": []

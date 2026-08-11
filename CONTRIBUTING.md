@@ -12,4 +12,4 @@ We welcome contributions to the GetSpot project! Please follow these guidelines 
 
 When using AI-powered tools for development, you can use the following template to provide context about the GetSpot project.
 
-"Context: GetSpot (Flutter + Firebase Auth/Firestore/Functions). Collections: users, groups(+members,joinRequests), events(+participants), transactions (planned), userGroupMemberships (planned index). Invariants: single membership per (groupId,uid); query-safe rules. Task: <YOUR TASK>. Output: <FORMAT>. List assumptions first if needed."
+"Context: GetSpot (Flutter + Firebase Auth/Firestore/Functions). Collections: users, groups(+members,joinRequests), events(+participants), transactions (root-level financial log), userGroupMemberships (denormalized user→groups index). Invariants: single membership per (groupId,uid); query-safe rules. Task: <YOUR TASK>. Output: <FORMAT>. List assumptions first if needed."

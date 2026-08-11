@@ -1,65 +1,64 @@
 # Local Development Guide
 
-This guide provides instructions on how to set up and run the GetSpot project on your local machine for development and testing purposes.
+Detailed setup instructions for running GetSpot locally. For a quick-reference command list once you're set up, see the root [`README.md`](../README.md#quick-start) Quick Start section or `CLAUDE.md`'s Common Commands.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-*   **Flutter SDK:** Make sure you have the Flutter SDK installed and configured correctly. You can find installation instructions on the [official Flutter website](https://flutter.dev/docs/get-started/install).
-*   **An IDE:** An IDE like Visual Studio Code with the Flutter extension or Android Studio is recommended.
+- **Flutter SDK 3.8.1+** — [install instructions](https://flutter.dev/docs/get-started/install)
+- **Firebase CLI** — `npm install -g firebase-tools`, then `firebase login`
+- **Node.js 22+** — required for Cloud Functions (see `functions/package.json`'s `engines.node`)
+- **An IDE** — VS Code (with the Flutter extension) or Android Studio recommended
+- For iOS builds: a macOS machine with Xcode
 
 ## Setup
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/getspot.git
-    cd getspot
-    ```
+1. **Clone and install dependencies:**
+   ```bash
+   git clone https://github.com/amitrke/getspot.git
+   cd getspot
+   flutter pub get
 
-2.  **Install dependencies:**
-    Run the following command to fetch the project's dependencies:
-    ```bash
-    flutter pub get
-    ```
+   cd functions
+   npm install
+   cd ..
+   ```
+
+2. **Firebase config files:** the app needs platform-specific Firebase config that is **not committed to the repo**:
+   - `android/app/google-services.json`
+   - `ios/Runner/GoogleService-Info.plist` (generated in CI by `ios/ci_scripts/ci_post_clone.sh`; for local iOS builds, download it yourself from Firebase Console → Project Settings → your iOS app)
+   - `lib/firebase_options.dart` is committed and points at the `getspot01` Firebase project — no local changes needed unless you're pointing at a different project
+
+   Download the missing files from [Firebase Console](https://console.firebase.google.com/project/getspot01/settings/general) if you don't already have them.
 
 ## Running the App
 
-You can run the app on a mobile emulator, a physical device, or in a web browser.
-
-### Mobile (Android/iOS)
-
-To run the app on a connected device or emulator, use the following command:
-
 ```bash
-flutter run
+flutter run              # connected device or emulator
+flutter run -d chrome    # web, in Chrome
 ```
 
-### Web
-
-To run the app in a Chrome web browser, use the following command:
+## Running Cloud Functions Locally
 
 ```bash
-flutter run -d chrome
+cd functions
+npm run serve   # builds TypeScript, then starts the functions emulator
 ```
+
+This only emulates Functions — there's no configured Firestore/Auth emulator, so functions running locally still read/write the real `getspot01` Firestore. Be mindful of this when testing against live data.
 
 ## Building the App
 
-You can build the app for various platforms. Here are some common build commands:
+```bash
+flutter build apk     # Android APK
+flutter build appbundle  # Android App Bundle (for Play Store — see docs/DEPLOYMENT.md)
+flutter build ios     # iOS (requires macOS/Xcode)
+flutter build web     # Web (output in build/web)
+```
 
-*   **Build an Android APK:**
-    ```bash
-    flutter build apk
-    ```
+For actual release builds to the Play Store / App Store, prefer the automated GitHub Actions workflows described in `docs/DEPLOYMENT.md` rather than building locally.
 
-*   **Build an iOS App:**
-    *(Note: This requires a macOS machine with Xcode installed.)*
-    ```bash
-    flutter build ios
-    ```
+## Troubleshooting
 
-*   **Build for the Web:**
-    ```bash
-    flutter build web
-    ```
-    The output will be in the `build/web` directory.
+- **"Firebase project not found" / auth errors on launch:** confirm `google-services.json` / `GoogleService-Info.plist` are present and match the `getspot01` project.
+- **Functions won't build:** run `npm run lint` and `npm run build` inside `functions/` — the predeploy hook runs both, so build/lint errors block deploys too.
+- See `docs/ENVIRONMENTS.md` for the (currently single-project) environment setup, and `CONTRIBUTING.md` for coding conventions before opening a PR.

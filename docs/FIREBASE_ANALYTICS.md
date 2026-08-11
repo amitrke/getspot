@@ -16,7 +16,7 @@ Firebase Analytics automatically collects user behavior data and provides insigh
 ### 1. Package Installed
 ```yaml
 # pubspec.yaml
-firebase_analytics: ^11.3.3
+firebase_analytics: ^12.1.0
 ```
 
 ### 2. Initialization
@@ -194,7 +194,7 @@ await analytics.setUserProperty(
 
 **Android:**
 ```bash
-adb shell setprop debug.firebase.analytics.app com.getspot.app
+adb shell setprop debug.firebase.analytics.app org.getspot
 ```
 
 **Web:**

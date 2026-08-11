@@ -57,7 +57,7 @@ This document tracks Firebase features currently used in GetSpot and recommends 
 - `manageJoinRequest` - Approve/deny group requests
 - `createGroup` - Atomic group creation
 - `cancelEvent` - Event cancellation with refunds
-- `sendNotification` - Push notification delivery
+- `notifyOnNewEvent` / `notifyOnAnnouncement` / `sendEventReminders` - Push notification delivery
 - `runDataLifecycleManagement` - Scheduled data cleanup
 
 **Files:**
@@ -129,7 +129,7 @@ await CrashlyticsService().setCustomKey('group_id', groupId);
 
 **Files:**
 - `lib/services/notification_service.dart`
-- `functions/src/sendNotification.ts`
+- `functions/src/notifyOnNewEvent.ts`, `functions/src/notifyOnAnnouncement.ts`, `functions/src/sendEventReminders.ts`
 - `lib/main.dart:18-28` - Background handler
 
 **Notification Types:**
@@ -291,7 +291,7 @@ if (FeatureFlagService().canAccessCrashTest(userId)) {
 - ✅ Full control over URLs
 - ✅ Simpler implementation
 
-**Documentation:** See `docs/UNIVERSAL_LINKS.md` and `docs/SETUP_DEEP_LINKS.md`
+**Documentation:** See `docs/DEEP_LINKS.md`
 
 **Future Enhancement:** Extend to event sharing (`/event/{eventId}`)
 
@@ -439,7 +439,7 @@ Several pre-built extensions could be useful:
 ~~4. Firebase Dynamic Links~~
 - ✅ Native deep linking already implemented
 - ✅ Group sharing via Universal Links / App Links
-- See: `docs/UNIVERSAL_LINKS.md`
+- See: `docs/DEEP_LINKS.md`
 
 **Future:** Extend to event sharing (2-4 hours)
 

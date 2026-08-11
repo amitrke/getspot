@@ -129,7 +129,7 @@ if (!mounted) return;
 **Status:** 📋 Backlog
 
 **Locations:**
-- `functions/src/createGroup.ts` vs `functions/src/manageJoinRequest.ts`
+- `createGroup` (defined inline in `functions/src/index.ts`) vs `functions/src/manageJoinRequest.ts`
 
 **Issue:** Different error wrapping patterns across functions.
 

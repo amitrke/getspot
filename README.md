@@ -117,7 +117,7 @@ See [LOCAL_DEVELOPMENT.md](./docs/LOCAL_DEVELOPMENT.md) for detailed setup instr
 
 ### In Progress 🚧
 - Separate dev/prod environments
-- Terms of Service and Privacy Policy
+- Terms of Service document (Privacy Policy is published, see [privacy.md](./docs/privacy.md))
 
 ### Coming Soon 🎯
 See [PRODUCT.md](./docs/PRODUCT.md) for the complete roadmap.

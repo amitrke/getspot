@@ -51,7 +51,7 @@ cp fastlane/.env.default fastlane/.env
 Then fill in the same values you have in GitHub Secrets:
 
 ```env
-APP_IDENTIFIER="com.getspot.app"
+APP_IDENTIFIER="org.getspot"
 APP_STORE_CONNECT_API_KEY_ID="YOUR_KEY_ID"
 APP_STORE_CONNECT_API_ISSUER_ID="YOUR_ISSUER_ID"
 APP_STORE_CONNECT_API_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----"

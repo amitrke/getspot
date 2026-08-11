@@ -14,9 +14,11 @@ This folder contains historical documentation from completed tasks and projects.
 ### Completed Feature Tasks
 - `TASK-Implement-Event-Cancellation.md` - Event cancellation feature (✅ Completed)
 - `TASK-Implement-Push-Notifications.md` - Push notification system (✅ Completed)
+- `TASK-Implement-Email-Password-Auth.md` - Email/password authentication (✅ Completed — implemented in `lib/services/auth_service.dart` and `lib/screens/login_screen.dart`, despite the task doc's own checklist being the only place that noted this)
 
-### Pending Feature Tasks
-- `TASK-Implement-Email-Password-Auth.md` - Email/password authentication (📋 Not yet started)
+### Resolved Troubleshooting Docs
+- `FIX_IOS_CRASHLYTICS.md` - iOS Crashlytics dSYM upload fix (✅ Applied — the "Upload Crashlytics Symbols" build phase it describes is already in `ios/Runner.xcodeproj/project.pbxproj`; see `CLAUDE.md`'s Crashlytics section for the current steady-state setup)
+- `NOTIFICATION_DEBUGGING.md` - Point-in-time log of push-notification fixes (iOS Info.plist, Android permissions, debug logging) that are now permanently baked into the codebase. Its still-useful diagnostic content (Xcode capability setup, APNs config, verbose FCM logging) was merged into `../PUSH_NOTIFICATIONS_TESTING.md`.
 
 ## Why Archive?
 
