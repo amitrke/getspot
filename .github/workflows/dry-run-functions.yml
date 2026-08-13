@@ -2,6 +2,11 @@
 # and running a dry-run deploy, without actually deploying to production.
 # Catches build errors, invalid triggers, and config issues early (including
 # from Dependabot PRs, which target develop) before changes reach main.
+#
+# TEMPORARY: the final step below has been switched from a dry-run to a
+# real deploy so pushes to develop go straight to production while we're
+# actively debugging the deploy pipeline. Revert the last step back to
+# `deploy --only functions --dry-run` once that's no longer needed.
 
 name: Dry Run Firebase Functions Deploy
 
@@ -51,9 +56,10 @@ jobs:
         run: pnpm run build
         working-directory: ./functions
 
-      - name: Dry run deploy to Firebase
+      # TEMPORARY: real deploy instead of --dry-run (see note at top of file).
+      - name: Deploy to Firebase (TEMPORARY - not a dry run)
         uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.26.0
         with:
-          args: deploy --only functions --dry-run
+          args: deploy --only functions --force
         env:
           GCP_SA_KEY: ${{ secrets.GITHUBACTIONSDEPLOY }}
