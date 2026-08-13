@@ -8,6 +8,7 @@
 
 name: Deploy Firebase Hosting Preview (develop)
 on:
+  workflow_dispatch: # Allows manual triggering to test the preview setup
   push:
     branches:
       - develop
