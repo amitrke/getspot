@@ -11,10 +11,21 @@ Web deployment is **fully automated** via GitHub Actions.
 - **Process:**
     1. The workflow checks out the code.
     2. It sets up Flutter and builds the web application (`flutter build web`).
-    3. It deploys the contents of the `build/web` directory to Firebase Hosting.
-No PR preview deployment is currently configured — only merges to `main` trigger a deploy.
+    3. It deploys the contents of the `build/web` directory to Firebase Hosting (`live` channel).
 
-No manual steps are required for web deployment.
+No manual steps are required for web deployment to production.
+
+### Preview channel (`develop` branch)
+
+- **Trigger:** A push to the `develop` branch (see branching workflow below).
+- **Workflow File:** `.github/workflows/firebase-hosting-preview.yml`
+- **Process:** Same build as production, but deployed to a persistent Firebase Hosting **preview channel** (`channelId: develop`, target `app` only — the marketing site isn't previewed) instead of `live`. The channel URL is printed in the workflow run output and stays live for 30 days, refreshed on every push to `develop`.
+- **Important limitation:** this previews the Flutter web app's static build only. Cloud Functions and Firestore rules/data are **not** isolated — the preview channel still talks to the production `getspot01` backend. It's useful for UI/visual review, not for testing backend-affecting changes (new functions, rule changes, data migrations) against non-production data. For full backend isolation, see the (not-yet-implemented) dual-project strategy in `docs/ENVIRONMENTS.md`.
+
+### Branching workflow
+
+- Feature branches → PR into `develop` → push to `develop` deploys the preview channel above for manual QA.
+- Once verified, PR `develop` into `main` → merge triggers the production deploy (web, functions, Firestore rules all go live together on push to `main`).
 
 ---
 
