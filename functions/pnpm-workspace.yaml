@@ -12,3 +12,12 @@ overrides:
   # install` doesn't silently pick up a too-fresh patch and break deploys.
   content-type: 2.0.0
   baseline-browser-mapping: 2.11.13
+
+# Locally, pnpm just warns and skips these packages' install/postinstall
+# scripts. Google Cloud Build's deploy environment treats the same
+# situation as a fatal ERR_PNPM_IGNORED_BUILDS error, so they must be
+# explicitly allow-listed to run their build scripts.
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - protobufjs
+  - unrs-resolver
