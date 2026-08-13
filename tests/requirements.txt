@@ -13,7 +13,7 @@ google-cloud-firestore==2.19.0
 google-cloud-storage==2.18.2
 
 # gRPC dependencies (pinned for Windows compatibility)
-grpcio==1.62.3
+grpcio==1.83.0
 grpcio-status==1.62.3
 
 # Utilities
