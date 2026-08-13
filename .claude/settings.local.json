@@ -50,7 +50,12 @@
       "Bash(gh label *)",
       "Bash(gh issue create --title 'Complete Firebase App Check rollout: verify all platforms + enable backend enforcement' --label enhancement --body ' *)",
       "Bash(gh issue create --title 'Inactive-user data lifecycle job never deletes the Firebase Authentication record' --label bug --body ' *)",
-      "Bash(gh api *)"
+      "Bash(gh api *)",
+      "Bash(flutter pub *)",
+      "Bash(flutter --version)",
+      "Bash(find \"/c/Users/amitr/AppData/Local/Pub/Cache/hosted/pub.dev\" -maxdepth 1 -iname \"app_links-*\" 2>/dev/null)",
+      "Read(//c/Users/amitr/AppData/Local/Pub/Cache/hosted/pub.dev/**)",
+      "WebFetch(domain:pub.dev)"
     ],
     "deny": [],
     "ask": []
