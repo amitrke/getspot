@@ -5,7 +5,7 @@
 pytest==9.0.3
 pytest-html==4.1.1        # HTML test reports
 pytest-cov==7.1.0         # Code coverage
-pytest-xdist==3.5.0       # Parallel test execution
+pytest-xdist==3.8.0       # Parallel test execution
 
 # Firebase Admin SDK
 firebase-admin==6.5.0
