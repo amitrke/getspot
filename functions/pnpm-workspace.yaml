@@ -1,0 +1,14 @@
+# This isn't a real multi-package workspace, but newer pnpm requires a
+# `packages` field whenever pnpm-workspace.yaml exists at all. This file
+# only exists to hold overrides that need to live here (see below).
+packages:
+  - '.'
+
+overrides:
+  '@types/node': ^22.0.0
+  # Google Cloud Build's deploy environment enforces a pnpm minimumReleaseAge
+  # policy that rejects packages published within roughly the last 24h. Pin
+  # these transitive deps to their previous release so a routine `pnpm
+  # install` doesn't silently pick up a too-fresh patch and break deploys.
+  content-type: 2.0.0
+  baseline-browser-mapping: 2.11.13

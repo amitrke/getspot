@@ -11,6 +11,7 @@ on:
       - develop
     paths:
       - 'functions/**'
+  workflow_dispatch:
 
 jobs:
   dry_run_functions:
@@ -36,7 +37,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: 10
 
       - name: Install Functions Dependencies
         run: pnpm install --frozen-lockfile

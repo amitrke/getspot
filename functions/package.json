@@ -30,10 +30,5 @@
     "firebase-functions-test": "^3.5.0",
     "typescript": "^5.9.3"
   },
-  "private": true,
-  "pnpm": {
-    "overrides": {
-      "@types/node": "^22.0.0"
-    }
-  }
+  "private": true
 }
