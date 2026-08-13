@@ -2,6 +2,8 @@
 
 This document outlines the strategy for maintaining separate development (`dev`) and production (`prod`) environments for the GetSpot application.
 
+> **Status: not yet implemented.** Today there is a single Firebase project (`getspot01`) and no flutter flavors. The `develop` branch currently only gets a Firebase Hosting **preview channel** for the web app's UI (see `docs/DEPLOYMENT.md`) — Functions and Firestore are still shared with production. The full dual-project/flavor split described below is the target end state, not the current one.
+
 ## 1. Firebase Project Strategy: Complete Separation
 
 The foundation of this setup is to use **two completely separate Firebase projects**.
