@@ -1,0 +1,58 @@
+# Validates Firebase Functions changes on the develop branch by building
+# and running a dry-run deploy, without actually deploying to production.
+# Catches build errors, invalid triggers, and config issues early (including
+# from Dependabot PRs, which target develop) before changes reach main.
+
+name: Dry Run Firebase Functions Deploy
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'functions/**'
+
+jobs:
+  dry_run_functions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # Match the version in package.json
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Functions Dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: ./functions
+
+      - name: Lint
+        run: npm run lint
+        working-directory: ./functions
+
+      - name: Build TypeScript
+        run: pnpm run build
+        working-directory: ./functions
+
+      - name: Dry run deploy to Firebase
+        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.26.0
+        with:
+          args: deploy --only functions --dry-run
+        env:
+          GCP_SA_KEY: ${{ secrets.GITHUBACTIONSDEPLOY }}

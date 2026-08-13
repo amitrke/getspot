@@ -9,18 +9,22 @@ updates:
     directory: "/functions"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
 
   - package-ecosystem: "npm"
     directory: "/main"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
 
   - package-ecosystem: "pip"
     directory: "/tests"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
