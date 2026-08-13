@@ -55,6 +55,7 @@ GetSpot streamlines the organization of local sports meetups, starting with badm
 - **[IOS_RELEASE_QUICKSTART.md](./docs/IOS_RELEASE_QUICKSTART.md)** - Quick iOS release guide
 - **[IOS_RELEASE_AUTOMATION.md](./docs/IOS_RELEASE_AUTOMATION.md)** - Detailed iOS automation
 - **[DATA_RETENTION.md](./docs/DATA_RETENTION.md)** - Data lifecycle policies
+- **[DEPENDENCIES.md](./docs/DEPENDENCIES.md)** - Updating Flutter and Cloud Functions dependencies
 
 ### Feature-Specific Guides
 - **[FEATURE_FLAGS.md](./docs/FEATURE_FLAGS.md)** - Remote Config setup

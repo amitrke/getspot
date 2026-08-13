@@ -45,7 +45,12 @@
       "Bash(curl -s http://localhost:3000/features)",
       "Bash(curl -s http://localhost:3000/faq)",
       "Bash(kill %1)",
-      "Bash(pkill -f \"next dev\")"
+      "Bash(pkill -f \"next dev\")",
+      "Bash(gh issue *)",
+      "Bash(gh label *)",
+      "Bash(gh issue create --title 'Complete Firebase App Check rollout: verify all platforms + enable backend enforcement' --label enhancement --body ' *)",
+      "Bash(gh issue create --title 'Inactive-user data lifecycle job never deletes the Firebase Authentication record' --label bug --body ' *)",
+      "Bash(gh api *)"
     ],
     "deny": [],
     "ask": []
