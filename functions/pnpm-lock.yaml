@@ -12,8 +12,8 @@ importers:
   .:
     dependencies:
       '@google-cloud/functions-framework':
-        specifier: ^4.0.1
-        version: 4.0.1
+        specifier: ^5.0.5
+        version: 5.0.5
       firebase-admin:
         specifier: ^12.7.0
         version: 12.7.0
@@ -274,10 +274,9 @@ packages:
     resolution: {integrity: sha512-EW/O8ktzwLfyWBOsNuhRoMi8lrC3clHM5LVFhGvO1HCsLozCOOXRAlHrYBoE6HL42Sc8yYMuCb2XqcnJ4OOEpw==}
     engines: {node: '>=14.0.0'}
 
-  '@google-cloud/functions-framework@4.0.1':
-    resolution: {integrity: sha512-/ui6HI2yNVPNQXGCR+3FMMUEXqm1vMt+xh7oS+rqpVeDjjAYmFYyER1SDYlwvhau/hE53vSUyaDbicb/ilFzJA==}
+  '@google-cloud/functions-framework@5.0.5':
+    resolution: {integrity: sha512-/w+OB1MxJux1uO9KRud4CRPLouaB7bZcy0v6STfFVh7yqafZ1L5coWIpseoKPLUgyNfawyoEfE2mEBDRZNGL2w==}
     engines: {node: '>=10.0.0'}
-    deprecated: Added a breaking change by upgrading expressjs from v4 to v5. If you want to use expressvs v5, update the 5.0.0, if you want to keep using expressjs v4, downgrade to 4.0.0
     hasBin: true
 
   '@google-cloud/paginator@5.0.2':
@@ -980,10 +979,6 @@ packages:
   body-parser@1.20.6:
     resolution: {integrity: sha512-p5tAzS57i5MV9fZFDj9LeIiTZEufbSe2eDozP+ElheSUq1m74CRq1jI4mYNDdVs9vQztXFLuk/Gd6BWTdwRJ5g==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
-
-  body-parser@2.2.0:
-    resolution: {integrity: sha512-02qvAaxv8tp7fBa/mw1ga98OGm+eCbqzJOKoRt70sLmfEEi+jyBYVTDGfCL/k06/4EMk/z01gCe7HoCH/f2LTg==}
-    engines: {node: '>=18'}
 
   body-parser@2.3.0:
     resolution: {integrity: sha512-2cGmJupaNgg+QUwVLAucDuWuoMZ6EX9iHDRswZ5lsNYEmwPaRknMPCLZz07yTzVq/83p4o/wzbDZbBrTvGGTIw==}
@@ -1711,10 +1706,6 @@ packages:
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
-    engines: {node: '>=0.10.0'}
-
-  iconv-lite@0.6.3:
-    resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
 
   iconv-lite@0.7.3:
@@ -3339,16 +3330,15 @@ snapshots:
       - supports-color
     optional: true
 
-  '@google-cloud/functions-framework@4.0.1':
+  '@google-cloud/functions-framework@5.0.5':
     dependencies:
       '@types/express': 5.0.6
-      body-parser: 2.2.0
+      body-parser: 2.3.0
       cloudevents: 10.0.0
       express: 5.2.1
       minimist: 1.2.8
       on-finished: 2.4.1
       read-package-up: 11.0.0
-      semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
 
@@ -4235,20 +4225,6 @@ snapshots:
       raw-body: 2.5.3
       type-is: 1.6.18
       unpipe: 1.0.0
-    transitivePeerDependencies:
-      - supports-color
-
-  body-parser@2.2.0:
-    dependencies:
-      bytes: 3.1.2
-      content-type: 1.0.5
-      debug: 4.4.3
-      http-errors: 2.0.1
-      iconv-lite: 0.6.3
-      on-finished: 2.4.1
-      qs: 6.15.3
-      raw-body: 3.0.2
-      type-is: 2.1.0
     transitivePeerDependencies:
       - supports-color
 
@@ -5235,10 +5211,6 @@ snapshots:
   human-signals@2.1.0: {}
 
   iconv-lite@0.4.24:
-    dependencies:
-      safer-buffer: 2.1.2
-
-  iconv-lite@0.6.3:
     dependencies:
       safer-buffer: 2.1.2
 
