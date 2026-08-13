@@ -10,7 +10,7 @@ pytest-xdist==3.5.0       # Parallel test execution
 # Firebase Admin SDK
 firebase-admin==6.5.0
 google-cloud-firestore==2.28.1
-google-cloud-storage==2.18.2
+google-cloud-storage==3.13.1
 
 # gRPC dependencies (pinned for Windows compatibility)
 grpcio==1.83.0
