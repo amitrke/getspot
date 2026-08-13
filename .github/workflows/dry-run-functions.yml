@@ -11,6 +11,7 @@ on:
       - develop
     paths:
       - 'functions/**'
+  workflow_dispatch:
 
 jobs:
   dry_run_functions:
