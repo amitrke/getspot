@@ -17,7 +17,18 @@ overrides:
 # scripts. Google Cloud Build's deploy environment treats the same
 # situation as a fatal ERR_PNPM_IGNORED_BUILDS error, so they must be
 # explicitly allow-listed to run their build scripts.
+#
+# We have to declare this both ways: our own pnpm (10.x, used locally and
+# in CI) reads the old `onlyBuiltDependencies` list, but Google Cloud
+# Build's deploy-time pnpm is already on 11.x, which removed that key in
+# favor of the `allowBuilds` map — an unrecognized-but-harmless key to the
+# older pnpm. Keep both in sync until everything is on pnpm 11.
 onlyBuiltDependencies:
   - '@firebase/util'
   - protobufjs
   - unrs-resolver
+
+allowBuilds:
+  '@firebase/util': true
+  protobufjs: true
+  unrs-resolver: true
