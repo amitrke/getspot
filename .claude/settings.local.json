@@ -55,7 +55,9 @@
       "Bash(flutter --version)",
       "Bash(find \"/c/Users/amitr/AppData/Local/Pub/Cache/hosted/pub.dev\" -maxdepth 1 -iname \"app_links-*\" 2>/dev/null)",
       "Read(//c/Users/amitr/AppData/Local/Pub/Cache/hosted/pub.dev/**)",
-      "WebFetch(domain:pub.dev)"
+      "WebFetch(domain:pub.dev)",
+      "Bash(pod install *)",
+      "Bash(pod update *)"
     ],
     "deny": [],
     "ask": []
