@@ -41,6 +41,13 @@ if [[ ! -d "$FLUTTER_ROOT" ]]; then
 fi
 export PATH="$FLUTTER_ROOT/bin:$PATH"
 
+# This project uses CocoaPods for iOS dependencies, not Swift Package Manager.
+# Without this, Flutter tries to auto-add SPM integration for plugins that
+# declare a Package.swift (e.g. firebase_app_check's unused recaptcha-enterprise
+# dependency), which fails on Xcode Cloud because automatic SPM dependency
+# resolution is disabled there and requires a committed Package.resolved.
+flutter config --no-enable-swift-package-manager
+
 #flutter doctor -v
 flutter pub get
 flutter build ios --release --no-codesign
