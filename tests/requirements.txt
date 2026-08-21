@@ -17,6 +17,6 @@ grpcio==1.83.0
 grpcio-status==1.83.0
 
 # Utilities
-python-dotenv==1.2.2      # Environment variable management
+python-dotenv==1.2.3      # Environment variable management
 colorama==0.4.6           # Colored terminal output (Windows)
 tabulate==0.10.0           # Pretty table formattingH
