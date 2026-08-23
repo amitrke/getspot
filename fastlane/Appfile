@@ -1,4 +1,4 @@
-app_identifier(ENV["APP_IDENTIFIER"] || "com.getspot.app")
+app_identifier(ENV["APP_IDENTIFIER"] || "org.getspot")
 apple_id(ENV["APP_APPLE_ID"]) # Your Apple email address
 
 # For more information about the Appfile, see:
