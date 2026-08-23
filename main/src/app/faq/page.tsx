@@ -80,8 +80,8 @@ export default function FaqPage() {
         </div>
 
         <div className="mt-16 divide-y divide-zinc-200 dark:divide-zinc-800">
-          {faqs.map((faq) => (
-            <details key={faq.question} className="group py-5">
+          {faqs.map((faq, index) => (
+            <details key={faq.question} open={index === 0} className="group py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between text-left text-sm font-semibold">
                 {faq.question}
                 <span className="ml-4 shrink-0 text-zinc-400 transition-transform group-open:rotate-45">
