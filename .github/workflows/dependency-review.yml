@@ -1,0 +1,29 @@
+# Flags pull requests that introduce a dependency with a known vulnerability
+# or a disallowed license, using GitHub's own dependency graph diff. Runs at
+# PR time so it catches issues before merge, complementing Dependabot's
+# alerts (which only fire after landing on the default branch).
+# https://github.com/actions/dependency-review-action
+
+name: Dependency review
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          comment-summary-in-pr: always
