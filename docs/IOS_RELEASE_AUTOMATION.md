@@ -77,6 +77,15 @@ The workflow will:
 - ✅ Submit it for App Store Review
 - ✅ Set it to manual release (you control when it goes live)
 
+### Updating Metadata Only (No Build)
+
+To push changes to `fastlane/metadata/` (name, description, keywords, support/marketing/privacy URLs, copyright) to App Store Connect without submitting a build:
+
+1. Edit the files under `fastlane/metadata/en-US/` (and `fastlane/metadata/copyright.txt`)
+2. Go to **Actions → "Update iOS App Store Metadata" → Run workflow**
+
+This uses the same App Store Connect API credentials as the promotion workflow above — no extra setup needed. It only touches text metadata (`skip_binary_upload` and `skip_screenshots` are both on), so it's safe to run without a corresponding build. Note Apple's own restriction: the **Privacy Policy URL specifically only takes effect on the next new app version** — App Store Connect won't apply a privacy URL change to an already-submitted version.
+
 ### Option 2: Local Command Line
 
 #### Promote Latest TestFlight Build

@@ -1,0 +1,1 @@
+sports,group,team,organizer,event,schedule,signup,wallet,waitlist,badminton,soccer,pickleball

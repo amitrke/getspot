@@ -1,0 +1,49 @@
+name: Update Android Play Store Metadata
+
+# Pushes fastlane/metadata/android/en-US/** (title, short/full description)
+# to Google Play Console via `fastlane supply`, without uploading a build.
+# Manual trigger only — this edits a live public listing, so it should be a
+# deliberate action, not something that fires on every push.
+#
+# Reuses the same PLAYSTORE_SERVICE_ACCOUNT_JSON and ANDROID_PACKAGE_NAME
+# secrets already configured for update-store-screenshots.yml. If this fails
+# with a permission error, that service account needs the "Store presence"
+# edit permission granted in Play Console → Users and permissions (uploading
+# releases/screenshots and editing the store listing text are separate
+# grants on the same account) — see docs/ANDROID_RELEASE_AUTOMATION.md.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update_metadata:
+    name: Update Play Store Metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Setup Google Play Service Account
+        env:
+          PLAYSTORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$PLAYSTORE_SERVICE_ACCOUNT_JSON" > play_store_key.json
+          echo "SUPPLY_JSON_KEY=${{ github.workspace }}/play_store_key.json" >> $GITHUB_ENV
+
+      - name: Update metadata
+        env:
+          ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+        run: |
+          bundle exec fastlane android update_metadata
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f play_store_key.json
