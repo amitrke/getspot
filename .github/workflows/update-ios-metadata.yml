@@ -1,0 +1,67 @@
+name: Update iOS App Store Metadata
+
+# Pushes fastlane/metadata/** (name, description, keywords, support/marketing/
+# privacy URLs, copyright) to App Store Connect via `fastlane deliver`, without
+# uploading a build. Manual trigger only — this edits a live public listing,
+# so it should be a deliberate action, not something that fires on every push.
+#
+# Uses the same App Store Connect API credentials already configured for
+# promote-to-appstore.yml — no new secrets needed.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update_metadata:
+    name: Update App Store Metadata
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: |
+          bundle install
+          gem install fastlane
+
+      - name: Create App Store Connect API Key file
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+        run: |
+          mkdir -p ./fastlane
+          cat <<EOF > ./fastlane/app_store_connect_api_key.json
+          {
+            "key_id": "$APP_STORE_CONNECT_API_KEY_ID",
+            "issuer_id": "$APP_STORE_CONNECT_API_ISSUER_ID",
+            "key": "$APP_STORE_CONNECT_API_KEY",
+            "in_house": false
+          }
+          EOF
+
+      - name: Create .env file
+        env:
+          APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
+        run: |
+          cat > ./fastlane/.env << EOF
+          APP_IDENTIFIER=org.getspot
+          APP_STORE_CONNECT_API_KEY_PATH=./fastlane/app_store_connect_api_key.json
+          APP_APPLE_ID=$APP_APPLE_ID
+          EOF
+
+      - name: Update metadata
+        run: |
+          cd fastlane
+          fastlane update_metadata
+
+      - name: Clean up API Key
+        if: always()
+        run: rm -f ./fastlane/app_store_connect_api_key.json
