@@ -5,6 +5,8 @@ import {
   clearFirestore,
   seedGroup,
   seedMember,
+  seedEvent,
+  seedParticipant,
   getMemberBalance,
   getTransactionsFor,
   callableAuth,
@@ -115,6 +117,23 @@ describe("manageGroupMember", () => {
       expect(memberDoc.exists).toBe(true);
     });
 
+    it("refuses to remove a member with a live upcoming event registration", async () => {
+      const groupId = await seedGroup({admin: ADMIN_UID});
+      await seedMember(groupId, MEMBER_UID, {walletBalance: 0});
+      const eventId = await seedEvent(groupId, {eventTimestamp: new Date(Date.now() + 60 * 60 * 1000)});
+      await seedParticipant(eventId, MEMBER_UID, {status: "confirmed"});
+
+      await expect(
+        wrapped({
+          data: {groupId, targetUserId: MEMBER_UID, action: "remove"},
+          auth: callableAuth(ADMIN_UID),
+        } as never)
+      ).rejects.toMatchObject({code: "failed-precondition"});
+
+      const memberDoc = await db.collection("groups").doc(groupId).collection("members").doc(MEMBER_UID).get();
+      expect(memberDoc.exists).toBe(true);
+    });
+
     it("removes an eligible member and their membership index entry", async () => {
       const groupId = await seedGroup({admin: ADMIN_UID});
       await seedMember(groupId, MEMBER_UID, {walletBalance: 0});
@@ -125,6 +144,97 @@ describe("manageGroupMember", () => {
       } as never);
 
       expect(result).toMatchObject({status: "removed"});
+      const memberDoc = await db.collection("groups").doc(groupId).collection("members").doc(MEMBER_UID).get();
+      expect(memberDoc.exists).toBe(false);
+      const indexDoc = await db
+        .collection("userGroupMemberships")
+        .doc(MEMBER_UID)
+        .collection("groups")
+        .doc(groupId)
+        .get();
+      expect(indexDoc.exists).toBe(false);
+    });
+  });
+
+  describe("leave (self-service)", () => {
+    it("rejects a caller trying to remove someone else", async () => {
+      const groupId = await seedGroup({admin: ADMIN_UID});
+      await seedMember(groupId, MEMBER_UID, {walletBalance: 0});
+
+      await expect(
+        wrapped({
+          data: {groupId, targetUserId: MEMBER_UID, action: "leave"},
+          auth: callableAuth("some-other-uid"),
+        } as never)
+      ).rejects.toMatchObject({code: "permission-denied"});
+    });
+
+    it("refuses to let the group admin leave their own group", async () => {
+      const groupId = await seedGroup({admin: ADMIN_UID});
+      await seedMember(groupId, ADMIN_UID, {walletBalance: 0});
+
+      await expect(
+        wrapped({
+          data: {groupId, targetUserId: ADMIN_UID, action: "leave"},
+          auth: callableAuth(ADMIN_UID),
+        } as never)
+      ).rejects.toMatchObject({code: "failed-precondition"});
+    });
+
+    it("refuses to leave with a non-zero wallet balance", async () => {
+      const groupId = await seedGroup({admin: ADMIN_UID});
+      await seedMember(groupId, MEMBER_UID, {walletBalance: -5});
+
+      await expect(
+        wrapped({
+          data: {groupId, targetUserId: MEMBER_UID, action: "leave"},
+          auth: callableAuth(MEMBER_UID),
+        } as never)
+      ).rejects.toMatchObject({code: "failed-precondition"});
+    });
+
+    it("refuses to leave with a live upcoming waitlisted registration", async () => {
+      const groupId = await seedGroup({admin: ADMIN_UID});
+      await seedMember(groupId, MEMBER_UID, {walletBalance: 0});
+      const eventId = await seedEvent(groupId, {eventTimestamp: new Date(Date.now() + 60 * 60 * 1000)});
+      await seedParticipant(eventId, MEMBER_UID, {status: "waitlisted"});
+
+      await expect(
+        wrapped({
+          data: {groupId, targetUserId: MEMBER_UID, action: "leave"},
+          auth: callableAuth(MEMBER_UID),
+        } as never)
+      ).rejects.toMatchObject({code: "failed-precondition"});
+    });
+
+    it("allows leaving once past-event and withdrawn registrations don't block it", async () => {
+      const groupId = await seedGroup({admin: ADMIN_UID});
+      await seedMember(groupId, MEMBER_UID, {walletBalance: 0});
+      // An upcoming event exists, but this member already withdrew from it —
+      // should not block leaving.
+      const eventId = await seedEvent(groupId, {eventTimestamp: new Date(Date.now() + 60 * 60 * 1000)});
+      await seedParticipant(eventId, MEMBER_UID, {status: "withdrawn"});
+
+      const result = await wrapped({
+        data: {groupId, targetUserId: MEMBER_UID, action: "leave"},
+        auth: callableAuth(MEMBER_UID),
+      } as never);
+
+      expect(result).toMatchObject({status: "left"});
+      const memberDoc = await db.collection("groups").doc(groupId).collection("members").doc(MEMBER_UID).get();
+      expect(memberDoc.exists).toBe(false);
+    });
+
+    it("removes the member and their membership index entry on success", async () => {
+      const groupId = await seedGroup({admin: ADMIN_UID});
+      await seedMember(groupId, MEMBER_UID, {walletBalance: 0});
+
+      const result = await wrapped({
+        data: {groupId, targetUserId: MEMBER_UID, action: "leave"},
+        auth: callableAuth(MEMBER_UID),
+      } as never);
+
+      expect(result).toMatchObject({status: "left"});
       const memberDoc = await db.collection("groups").doc(groupId).collection("members").doc(MEMBER_UID).get();
       expect(memberDoc.exists).toBe(false);
       const indexDoc = await db
