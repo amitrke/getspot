@@ -90,11 +90,19 @@ class GroupService {
     }
 
     try {
-      final groupsSnapshot = await _firestore
-          .collection('groups')
-          .where(FieldPath.documentId, whereIn: allGroupIds)
-          .get();
-      final groupDocs = {for (var doc in groupsSnapshot.docs) doc.id: doc};
+      // Individual gets rather than a whereIn(documentId) query: /groups
+      // denies `list` entirely (Firestore can't redact fields per query, so
+      // an open list would let any authenticated user enumerate every
+      // group's admin uid, negativeBalanceLimit, etc.) but `get` by a known
+      // ID stays open — including for allGroupIds' pending-join-request
+      // groups, which the caller isn't a member of yet.
+      final groupSnapshots = await Future.wait(
+        allGroupIds.map((groupId) => _firestore.collection('groups').doc(groupId).get()),
+      );
+      final groupDocs = {
+        for (var doc in groupSnapshots)
+          if (doc.exists) doc.id: doc
+      };
 
       final memberViewModels =
           await _fetchMemberViewModels(user.uid, memberships.docs, groupDocs);
