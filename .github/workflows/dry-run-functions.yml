@@ -36,6 +36,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Set up Java
+        # The Firestore emulator (used by the unit test suite below) requires
+        # JDK 21+; ubuntu-latest's default java isn't guaranteed to satisfy that.
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
