@@ -71,7 +71,13 @@ service cloud.firestore {
 
     match /events/{eventId} {
       allow read: if exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
-      allow create: if exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(request.auth.uid))
+      // Only the group's admin may create events — the client UI only ever
+      // exposes event creation to admins, but nothing enforced that
+      // server-side: any member could otherwise write an events doc
+      // directly and set an arbitrary `admin` field on it. Both are
+      // asserted here rather than trusting the client-provided `admin`.
+      allow create: if request.auth.uid == get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.admin
+                    && request.resource.data.admin == request.auth.uid
                     && request.resource.data.maxParticipants > 0
                     && request.resource.data.maxParticipants <= get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.maxEventCapacity;
       // Admin can update/delete events. Note: maxParticipants updates are handled via Cloud Function for safety
