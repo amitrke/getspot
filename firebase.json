@@ -55,6 +55,7 @@
     {
       "target": "main",
       "public": "main/out",
+      "cleanUrls": true,
       "ignore": [
         "firebase.json",
         "**/.*",
