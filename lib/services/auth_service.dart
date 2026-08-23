@@ -246,6 +246,17 @@ class AuthService {
           'email': email,
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        // Send the verification email. Don't fail the signup if this
+        // errors — the user can still request another one from the
+        // verify-email screen.
+        try {
+          await updatedUser.sendEmailVerification();
+        } catch (e) {
+          developer.log('Error sending verification email: $e',
+              name: 'AuthService');
+        }
+
         return userCredential;
       }
       return null;
