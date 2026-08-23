@@ -1,16 +1,16 @@
 name: Update Android Play Store Metadata
 
-# Pushes android/fastlane/metadata/android/en-US/** (title, short/full
-# description) to Google Play Console via `fastlane supply`, without
-# uploading a build. Manual trigger only — this edits a live public listing,
-# so it should be a deliberate action, not something that fires on every push.
+# Pushes fastlane/metadata/android/en-US/** (title, short/full description)
+# to Google Play Console via `fastlane supply`, without uploading a build.
+# Manual trigger only — this edits a live public listing, so it should be a
+# deliberate action, not something that fires on every push.
 #
-# Reuses the same PLAYSTORE_SERVICE_ACCOUNT_JSON secret already configured
-# for deploy-android.yml's release uploads. If this fails with a permission
-# error, that service account needs the "Store presence" edit permission
-# granted in Play Console → Users and permissions (uploading releases and
-# editing the store listing are separate grants on the same account) — see
-# docs/ANDROID_RELEASE_AUTOMATION.md.
+# Reuses the same PLAYSTORE_SERVICE_ACCOUNT_JSON and ANDROID_PACKAGE_NAME
+# secrets already configured for update-store-screenshots.yml. If this fails
+# with a permission error, that service account needs the "Store presence"
+# edit permission granted in Play Console → Users and permissions (uploading
+# releases/screenshots and editing the store listing text are separate
+# grants on the same account) — see docs/ANDROID_RELEASE_AUTOMATION.md.
 
 on:
   workflow_dispatch:
@@ -21,34 +21,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Set up Ruby
+      - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
           bundler-cache: true
 
-      - name: Install Fastlane
-        run: |
-          bundle install
-          gem install fastlane
-
-      - name: Write Play Console service account key
+      - name: Setup Google Play Service Account
         env:
           PLAYSTORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT_JSON }}
         run: |
-          mkdir -p ./android/fastlane
-          echo "$PLAYSTORE_SERVICE_ACCOUNT_JSON" > ./android/fastlane/play-service-account.json
+          echo "$PLAYSTORE_SERVICE_ACCOUNT_JSON" > play_store_key.json
+          echo "SUPPLY_JSON_KEY=${{ github.workspace }}/play_store_key.json" >> $GITHUB_ENV
 
       - name: Update metadata
         env:
-          SUPPLY_JSON_KEY_FILE: fastlane/play-service-account.json
+          ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
         run: |
-          cd android
-          fastlane update_metadata
+          bundle exec fastlane android update_metadata
 
-      - name: Clean up service account key
+      - name: Cleanup
         if: always()
-        run: rm -f ./android/fastlane/play-service-account.json
+        run: |
+          rm -f play_store_key.json

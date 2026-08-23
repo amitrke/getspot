@@ -2,6 +2,8 @@
 
 This guide explains how to push Google Play Store listing metadata (title, descriptions) using Fastlane, without going through the Play Console UI by hand.
 
+Android lanes live in the same `fastlane/Fastfile` as iOS, under `platform :android do ... end` — there's no separate `android/fastlane/` directory. This mirrors the existing `upload_screenshots`/`prepare_screenshots` Android lanes already in that file.
+
 ## Table of Contents
 1. [Prerequisites](#prerequisites)
 2. [Initial Setup](#initial-setup)
@@ -27,28 +29,24 @@ This guide explains how to push Google Play Store listing metadata (title, descr
 bundle install
 ```
 
-### 2. You Likely Already Have the Service Account Key
+### 2. You Already Have the Secrets
 
-`deploy-android.yml` (release uploads) already uses a `PLAYSTORE_SERVICE_ACCOUNT_JSON` GitHub secret. `update-android-metadata.yml` reuses the same one — **no new secret is required** unless that service account lacks the right Play Console permission (see below).
+`update-store-screenshots.yml` (screenshot uploads) already uses `PLAYSTORE_SERVICE_ACCOUNT_JSON` and `ANDROID_PACKAGE_NAME` GitHub secrets, and `deploy-android.yml` (release uploads) uses `PLAYSTORE_SERVICE_ACCOUNT_JSON` too. `update-android-metadata.yml` reuses both — **no new secrets required** unless that service account lacks the right Play Console permission (see below).
 
 ### 3. Check the Service Account's Play Console Permission
 
-Uploading a release and editing the store listing are **separate permission grants** on the same service account in Play Console. To confirm (or grant) the one this workflow needs:
+Uploading a release/screenshots and editing the store listing text are **separate permission grants** on the same service account in Play Console. To confirm (or grant) the one this workflow needs:
 
 1. Play Console → **Users and permissions**
 2. Find the service account email used for `PLAYSTORE_SERVICE_ACCOUNT_JSON` (it's the `client_email` field inside that JSON key)
-3. Under its **App permissions** for GetSpot, confirm **"Store presence"** is checked (specifically the ability to edit the store listing) — release-related permissions alone aren't enough for `fastlane supply` metadata updates
+3. Under its **App permissions** for GetSpot, confirm **"Store presence"** is checked (specifically the ability to edit the store listing) — release/screenshot permissions alone aren't enough for this
 4. If it's missing, add it and save
-
-If you don't have the JSON key handy to read `client_email` from, it's also visible as a service account in Google Cloud Console → IAM & Admin → Service Accounts, under the project linked to Play Console's API access page (Play Console → Setup → API access).
 
 ### 4. (Optional) Local Development Setup
 
 ```bash
-# Save a local copy of the same service account JSON used in PLAYSTORE_SERVICE_ACCOUNT_JSON.
-# Any *.json file directly under android/fastlane/ is gitignored, so it's safe
-# to drop it there — but never commit it regardless of where it lives.
-export SUPPLY_JSON_KEY_FILE=/path/to/your/play-service-account.json
+export SUPPLY_JSON_KEY=/path/to/your/play-service-account.json  # NEVER commit this file
+export ANDROID_PACKAGE_NAME=org.getspot
 ```
 
 ---
@@ -57,7 +55,7 @@ export SUPPLY_JSON_KEY_FILE=/path/to/your/play-service-account.json
 
 ### Option 1: GitHub Actions (Recommended)
 
-1. Edit files under `android/fastlane/metadata/android/en-US/` (`title.txt`, `short_description.txt`, `full_description.txt`)
+1. Edit files under `fastlane/metadata/android/en-US/` (`title.txt`, `short_description.txt`, `full_description.txt`)
 2. Go to **Actions → "Update Android Play Store Metadata" → Run workflow**
 
 This only touches store listing text — `skip_upload_apk`, `skip_upload_aab`, `skip_upload_images`, `skip_upload_screenshots`, and `skip_upload_changelogs` are all on, so it's safe to run without a corresponding build or release notes.
@@ -67,8 +65,7 @@ Note: the Play Store **Privacy Policy URL** and **contact email** are *not* mana
 ### Option 2: Local Command Line
 
 ```bash
-cd android
-SUPPLY_JSON_KEY_FILE=/path/to/your/play-service-account.json bundle exec fastlane update_metadata
+bundle exec fastlane android update_metadata
 ```
 
 ---
@@ -78,11 +75,10 @@ SUPPLY_JSON_KEY_FILE=/path/to/your/play-service-account.json bundle exec fastlan
 ### Update Metadata Without Submitting a Build
 
 ```bash
-cd android
-SUPPLY_JSON_KEY_FILE=/path/to/key.json bundle exec fastlane update_metadata
+SUPPLY_JSON_KEY=/path/to/key.json ANDROID_PACKAGE_NAME=org.getspot bundle exec fastlane android update_metadata
 ```
 
-Edit files in `android/fastlane/metadata/android/en-US/` first, then run this.
+Edit files in `fastlane/metadata/android/en-US/` first, then run this.
 
 ---
 
@@ -94,7 +90,7 @@ Edit files in `android/fastlane/metadata/android/en-US/` first, then run this.
 
 ### "Package not found" / invalid package name
 
-**Solution:** Confirm `android/fastlane/Appfile`'s `package_name` matches `applicationId` in `android/app/build.gradle` (currently `org.getspot`).
+**Solution:** Confirm `ANDROID_PACKAGE_NAME` (or the `org.getspot` fallback in the Fastfile lane) matches `applicationId` in `android/app/build.gradle`.
 
 ### Changes don't appear on the Play Store
 
@@ -104,7 +100,7 @@ Edit files in `android/fastlane/metadata/android/en-US/` first, then run this.
 
 ## Security Notes
 
-- ✅ Never commit a Play Console service account JSON key to the repository
+- ✅ Never commit a Play Console service account JSON key to the repository (`play_store_key.json` is gitignored, but that's a safety net, not a reason to leave one lying around)
 - ✅ `PLAYSTORE_SERVICE_ACCOUNT_JSON` is a GitHub encrypted secret, only accessible to workflows
 - ✅ Service account keys can be rotated/revoked anytime in Google Cloud Console
 

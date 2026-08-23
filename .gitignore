@@ -67,7 +67,7 @@ fastlane/app_store_connect_api_key.json
 *.p8
 
 # Play Console service account key (NEVER COMMIT THIS)
-android/fastlane/*.json
+play_store_key.json
 
 # fastlane/metadata and fastlane/screenshots are intentionally version-
 # controlled (see docs/IOS_RELEASE_AUTOMATION.md / ANDROID_RELEASE_AUTOMATION.md)

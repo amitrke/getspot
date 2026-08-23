@@ -50,6 +50,29 @@ platform :android do
     UI.success("Screenshots uploaded to Google Play Store!")
   end
 
+  desc "Update Play Store listing metadata (title, descriptions) without uploading a build"
+  lane :update_metadata do
+    fastlane_dir = File.expand_path("..", Dir.pwd)
+    metadata_path = File.join(fastlane_dir, "fastlane", "metadata", "android")
+
+    upload_to_play_store(
+      json_key: ENV["SUPPLY_JSON_KEY"],
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: false,
+      # Not managed via this lane yet — see fastlane/metadata/android/en-US/.
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      # Release notes are handled separately at release time (paired with a
+      # real build), not synced as part of this baseline metadata update.
+      skip_upload_changelogs: true,
+      metadata_path: metadata_path,
+      package_name: ENV["ANDROID_PACKAGE_NAME"] || "org.getspot"
+    )
+
+    UI.success("✅ Metadata updated on Google Play Store!")
+  end
+
   desc "Prepare Maestro screenshots for Play Store"
   lane :prepare_screenshots do
     UI.message("Organizing screenshots from Maestro to Play Store format...")
