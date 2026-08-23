@@ -110,7 +110,7 @@ platform :ios do
 
     # Get the latest build number from TestFlight
     latest_build = latest_testflight_build_number(
-      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      app_identifier: ENV["APP_IDENTIFIER"] || "org.getspot",
       api_key: api_key
     )
 
@@ -119,7 +119,7 @@ platform :ios do
     # Deliver the build to App Store Review
     deliver(
       api_key: api_key,
-      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      app_identifier: ENV["APP_IDENTIFIER"] || "org.getspot",
       build_number: latest_build.to_s,
       submit_for_review: true,
       automatic_release: false, # Set to true if you want auto-release after approval
@@ -157,7 +157,7 @@ platform :ios do
 
     deliver(
       api_key: api_key,
-      app_identifier: ENV["APP_IDENTIFIER"] || "com.getspot.app",
+      app_identifier: ENV["APP_IDENTIFIER"] || "org.getspot",
       build_number: build_number.to_s,
       submit_for_review: true,
       automatic_release: false,

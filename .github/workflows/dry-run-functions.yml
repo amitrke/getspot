@@ -1,13 +1,16 @@
-# Validates Firebase Functions changes by installing, linting, and building.
-# On push to develop, additionally runs a dry-run deploy (no changes made) to
-# catch invalid triggers/config that only surface against the real project.
+# Validates Firebase Functions changes by installing, linting, building, and
+# running the unit test suite (against the Firestore emulator — no secrets
+# needed). On push to develop, additionally runs a dry-run deploy (no
+# changes made) to catch invalid triggers/config that only surface against
+# the real project.
 #
-# Also runs on pull_request (including Dependabot PRs) so lint/build failures
-# are caught before merge instead of only after landing on develop. The
-# Google Cloud auth + dry-run-deploy steps are skipped for pull_request
+# Also runs on pull_request (including Dependabot PRs) so lint/build/test
+# failures are caught before merge instead of only after landing on develop.
+# The Google Cloud auth + dry-run-deploy steps are skipped for pull_request
 # because GitHub does not pass repo secrets to workflows triggered by
-# Dependabot pull requests — lint + build alone still catch the class of
-# breakage (e.g. an incompatible TypeScript major bump) that matters most.
+# Dependabot pull requests — lint + build + test alone still catch the
+# class of breakage (e.g. an incompatible TypeScript major bump, or a
+# regression in the wallet/registration transaction logic) that matters most.
 
 name: Dry Run Firebase Functions Deploy
 
@@ -33,6 +36,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Set up Java
+        # The Firestore emulator (used by the unit test suite below) requires
+        # JDK 21+; ubuntu-latest's default java isn't guaranteed to satisfy that.
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
@@ -53,6 +64,10 @@ jobs:
 
       - name: Build TypeScript
         run: pnpm run build
+        working-directory: ./functions
+
+      - name: Run unit tests
+        run: npm test
         working-directory: ./functions
 
       - name: Authenticate to Google Cloud

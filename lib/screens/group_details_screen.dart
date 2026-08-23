@@ -11,6 +11,7 @@ import 'package:getspot/services/group_cache_service.dart';
 import 'package:getspot/services/user_cache_service.dart';
 import 'package:getspot/services/event_cache_service.dart';
 import 'package:getspot/services/announcement_cache_service.dart';
+import 'package:getspot/services/analytics_service.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
 import 'package:getspot/screens/wallet_screen.dart';
@@ -174,6 +175,72 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     }
   }
 
+  Future<void> _leaveGroup() async {
+    final groupName = widget.group['name'] ?? 'this group';
+    final groupId = widget.group['groupId'] as String?;
+    final user = FirebaseAuth.instance.currentUser;
+    if (groupId == null || user == null) return;
+
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('Leave $groupName?'),
+            content: const Text(
+              'You\'ll need a new invite or the group code to rejoin. Make sure your wallet '
+              'balance is settled and you\'re not registered for any upcoming events first.',
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Leave')),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed || !mounted) return;
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
+      final callable = functions.httpsCallable('manageGroupMember');
+      await callable.call({
+        'groupId': groupId,
+        'targetUserId': user.uid,
+        'action': 'leave',
+      });
+
+      developer.log('Left group successfully', name: 'GroupDetailsScreen');
+      GroupCacheService().invalidate(groupId);
+      await AnalyticsService().logLeaveGroup();
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You\'ve left $groupName.')),
+        );
+      }
+    } on FirebaseFunctionsException catch (e) {
+      developer.log('Error leaving group', name: 'GroupDetailsScreen', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'Could not leave the group.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (e) {
+      developer.log('Error leaving group', name: 'GroupDetailsScreen', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error leaving group: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     developer.log('Building GroupDetailsScreen.', name: 'GroupDetailsScreen');
@@ -186,6 +253,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
             tooltip: 'Share Group',
             onPressed: _shareGroup,
           ),
+          if (!_isAdmin)
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'leave') _leaveGroup();
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'leave',
+                  child: Text('Leave Group'),
+                ),
+              ],
+            ),
         ],
         bottom: TabBar(
           controller: _tabController,
