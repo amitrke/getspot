@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:getspot/screens/create_event_screen.dart';
@@ -112,25 +113,26 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       return;
     }
 
+    // Create the deep link URL
+    final deepLink = 'https://app.getspot.org/join/$code';
+
+    // Build share message
+    final StringBuffer messageBuffer = StringBuffer();
+    messageBuffer.writeln('Join our group on GetSpot!');
+    messageBuffer.writeln();
+    if (name != null && name.isNotEmpty) {
+      messageBuffer.writeln('Group: $name');
+    }
+    if (description != null && description.isNotEmpty) {
+      messageBuffer.writeln(description);
+    }
+    messageBuffer.writeln();
+    messageBuffer.writeln('Tap to join: $deepLink');
+    messageBuffer.writeln();
+    messageBuffer.writeln('Or use code: $code in the GetSpot app');
+    final String message = messageBuffer.toString();
+
     try {
-      // Create the deep link URL
-      final deepLink = 'https://app.getspot.org/join/$code';
-
-      // Build share message
-      final StringBuffer message = StringBuffer();
-      message.writeln('Join our group on GetSpot!');
-      message.writeln();
-      if (name != null && name.isNotEmpty) {
-        message.writeln('Group: $name');
-      }
-      if (description != null && description.isNotEmpty) {
-        message.writeln(description);
-      }
-      message.writeln();
-      message.writeln('Tap to join: $deepLink');
-      message.writeln();
-      message.writeln('Or use code: $code in the GetSpot app');
-
       // Get the share button position for iPad popover
       final box = context.findRenderObject() as RenderBox?;
       final sharePositionOrigin = box != null
@@ -139,7 +141,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
 
       await SharePlus.instance.share(
         ShareParams(
-          text: message.toString(),
+          text: message,
           subject: 'Join ${name ?? "our group"} on GetSpot',
           sharePositionOrigin: sharePositionOrigin,
         ),
@@ -148,7 +150,20 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       developer.log('Group shared successfully', name: 'GroupDetailsScreen');
     } catch (e) {
       developer.log('Error sharing group', name: 'GroupDetailsScreen', error: e);
-      if (mounted) {
+      if (!mounted) return;
+
+      if (kIsWeb) {
+        // The Web Share API isn't available in every browser (e.g. Firefox,
+        // or non-HTTPS/localhost contexts), so fall back to copying the
+        // invite text instead of just showing an error.
+        await Clipboard.setData(ClipboardData(text: message));
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sharing isn\'t supported in this browser. Invite message copied to clipboard instead.'),
+          ),
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error sharing: ${e.toString()}'),
