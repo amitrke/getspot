@@ -25,6 +25,10 @@ on:
   workflow_dispatch:
 
 permissions:
+  # actions: read is required by the reusable workflows below to upload the
+  # SARIF file to code scanning. See:
+  # https://github.com/github/codeql-action/issues/2117
+  actions: read
   security-events: write
   contents: read
 
