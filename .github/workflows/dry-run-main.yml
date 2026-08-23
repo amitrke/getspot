@@ -1,0 +1,44 @@
+# Validates the marketing site (main/, Next.js) by installing, linting, and
+# building it. Runs on push to develop and on pull_request (including
+# Dependabot PRs) so a broken build/lint is caught before merge — previously
+# main/ was only ever built as part of the live deploy on push to `main`.
+
+name: Dry Run Main Site Build
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'main/**'
+  pull_request:
+    paths:
+      - 'main/**'
+  workflow_dispatch:
+
+jobs:
+  dry_run_main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: main/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: main
+
+      - name: Lint
+        run: npm run lint
+        working-directory: main
+
+      - name: Build
+        run: npm run build
+        working-directory: main
