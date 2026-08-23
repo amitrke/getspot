@@ -191,7 +191,11 @@ platform :ios do
     deliver(
       app_identifier: ENV["APP_IDENTIFIER"],
       skip_binary_upload: true,
-      skip_screenshots: false,
+      # Screenshots aren't synced via this lane yet — leaving this false with
+      # no local fastlane/metadata/en-US/screenshots content risked deliver
+      # erroring or touching what's live. Flip to false once screenshots are
+      # added to this repo.
+      skip_screenshots: true,
       force: true
     )
 

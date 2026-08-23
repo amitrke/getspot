@@ -1,0 +1,54 @@
+name: Update Android Play Store Metadata
+
+# Pushes android/fastlane/metadata/android/en-US/** (title, short/full
+# description) to Google Play Console via `fastlane supply`, without
+# uploading a build. Manual trigger only — this edits a live public listing,
+# so it should be a deliberate action, not something that fires on every push.
+#
+# Reuses the same PLAYSTORE_SERVICE_ACCOUNT_JSON secret already configured
+# for deploy-android.yml's release uploads. If this fails with a permission
+# error, that service account needs the "Store presence" edit permission
+# granted in Play Console → Users and permissions (uploading releases and
+# editing the store listing are separate grants on the same account) — see
+# docs/ANDROID_RELEASE_AUTOMATION.md.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update_metadata:
+    name: Update Play Store Metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: |
+          bundle install
+          gem install fastlane
+
+      - name: Write Play Console service account key
+        env:
+          PLAYSTORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p ./android/fastlane
+          echo "$PLAYSTORE_SERVICE_ACCOUNT_JSON" > ./android/fastlane/play-service-account.json
+
+      - name: Update metadata
+        env:
+          SUPPLY_JSON_KEY_FILE: fastlane/play-service-account.json
+        run: |
+          cd android
+          fastlane update_metadata
+
+      - name: Clean up service account key
+        if: always()
+        run: rm -f ./android/fastlane/play-service-account.json
