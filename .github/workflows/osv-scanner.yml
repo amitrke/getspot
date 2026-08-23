@@ -17,8 +17,13 @@ on:
       - main
       - develop
   pull_request:
+    # Diff-scanning PRs into main would run `git checkout main` inside the
+    # reusable workflow, which is ambiguous in this repo because of the
+    # top-level main/ directory ("'main' could be both a local file and a
+    # tracking branch") and fails the job. Not a coverage gap: a develop -> main
+    # PR was already diff-scanned as a feature branch's PR into develop, and
+    # gets scanned again post-merge via the push trigger above.
     branches:
-      - main
       - develop
   schedule:
     - cron: '0 8 * * 1' # Weekly, Monday 08:00 UTC
