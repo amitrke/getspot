@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 
+import 'group_details_screen.dart';
+
 /// Screen for joining a group with a pre-filled group code (used for deep linking)
 class JoinGroupScreen extends StatefulWidget {
   final String groupCode;
@@ -17,6 +19,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   QueryDocumentSnapshot<Map<String, dynamic>>? _foundGroup;
+  bool _isAlreadyMember = false;
 
   @override
   void initState() {
@@ -29,6 +32,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
       _isLoading = true;
       _errorMessage = null;
       _foundGroup = null;
+      _isAlreadyMember = false;
     });
 
     try {
@@ -51,11 +55,14 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
         });
         developer.log('No group found with code: ${widget.groupCode}', name: 'JoinGroupScreen');
       } else {
+        final foundGroup = groupQuery.docs.first;
+        final isAlreadyMember = await _checkMembership(foundGroup.id);
         setState(() {
-          _foundGroup = groupQuery.docs.first;
+          _foundGroup = foundGroup;
+          _isAlreadyMember = isAlreadyMember;
         });
         developer.log(
-          'Found group: ${groupQuery.docs.first.data()['name']}',
+          'Found group: ${foundGroup.data()['name']} (alreadyMember: $isAlreadyMember)',
           name: 'JoinGroupScreen',
         );
       }
@@ -69,6 +76,36 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  /// Checks the denormalized membership index rather than the group's
+  /// `members` subcollection directly — the `members` security rule requires
+  /// the caller to already be a member just to `get` any doc in it
+  /// (including their own), which would surface as permission-denied instead
+  /// of a clean "not found" for the exact non-member case we need to detect.
+  Future<bool> _checkMembership(String groupId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    final membershipDoc = await FirebaseFirestore.instance
+        .collection('userGroupMemberships')
+        .doc(user.uid)
+        .collection('groups')
+        .doc(groupId)
+        .get();
+
+    return membershipDoc.exists;
+  }
+
+  void _goToGroup() {
+    if (_foundGroup == null) return;
+
+    final groupData = {..._foundGroup!.data(), 'groupId': _foundGroup!.id};
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => GroupDetailsScreen(group: groupData),
+      ),
+    );
   }
 
   Future<void> _sendJoinRequest() async {
@@ -217,11 +254,25 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                   color: Colors.grey.shade600,
                 ),
           ),
+          if (_isAlreadyMember) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text('You\'re already a member of this group.'),
+                ),
+              ],
+            ),
+          ],
           const Spacer(),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _sendJoinRequest,
+              onPressed: _isLoading
+                  ? null
+                  : (_isAlreadyMember ? _goToGroup : _sendJoinRequest),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: Theme.of(context).primaryColor,
@@ -236,9 +287,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Request to Join',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  : Text(
+                      _isAlreadyMember ? 'Go to Group' : 'Request to Join',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
           ),

@@ -1,7 +1,13 @@
-# Validates Firebase Functions changes on the develop branch by building
-# and running a dry-run deploy, without actually deploying to production.
-# Catches build errors, invalid triggers, and config issues early (including
-# from Dependabot PRs, which target develop) before changes reach main.
+# Validates Firebase Functions changes by installing, linting, and building.
+# On push to develop, additionally runs a dry-run deploy (no changes made) to
+# catch invalid triggers/config that only surface against the real project.
+#
+# Also runs on pull_request (including Dependabot PRs) so lint/build failures
+# are caught before merge instead of only after landing on develop. The
+# Google Cloud auth + dry-run-deploy steps are skipped for pull_request
+# because GitHub does not pass repo secrets to workflows triggered by
+# Dependabot pull requests — lint + build alone still catch the class of
+# breakage (e.g. an incompatible TypeScript major bump) that matters most.
 
 name: Dry Run Firebase Functions Deploy
 
@@ -9,6 +15,9 @@ on:
   push:
     branches:
       - develop
+    paths:
+      - 'functions/**'
+  pull_request:
     paths:
       - 'functions/**'
   workflow_dispatch:
@@ -24,13 +33,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Authenticate to Google Cloud
-        uses: 'google-github-actions/auth@v3'
-        with:
-          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}'
-
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22' # Match the version in package.json
 
@@ -51,8 +55,14 @@ jobs:
         run: pnpm run build
         working-directory: ./functions
 
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push'
+        uses: 'google-github-actions/auth@v3'
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}'
+
       - name: Dry run deploy to Firebase
-        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.26.0
+        uses: w9jds/firebase-action@9ad0d519471afe1de970603de47075637414bfe9 # v15.27.0
         with:
           args: deploy --only functions --dry-run
         env:

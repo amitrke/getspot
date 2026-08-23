@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../screens/group_details_screen.dart';
+
 class JoinGroupModal extends StatefulWidget {
   const JoinGroupModal({super.key});
 
@@ -15,6 +17,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
   bool _isLoading = false;
   String? _errorMessage;
   QueryDocumentSnapshot<Map<String, dynamic>>? _foundGroup;
+  bool _isAlreadyMember = false;
 
   @override
   void dispose() {
@@ -30,6 +33,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
       _isLoading = true;
       _errorMessage = null;
       _foundGroup = null;
+      _isAlreadyMember = false;
     });
 
     try {
@@ -47,8 +51,11 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
           _errorMessage = 'No group found with that code.';
         });
       } else {
+        final foundGroup = groupQuery.docs.first;
+        final isAlreadyMember = await _checkMembership(foundGroup.id);
         setState(() {
-          _foundGroup = groupQuery.docs.first;
+          _foundGroup = foundGroup;
+          _isAlreadyMember = isAlreadyMember;
         });
       }
     } catch (e) {
@@ -60,6 +67,37 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
         _isLoading = false;
       });
     }
+  }
+
+  /// Checks the denormalized membership index rather than the group's
+  /// `members` subcollection directly — the `members` security rule requires
+  /// the caller to already be a member just to `get` any doc in it
+  /// (including their own), which would surface as permission-denied instead
+  /// of a clean "not found" for the exact non-member case we need to detect.
+  Future<bool> _checkMembership(String groupId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    final membershipDoc = await FirebaseFirestore.instance
+        .collection('userGroupMemberships')
+        .doc(user.uid)
+        .collection('groups')
+        .doc(groupId)
+        .get();
+
+    return membershipDoc.exists;
+  }
+
+  void _goToGroup() {
+    if (_foundGroup == null) return;
+
+    final groupData = {..._foundGroup!.data(), 'groupId': _foundGroup!.id};
+    Navigator.of(context).pop();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GroupDetailsScreen(group: groupData),
+      ),
+    );
   }
 
   Future<void> _sendJoinRequest() async {
@@ -186,6 +224,18 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
         ),
         const SizedBox(height: 8),
         Text(groupData['description']),
+        if (_isAlreadyMember) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text('You\'re already a member of this group.'),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -204,8 +254,8 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
               const CircularProgressIndicator()
             else
               ElevatedButton(
-                onPressed: _sendJoinRequest,
-                child: const Text('Request to Join'),
+                onPressed: _isAlreadyMember ? _goToGroup : _sendJoinRequest,
+                child: Text(_isAlreadyMember ? 'Go to Group' : 'Request to Join'),
               ),
           ],
         ),

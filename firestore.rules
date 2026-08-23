@@ -49,7 +49,8 @@ service cloud.firestore {
       // Admin can list/update/delete all requests for their group.
       match /joinRequests/{userId} {
         allow get: if request.auth.uid == userId;
-        allow create: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId
+          && !exists(/databases/$(database)/documents/groups/$(groupId)/members/$(userId));
         allow list, update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
 

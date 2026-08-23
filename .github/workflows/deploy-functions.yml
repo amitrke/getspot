@@ -28,7 +28,7 @@ jobs:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}'
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22' # Match the version in package.json
 
@@ -46,7 +46,7 @@ jobs:
         working-directory: ./functions
 
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@d22ff47470f4628073cf145378b43b6f198f05ae # v15.26.0
+        uses: w9jds/firebase-action@9ad0d519471afe1de970603de47075637414bfe9 # v15.27.0
         with:
           args: deploy --only functions --force
         env:
