@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:getspot/firebase_options.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/screens/login_screen.dart';
+import 'package:getspot/screens/verify_email_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
 import 'package:getspot/screens/group_details_screen.dart';
 import 'dart:developer' as developer;
@@ -363,6 +364,16 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // User is logged in
         if (user != null) {
+          // Email/password accounts must verify their address before
+          // reaching the app; Google/Apple sign-in already asserts a
+          // verified email. userChanges() fires on reload(), so once the
+          // user verifies and taps "I've verified" this swaps to
+          // HomeScreen automatically.
+          if (!user.emailVerified) {
+            developer.log('Showing VerifyEmailScreen for user: ${user.uid}', name: 'AuthWrapper');
+            return const VerifyEmailScreen();
+          }
+
           developer.log('Showing HomeScreen for user: ${user.uid}', name: 'AuthWrapper');
           // Set analytics user ID
           _analytics.setUserId(user.uid);

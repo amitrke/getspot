@@ -49,7 +49,7 @@ jobs:
           APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
         run: |
           cat > ./fastlane/.env << EOF
-          APP_IDENTIFIER=com.getspot.app
+          APP_IDENTIFIER=org.getspot
           APP_STORE_CONNECT_API_KEY_PATH=./fastlane/app_store_connect_api_key.json
           APP_APPLE_ID=$APP_APPLE_ID
           EOF

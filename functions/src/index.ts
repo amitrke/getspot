@@ -31,6 +31,7 @@ import {
 } from "./maintainJoinRequestCount";
 import {updateEventCapacity as updateEventCapacityHandler} from "./updateEventCapacity";
 import {notifyOnAnnouncement as notifyOnAnnouncementHandler} from "./notifyOnAnnouncement";
+import {findGroupByCode as findGroupByCodeHandler} from "./findGroupByCode";
 // import {initializePendingJoinRequestsCount as initializePendingJoinRequestsCountHandler} from "./migrations/initializePendingJoinRequestsCount";
 
 
@@ -194,6 +195,7 @@ export const onJoinRequestUpdated = onJoinRequestUpdatedHandler(db);
 export const onJoinRequestDeleted = onJoinRequestDeletedHandler(db);
 export const updateEventCapacity = updateEventCapacityHandler(db);
 export const notifyOnAnnouncement = notifyOnAnnouncementHandler(db);
+export const findGroupByCode = findGroupByCodeHandler(db);
 
 // Migration function - call once, then comment out or remove
 // MIGRATION COMPLETED - Commented out on 2025-10-07

@@ -135,14 +135,19 @@ class GroupCacheService {
       );
 
       try {
-        final snapshot = await FirebaseFirestore.instance
-            .collection('groups')
-            .where(FieldPath.documentId, whereIn: toFetch)
-            .get();
+        // Individual gets rather than a whereIn(documentId) query: /groups
+        // denies `list` entirely (Firestore can't redact fields per query,
+        // so an open list would let any authenticated user enumerate every
+        // group's admin uid, negativeBalanceLimit, etc.) but `get` by a
+        // known ID stays open, which is all a batch of specific groupIds
+        // needs.
+        final docs = await Future.wait(
+          toFetch.map((groupId) => FirebaseFirestore.instance.collection('groups').doc(groupId).get()),
+        );
 
-        for (final doc in snapshot.docs) {
+        for (final doc in docs) {
           if (doc.exists) {
-            final data = doc.data();
+            final data = doc.data()!;
             final group = CachedGroup(
               groupId: doc.id,
               name: data['name'] ?? 'Unnamed Group',

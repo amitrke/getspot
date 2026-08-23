@@ -62,5 +62,3 @@ Building, signing, and uploading to TestFlight is automated via GitHub Actions (
 1. Go to **GitHub → Actions → "Manual iOS TestFlight Deployment"** (`.github/workflows/deploy-ios-manual.yml`), run via `workflow_dispatch`, and supply the base version (e.g. `1.0.3`) — the build number is set to the GitHub Actions run number.
 2. The workflow builds an unsigned IPA (`flutter build ipa --no-codesign`) and uploads it to TestFlight via Fastlane (`pilot upload`).
 3. **Promote to App Store review:** run **"Promote to App Store"** (`.github/workflows/promote-to-appstore.yml`) via `workflow_dispatch`, optionally specifying a build number (defaults to latest). This runs `fastlane promote_to_review`/`promote_build` to move the TestFlight build to App Store review — no local Xcode step needed.
-
-> **Known issue:** `promote-to-appstore.yml` currently hardcodes `APP_IDENTIFIER=com.getspot.app` in its generated `.env`, but the app's real bundle ID is `org.getspot`. This looks like the same stale-identifier issue found elsewhere in the docs, but it's in a live workflow file — worth verifying/fixing separately before relying on this workflow.

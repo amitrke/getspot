@@ -35,7 +35,15 @@ service cloud.firestore {
     }
 
     match /groups/{groupId} {
-      allow read, create: if request.auth != null;
+      // get (single doc by known ID) is safe to leave open — group IDs are
+      // unguessable Firestore auto-IDs. list is denied outright: Firestore
+      // can't redact fields per query, so an open list would let any
+      // authenticated user enumerate every group's admin uid,
+      // negativeBalanceLimit, etc. The one legitimate non-member lookup
+      // (join by code) goes through the findGroupByCode callable instead,
+      // which runs with Admin SDK privileges and returns only safe fields.
+      allow get, create: if request.auth != null;
+      allow list: if false;
       allow update, delete: if request.auth.uid == resource.data.admin;
 
       //--- SUBCOLLECTIONS ---//
@@ -63,7 +71,13 @@ service cloud.firestore {
 
     match /events/{eventId} {
       allow read: if exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
-      allow create: if exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(request.auth.uid))
+      // Only the group's admin may create events — the client UI only ever
+      // exposes event creation to admins, but nothing enforced that
+      // server-side: any member could otherwise write an events doc
+      // directly and set an arbitrary `admin` field on it. Both are
+      // asserted here rather than trusting the client-provided `admin`.
+      allow create: if request.auth.uid == get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.admin
+                    && request.resource.data.admin == request.auth.uid
                     && request.resource.data.maxParticipants > 0
                     && request.resource.data.maxParticipants <= get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.maxEventCapacity;
       // Admin can update/delete events. Note: maxParticipants updates are handled via Cloud Function for safety

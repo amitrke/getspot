@@ -246,6 +246,17 @@ class AuthService {
           'email': email,
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        // Send the verification email. Don't fail the signup if this
+        // errors — the user can still request another one from the
+        // verify-email screen.
+        try {
+          await updatedUser.sendEmailVerification();
+        } catch (e) {
+          developer.log('Error sending verification email: $e',
+              name: 'AuthService');
+        }
+
         return userCredential;
       }
       return null;
@@ -293,12 +304,21 @@ class AuthService {
       // Clear crashlytics user ID
       await _crashlytics.clearUserId();
 
-      // Sign out from Google first
-      await _googleSignIn.signOut();
-
-      // Disconnect Google account to ensure fresh sign-in next time
-      // In v7.x, we can safely call disconnect without checking
+      // On web, signInWithGoogle() never calls _initializeGoogleSignIn() —
+      // it signs in via Firebase's signInWithPopup directly instead, so
+      // _googleSignIn (the GoogleSignIn.instance singleton) is never
+      // initialized regardless of how the user signed in. Calling
+      // .signOut()/.disconnect() on it awaits an internal Completer that
+      // only ever completes inside .initialize() — on web that hangs this
+      // method forever instead of throwing, silently breaking the sign-out
+      // button. Skip both entirely on web; there's no google_sign_in
+      // session to clear there anyway.
       if (!kIsWeb) {
+        // Sign out from Google first
+        await _googleSignIn.signOut();
+
+        // Disconnect Google account to ensure fresh sign-in next time
+        // In v7.x, we can safely call disconnect without checking
         try {
           await _googleSignIn.disconnect();
         } catch (e) {
