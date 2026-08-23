@@ -20,6 +20,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
   String? _errorMessage;
   QueryDocumentSnapshot<Map<String, dynamic>>? _foundGroup;
   bool _isAlreadyMember = false;
+  String? _existingRequestStatus;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
       _errorMessage = null;
       _foundGroup = null;
       _isAlreadyMember = false;
+      _existingRequestStatus = null;
     });
 
     try {
@@ -57,12 +59,17 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
       } else {
         final foundGroup = groupQuery.docs.first;
         final isAlreadyMember = await _checkMembership(foundGroup.id);
+        final existingRequestStatus = isAlreadyMember
+            ? null
+            : await _checkExistingRequest(foundGroup.id);
         setState(() {
           _foundGroup = foundGroup;
           _isAlreadyMember = isAlreadyMember;
+          _existingRequestStatus = existingRequestStatus;
         });
         developer.log(
-          'Found group: ${foundGroup.data()['name']} (alreadyMember: $isAlreadyMember)',
+          'Found group: ${foundGroup.data()['name']} '
+          '(alreadyMember: $isAlreadyMember, existingRequestStatus: $existingRequestStatus)',
           name: 'JoinGroupScreen',
         );
       }
@@ -95,6 +102,27 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
         .get();
 
     return membershipDoc.exists;
+  }
+
+  /// Returns the `status` of the user's existing join request for this group
+  /// (e.g. `'pending'`, `'denied'`), or null if none exists. Firestore
+  /// Security Rules only allow a user to `create` a join request, not
+  /// `update` one — writing over an existing request throws
+  /// permission-denied, so we must check for one up front and steer the UI
+  /// accordingly rather than let that write fail.
+  Future<String?> _checkExistingRequest(String groupId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    final requestDoc = await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(groupId)
+        .collection('joinRequests')
+        .doc(user.uid)
+        .get();
+
+    if (!requestDoc.exists) return null;
+    return requestDoc.data()?['status'] as String? ?? 'pending';
   }
 
   void _goToGroup() {
@@ -145,12 +173,30 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
     } catch (e) {
       developer.log('Error sending join request', name: 'JoinGroupScreen', error: e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        // Security Rules only allow creating a join request, not overwriting
+        // one — a permission-denied here almost always means a request from
+        // this user already exists (e.g. a race with another tab, or this
+        // screen's own pre-check was stale). Re-check and show a friendly
+        // message instead of the raw Firestore error.
+        final isPermissionDenied = e is FirebaseException && e.code == 'permission-denied';
+        final status = isPermissionDenied
+            ? await _checkExistingRequest(_foundGroup!.id)
+            : null;
+        if (mounted) {
+          setState(() {
+            _existingRequestStatus = status;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                status != null
+                    ? 'You already have a request to join this group ($status).'
+                    : e.toString(),
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {
@@ -265,6 +311,28 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                 ),
               ],
             ),
+          ] else if (_existingRequestStatus == 'pending') ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.hourglass_top, color: Colors.orange.shade700, size: 20),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text('Your request to join this group is pending approval.'),
+                ),
+              ],
+            ),
+          ] else if (_existingRequestStatus != null) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.grey.shade600, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Your previous request was $_existingRequestStatus. Contact the group admin for help.'),
+                ),
+              ],
+            ),
           ],
           const Spacer(),
           SizedBox(
@@ -272,7 +340,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
             child: ElevatedButton(
               onPressed: _isLoading
                   ? null
-                  : (_isAlreadyMember ? _goToGroup : _sendJoinRequest),
+                  : (_isAlreadyMember
+                      ? _goToGroup
+                      : (_existingRequestStatus != null ? null : _sendJoinRequest)),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: Theme.of(context).primaryColor,
@@ -288,7 +358,11 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                       ),
                     )
                   : Text(
-                      _isAlreadyMember ? 'Go to Group' : 'Request to Join',
+                      _isAlreadyMember
+                          ? 'Go to Group'
+                          : (_existingRequestStatus == 'pending'
+                              ? 'Request Pending'
+                              : (_existingRequestStatus != null ? 'Request $_existingRequestStatus' : 'Request to Join')),
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
