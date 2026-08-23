@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,11 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
   final _codeController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  QueryDocumentSnapshot<Map<String, dynamic>>? _foundGroup;
+  // Populated from the findGroupByCode callable, so only contains the safe
+  // preview fields (groupId, name, description, groupCode) — never admin,
+  // negativeBalanceLimit, etc. See _goToGroup for the full-document fetch
+  // used once membership is confirmed.
+  Map<String, dynamic>? _foundGroup;
   bool _isAlreadyMember = false;
 
   @override
@@ -37,27 +42,27 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
     });
 
     try {
-      // Standardize the input for a case-insensitive search
-      final enteredCode =
-          _codeController.text.trim().toUpperCase().replaceAll("-", "");
-      final groupQuery = await FirebaseFirestore.instance
-          .collection('groups')
-          .where('groupCodeSearch', isEqualTo: enteredCode)
-          .limit(1)
-          .get();
+      // Groups aren't directly listable/queryable by non-members (Firestore
+      // Security Rules deny `list` on /groups to prevent enumerating every
+      // group's admin uid, negativeBalanceLimit, etc.), so the code lookup
+      // goes through a callable that runs with Admin SDK privileges and
+      // returns only the safe preview fields.
+      final functions = FirebaseFunctions.instanceFor(region: 'us-east4');
+      final callable = functions.httpsCallable('findGroupByCode');
+      final result = await callable.call({'code': _codeController.text.trim()});
+      final foundGroup = Map<String, dynamic>.from(result.data as Map);
+      final groupId = foundGroup['groupId'] as String;
 
-      if (groupQuery.docs.isEmpty) {
-        setState(() {
-          _errorMessage = 'No group found with that code.';
-        });
-      } else {
-        final foundGroup = groupQuery.docs.first;
-        final isAlreadyMember = await _checkMembership(foundGroup.id);
-        setState(() {
-          _foundGroup = foundGroup;
-          _isAlreadyMember = isAlreadyMember;
-        });
-      }
+      final isAlreadyMember = await _checkMembership(groupId);
+      setState(() {
+        _foundGroup = foundGroup;
+        _isAlreadyMember = isAlreadyMember;
+      });
+    } on FirebaseFunctionsException catch (e) {
+      setState(() {
+        _errorMessage =
+            e.code == 'not-found' ? 'No group found with that code.' : 'An error occurred. Please try again.';
+      });
     } catch (e) {
       setState(() {
         _errorMessage = 'An error occurred. Please try again.';
@@ -88,16 +93,45 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
     return membershipDoc.exists;
   }
 
-  void _goToGroup() {
+  Future<void> _goToGroup() async {
     if (_foundGroup == null) return;
+    final groupId = _foundGroup!['groupId'] as String;
 
-    final groupData = {..._foundGroup!.data(), 'groupId': _foundGroup!.id};
-    Navigator.of(context).pop();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => GroupDetailsScreen(group: groupData),
-      ),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // _foundGroup only has the safe preview fields from findGroupByCode.
+      // Now that membership is confirmed, fetch the full document (allowed
+      // for any authenticated user via `get`) for GroupDetailsScreen.
+      final groupDoc = await FirebaseFirestore.instance.collection('groups').doc(groupId).get();
+      if (!mounted) return;
+      if (!groupDoc.exists) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'This group no longer exists.';
+        });
+        return;
+      }
+
+      final groupData = {...groupDoc.data()!, 'groupId': groupId};
+      Navigator.of(context).pop();
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GroupDetailsScreen(group: groupData),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open the group. Please try again.')),
+        );
+      }
+    }
   }
 
   Future<void> _sendJoinRequest() async {
@@ -113,7 +147,8 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
         throw Exception('You must be logged in to send a request.');
       }
 
-      final groupRef = _foundGroup!.reference;
+      final groupId = _foundGroup!['groupId'] as String;
+      final groupRef = FirebaseFirestore.instance.collection('groups').doc(groupId);
       final requestRef = groupRef.collection('joinRequests').doc(user.uid);
 
       await requestRef.set({
@@ -214,7 +249,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
   }
 
   Widget _buildGroupDetails() {
-    final groupData = _foundGroup!.data();
+    final groupData = _foundGroup!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

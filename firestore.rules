@@ -35,7 +35,15 @@ service cloud.firestore {
     }
 
     match /groups/{groupId} {
-      allow read, create: if request.auth != null;
+      // get (single doc by known ID) is safe to leave open — group IDs are
+      // unguessable Firestore auto-IDs. list is denied outright: Firestore
+      // can't redact fields per query, so an open list would let any
+      // authenticated user enumerate every group's admin uid,
+      // negativeBalanceLimit, etc. The one legitimate non-member lookup
+      // (join by code) goes through the findGroupByCode callable instead,
+      // which runs with Admin SDK privileges and returns only safe fields.
+      allow get, create: if request.auth != null;
+      allow list: if false;
       allow update, delete: if request.auth.uid == resource.data.admin;
 
       //--- SUBCOLLECTIONS ---//
