@@ -2,13 +2,13 @@
 # Python 3.9+
 
 # Core testing framework
-pytest==9.0.3
-pytest-html==4.1.1        # HTML test reports
+pytest==9.1.1
+pytest-html==4.2.0        # HTML test reports
 pytest-cov==7.1.0         # Code coverage
 pytest-xdist==3.8.0       # Parallel test execution
 
 # Firebase Admin SDK
-firebase-admin==6.5.0
+firebase-admin==7.5.0
 google-cloud-firestore==2.28.1
 google-cloud-storage==3.13.1
 
@@ -17,6 +17,6 @@ grpcio==1.83.0
 grpcio-status==1.83.0
 
 # Utilities
-python-dotenv==1.2.2      # Environment variable management
+python-dotenv==1.2.3      # Environment variable management
 colorama==0.4.6           # Colored terminal output (Windows)
 tabulate==0.10.0           # Pretty table formattingH
