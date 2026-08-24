@@ -211,11 +211,14 @@ platform :ios do
 
   desc "Update App Store metadata only (no build submission)"
   lane :update_metadata do
-    # Load API key from environment
+    # Load API key from environment. The key is stored with literal \n
+    # escapes (see fastlane/.env.default) since a raw multi-line PEM breaks
+    # .env parsing — un-escape it back into real newlines here, or OpenSSL
+    # fails with "invalid curve name" trying to parse the mangled PEM.
     api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"].to_s.gsub('\n', "\n"),
       is_key_content_base64: false,
       in_house: false
     )
