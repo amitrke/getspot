@@ -244,7 +244,13 @@ platform :ios do
       # added to this repo.
       skip_screenshots: true,
       force: true,
-      version_check_wait_retry_limit: 1
+      version_check_wait_retry_limit: 1,
+      # precheck's In-App Purchase check isn't supported with API-key auth
+      # ("Precheck cannot check In-app purchases with the App Store Connect
+      # API Key (yet)") and we're not submitting for review here anyway
+      # (submit_for_review defaults to false), so there's nothing to
+      # precheck for.
+      run_precheck_before_submit: false
     )
 
     UI.success("✅ Metadata updated on App Store Connect!")
