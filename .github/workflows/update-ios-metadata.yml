@@ -54,12 +54,16 @@ jobs:
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
         run: |
+          # The private key is a multi-line PEM. A raw multi-line value breaks
+          # .env's line-based KEY=VALUE parsing, so collapse it to literal \n
+          # escapes here — the Fastfile un-escapes it back before use.
+          ESCAPED_KEY="${APP_STORE_CONNECT_API_KEY//$'\n'/\\n}"
           cat > ./fastlane/.env << EOF
           APP_IDENTIFIER=org.getspot
           APP_STORE_CONNECT_API_KEY_PATH=./fastlane/app_store_connect_api_key.json
           APP_STORE_CONNECT_API_KEY_ID=$APP_STORE_CONNECT_API_KEY_ID
           APP_STORE_CONNECT_API_ISSUER_ID=$APP_STORE_CONNECT_API_ISSUER_ID
-          APP_STORE_CONNECT_API_KEY=$APP_STORE_CONNECT_API_KEY
+          APP_STORE_CONNECT_API_KEY=$ESCAPED_KEY
           APP_APPLE_ID=$APP_APPLE_ID
           EOF
 
