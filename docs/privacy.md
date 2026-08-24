@@ -1,6 +1,6 @@
 # Privacy Policy for GetSpot
 
-**Last Updated: October 1, 2025**
+**Last Updated: August 23, 2026**
 
 Thank you for using GetSpot. This Privacy Policy explains how we collect, use, and share information about you when you use our mobile application and related services (collectively, the "Services").
 
@@ -72,11 +72,9 @@ You have the right to access, update, or delete your personal information. You c
 
 ### 7. Data Deletion Request
 
-You can request the deletion of your account and all associated data. To do so, please use the following link to open a data deletion request.
+You can delete your account and all associated data directly within the app: open your profile screen and tap "Delete Account." This is immediate and cannot be undone. If you have a negative wallet balance in any group, you'll need to settle it with your group admin before you can delete your account.
 
-**[Request Data Deletion](https://github.com/amitrke/getspot/issues/new?title=Data+Deletion+Request)**
-
-We will process your request after verifying your identity to protect your account from fraudulent deletion requests.
+If you're unable to access the app, you can email [support@getspot.org](mailto:support@getspot.org) to request deletion instead.
 
 ---
 
@@ -94,4 +92,4 @@ We may update this Privacy Policy from time to time. We will notify you of any c
 
 ### 10. Contact Us
 
-If you have any questions about this Privacy Policy, please [open an issue on our GitHub repository](https://github.com/amitrke/getspot/issues/new).
+If you have any questions about this Privacy Policy, please email [support@getspot.org](mailto:support@getspot.org).

@@ -50,6 +50,29 @@ platform :android do
     UI.success("Screenshots uploaded to Google Play Store!")
   end
 
+  desc "Update Play Store listing metadata (title, descriptions) without uploading a build"
+  lane :update_metadata do
+    fastlane_dir = File.expand_path("..", Dir.pwd)
+    metadata_path = File.join(fastlane_dir, "fastlane", "metadata", "android")
+
+    upload_to_play_store(
+      json_key: ENV["SUPPLY_JSON_KEY"],
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: false,
+      # Not managed via this lane yet — see fastlane/metadata/android/en-US/.
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      # Release notes are handled separately at release time (paired with a
+      # real build), not synced as part of this baseline metadata update.
+      skip_upload_changelogs: true,
+      metadata_path: metadata_path,
+      package_name: ENV["ANDROID_PACKAGE_NAME"] || "org.getspot"
+    )
+
+    UI.success("✅ Metadata updated on Google Play Store!")
+  end
+
   desc "Prepare Maestro screenshots for Play Store"
   lane :prepare_screenshots do
     UI.message("Organizing screenshots from Maestro to Play Store format...")
@@ -187,12 +210,47 @@ platform :ios do
   end
 
   desc "Update App Store metadata only (no build submission)"
-  lane :update_metadata do
+  lane :update_metadata do |options|
+    # Load API key from environment. The key is base64-encoded before it's
+    # written into .env (see the workflow) — a raw multi-line PEM passed
+    # through GitHub Actions secrets/.env gets its newlines mangled, which
+    # OpenSSL rejects as "invalid curve name" (fastlane/fastlane#29478).
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: true,
+      in_house: false
+    )
+
+    # The live version has no editable version to attach metadata changes
+    # to, and edit_live: true hits a fastlane 2.238.0 bug (nil vs Array in
+    # upload_metadata.rb) as soon as it tries to upload anything — it's
+    # unconditional, skip_app_version_update doesn't avoid it either.
+    # Target/create a draft next-version instead, which goes through
+    # deliver's normal, non-buggy path. Pass app_version explicitly (rather
+    # than letting deliver auto-detect one) so it doesn't spend ~20 minutes
+    # retrying to find a pending version that doesn't exist yet.
+    app_version = options[:app_version] || "1.0.4"
+
     deliver(
+      api_key: api_key,
       app_identifier: ENV["APP_IDENTIFIER"],
+      app_version: app_version,
       skip_binary_upload: true,
-      skip_screenshots: false,
-      force: true
+      # Screenshots aren't synced via this lane yet — leaving this false with
+      # no local fastlane/metadata/en-US/screenshots content risked deliver
+      # erroring or touching what's live. Flip to false once screenshots are
+      # added to this repo.
+      skip_screenshots: true,
+      force: true,
+      version_check_wait_retry_limit: 1,
+      # precheck's In-App Purchase check isn't supported with API-key auth
+      # ("Precheck cannot check In-app purchases with the App Store Connect
+      # API Key (yet)") and we're not submitting for review here anyway
+      # (submit_for_review defaults to false), so there's nothing to
+      # precheck for.
+      run_precheck_before_submit: false
     )
 
     UI.success("✅ Metadata updated on App Store Connect!")
