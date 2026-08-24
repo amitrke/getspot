@@ -212,6 +212,7 @@ platform :ios do
   desc "Update App Store metadata only (no build submission)"
   lane :update_metadata do
     deliver(
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
       app_identifier: ENV["APP_IDENTIFIER"],
       skip_binary_upload: true,
       # Screenshots aren't synced via this lane yet — leaving this false with
