@@ -1,0 +1,13 @@
+Features
+- Performance improvements — events and transactions now cache locally for faster loading.
+- Copy button for admins to copy the list of members registered for an event.
+- Max event capacity limit for events set to sixty.
+- Handle horizontal rotation on iOS and Android.
+- Added Firebase App Check for improved account security.
+
+Bug Fixes
+- Home view cache refresh fix.
+- Fixed Apple Sign-In authentication errors on iOS and Android.
+- Fixed errors joining a group via an invite link or deep link.
+- Fixed duplicate join-request handling and improved the share/invite flow on web.
+- Clearer error messages and more reliable group creation.

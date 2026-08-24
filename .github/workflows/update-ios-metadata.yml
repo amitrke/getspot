@@ -50,10 +50,23 @@ jobs:
       - name: Create .env file
         env:
           APP_APPLE_ID: ${{ secrets.APP_APPLE_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
         run: |
+          # The private key is a multi-line PEM. Passing it through GitHub
+          # Actions secrets/.env as raw text mangles its newlines, which
+          # OpenSSL then rejects as "invalid curve name" (see
+          # fastlane/fastlane#29478) — base64-encode it instead so it
+          # survives as a single line, and decode with is_key_content_base64
+          # in the Fastfile.
+          ENCODED_KEY=$(printf '%s' "$APP_STORE_CONNECT_API_KEY" | base64 | tr -d '\n')
           cat > ./fastlane/.env << EOF
           APP_IDENTIFIER=org.getspot
           APP_STORE_CONNECT_API_KEY_PATH=./fastlane/app_store_connect_api_key.json
+          APP_STORE_CONNECT_API_KEY_ID=$APP_STORE_CONNECT_API_KEY_ID
+          APP_STORE_CONNECT_API_ISSUER_ID=$APP_STORE_CONNECT_API_ISSUER_ID
+          APP_STORE_CONNECT_API_KEY=$ENCODED_KEY
           APP_APPLE_ID=$APP_APPLE_ID
           EOF
 
