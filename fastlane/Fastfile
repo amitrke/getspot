@@ -232,7 +232,15 @@ platform :ios do
       # erroring or touching what's live. Flip to false once screenshots are
       # added to this repo.
       skip_screenshots: true,
-      force: true
+      force: true,
+      # No draft version exists most of the time (app is live, fully
+      # approved) — edit the live version's metadata directly instead of
+      # waiting for a pending version that isn't there.
+      edit_live: true,
+      # Default is 7 retries with growing waits (up to ~20 min total) for a
+      # pending version to appear — pointless here since edit_live means
+      # there's nothing to wait for.
+      version_check_wait_retry_limit: 1
     )
 
     UI.success("✅ Metadata updated on App Store Connect!")
