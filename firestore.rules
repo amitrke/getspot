@@ -35,15 +35,16 @@ service cloud.firestore {
     }
 
     match /groups/{groupId} {
-      // get (single doc by known ID) is safe to leave open — group IDs are
-      // unguessable Firestore auto-IDs. list is denied outright: Firestore
-      // can't redact fields per query, so an open list would let any
-      // authenticated user enumerate every group's admin uid,
-      // negativeBalanceLimit, etc. The one legitimate non-member lookup
-      // (join by code) goes through the findGroupByCode callable instead,
-      // which runs with Admin SDK privileges and returns only safe fields.
-      allow get, create: if request.auth != null;
-      allow list: if false;
+      // TEMPORARY REVERT (see GitHub issue for tracking): `allow list: if
+      // false` broke "load groups" for every iOS/Android user still on an
+      // app build older than the client-side fix that stopped querying
+      // /groups with whereIn(documentId) — those old builds can't be force-
+      // updated, and Firestore rules deploy instantly while app store
+      // releases don't, so tightening this broke production before any
+      // client could have picked up the compatible query pattern. Reopening
+      // `list` restores service; re-tighten once the fixed app version has
+      // had time to roll out to the userbase.
+      allow read, create: if request.auth != null;
       allow update, delete: if request.auth.uid == resource.data.admin;
 
       //--- SUBCOLLECTIONS ---//
