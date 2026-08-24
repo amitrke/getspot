@@ -210,7 +210,7 @@ platform :ios do
   end
 
   desc "Update App Store metadata only (no build submission)"
-  lane :update_metadata do
+  lane :update_metadata do |options|
     # Load API key from environment. The key is base64-encoded before it's
     # written into .env (see the workflow) — a raw multi-line PEM passed
     # through GitHub Actions secrets/.env gets its newlines mangled, which
@@ -223,9 +223,20 @@ platform :ios do
       in_house: false
     )
 
+    # The live version has no editable version to attach metadata changes
+    # to, and edit_live: true hits a fastlane 2.238.0 bug (nil vs Array in
+    # upload_metadata.rb) as soon as it tries to upload anything — it's
+    # unconditional, skip_app_version_update doesn't avoid it either.
+    # Target/create a draft next-version instead, which goes through
+    # deliver's normal, non-buggy path. Pass app_version explicitly (rather
+    # than letting deliver auto-detect one) so it doesn't spend ~20 minutes
+    # retrying to find a pending version that doesn't exist yet.
+    app_version = options[:app_version] || "1.0.4"
+
     deliver(
       api_key: api_key,
       app_identifier: ENV["APP_IDENTIFIER"],
+      app_version: app_version,
       skip_binary_upload: true,
       # Screenshots aren't synced via this lane yet — leaving this false with
       # no local fastlane/metadata/en-US/screenshots content risked deliver
@@ -233,21 +244,7 @@ platform :ios do
       # added to this repo.
       skip_screenshots: true,
       force: true,
-      # No draft version exists most of the time (app is live, fully
-      # approved) — edit the live version's metadata directly instead of
-      # waiting for a pending version that isn't there.
-      edit_live: true,
-      # Default is 7 retries with growing waits (up to ~20 min total) for a
-      # pending version to appear — pointless here since edit_live means
-      # there's nothing to wait for.
-      version_check_wait_retry_limit: 1,
-      # deliver 2.238.0 has a bug where edit_live: true skips initializing
-      # app_store_version_localizations but later unconditionally
-      # batch_enqueues it, crashing with "Enqueue Array instead of
-      # NilClass". We only need App Info-level fields (privacy_url) here,
-      # not version-scoped ones (description/keywords/promotional_text),
-      # so skip that step entirely and route around the bug.
-      skip_app_version_update: true
+      version_check_wait_retry_limit: 1
     )
 
     UI.success("✅ Metadata updated on App Store Connect!")
