@@ -48,7 +48,7 @@ class NotificationService {
       iOS: initializationSettingsIOS,
     );
     await _localNotifications.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: _onLocalNotificationTap,
     );
 
@@ -166,10 +166,10 @@ class NotificationService {
       iOS: iosDetails,
     );
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      platformDetails,
+      id: notification.hashCode,
+      title: notification.title,
+      body: notification.body,
+      notificationDetails: platformDetails,
       payload: data.isNotEmpty ? data.toString() : null,
     );
   }

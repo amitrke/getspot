@@ -1,0 +1,45 @@
+# Deploys the Flutter web app to a persistent Firebase Hosting preview
+# channel on every push to `develop`, so changes can be tested against a
+# real URL before they're merged to `main` and go live.
+#
+# Note: this only previews the web app itself. Cloud Functions and
+# Firestore rules are still shared with production (single Firebase
+# project) — see docs/DEPLOYMENT.md.
+
+name: Deploy Firebase Hosting Preview (develop)
+on:
+  workflow_dispatch: # Allows manual triggering to test the preview setup
+  push:
+    branches:
+      - develop
+    paths:
+      - 'lib/**'
+      - 'web/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
+      - 'docs/hosting/**'
+      - 'firebase.json'
+jobs:
+  build_and_deploy_preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: flutter build web
+      - name: Setup deep links for Universal Links / App Links
+        run: |
+          echo "Setting up Universal Links / App Links..."
+          mkdir -p build/web/.well-known
+          cp docs/hosting/apple-app-site-association build/web/.well-known/
+          cp docs/hosting/assetlinks.json build/web/.well-known/
+          echo "✅ Deep link files copied"
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}
+          projectId: getspot01
+          target: app
+          channelId: develop
+          expires: 30d

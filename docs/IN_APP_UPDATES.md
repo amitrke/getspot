@@ -9,7 +9,7 @@ GetSpot uses the [`upgrader`](https://pub.dev/packages/upgrader) package to auto
 ## Implementation
 
 ### Package
-- **Package**: `upgrader: ^11.2.0`
+- **Package**: `upgrader: ^12.3.0`
 - **Location**: Added to `pubspec.yaml` dependencies
 
 ### Integration
@@ -50,7 +50,7 @@ return UpgradeAlert(
 4. Tapping "Update" opens Google Play Store to the app's page
 
 ### Version Detection
-- **Current Version**: Read from `pubspec.yaml` (`version: 1.0.1+2`)
+- **Current Version**: Read from `pubspec.yaml` (`version: 1.0.3+2`)
 - **Store Version**: Fetched from App Store (iOS) or Google Play Store (Android)
 - **Comparison**: Uses semantic versioning (major.minor.patch)
 
@@ -179,7 +179,7 @@ UpgradeCard(
 ## Store Requirements
 
 ### iOS (App Store)
-- **Bundle ID**: Must match the one in App Store Connect (e.g., `com.getspot.app`)
+- **Bundle ID**: Must match the one in App Store Connect (`org.getspot`)
 - **Version Format**: Follows `CFBundleShortVersionString` (e.g., `1.0.1`)
 - **Lookup**: Uses iTunes Search API (no authentication needed)
 

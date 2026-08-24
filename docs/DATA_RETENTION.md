@@ -51,11 +51,13 @@ A scheduled Cloud Function (`runDataLifecycleManagement`) will be configured to 
 
 ### Stage 2: Deletion (Cloud Storage -> Permanent Deletion)
 
-The final deletion of archived data will be handled automatically by **Google Cloud Storage Object Lifecycle Management**. This is the most efficient and cost-effective method for managing the final stage of the data's lifecycle.
+The final deletion of the archived **data file** is handled automatically by **Google Cloud Storage Object Lifecycle Management**. This is the most efficient and cost-effective method for managing the final stage of the data's lifecycle.
 
 *   **Configuration:**
     *   A lifecycle rule will be configured on the `getspot-archive/` path within our GCS bucket.
     *   **Action:** `Delete`
     *   **Condition:** The rule will be triggered when an object's **age** is greater than **730 days** (2 years).
 
-This two-stage approach separates the logic of *what* to archive (the Cloud Function) from the policy of *when* to permanently delete (GCS Lifecycle Management), creating a clean and robust system.
+GCS Lifecycle Management can only delete the storage object — it has no way to call the Firebase Authentication Admin SDK. For **User Accounts** specifically, the daily `runDataLifecycleManagement` job also runs `deleteExpiredArchivedUsers()`, which checks the same 730-day age threshold on each `archive/users/{uid}.json` object and calls `admin.auth().deleteUser(uid)` once it's passed. This is what actually removes the user's Firebase Authentication record; without it, the Auth record would persist indefinitely even after the archive file and Firestore data are gone.
+
+This two-stage approach separates the logic of *what* to archive (the Cloud Function) from the policy of *when* to permanently delete (GCS Lifecycle Management for the file, and the scheduled function for the Auth record), creating a clean and robust system.

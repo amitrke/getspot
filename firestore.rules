@@ -29,7 +29,21 @@ service cloud.firestore {
       allow read: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
+    // Allows collection group queries for participants so users can find all events they've registered for.
+    match /{path=**}/participants/{participantId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
     match /groups/{groupId} {
+      // TEMPORARY REVERT (see GitHub issue for tracking): `allow list: if
+      // false` broke "load groups" for every iOS/Android user still on an
+      // app build older than the client-side fix that stopped querying
+      // /groups with whereIn(documentId) — those old builds can't be force-
+      // updated, and Firestore rules deploy instantly while app store
+      // releases don't, so tightening this broke production before any
+      // client could have picked up the compatible query pattern. Reopening
+      // `list` restores service; re-tighten once the fixed app version has
+      // had time to roll out to the userbase.
       allow read, create: if request.auth != null;
       allow update, delete: if request.auth.uid == resource.data.admin;
 
@@ -44,7 +58,8 @@ service cloud.firestore {
       // Admin can list/update/delete all requests for their group.
       match /joinRequests/{userId} {
         allow get: if request.auth.uid == userId;
-        allow create: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId
+          && !exists(/databases/$(database)/documents/groups/$(groupId)/members/$(userId));
         allow list, update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(groupId)).data.admin;
       }
 
@@ -57,7 +72,15 @@ service cloud.firestore {
 
     match /events/{eventId} {
       allow read: if exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
-      allow create: if exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(request.auth.uid));
+      // Only the group's admin may create events — the client UI only ever
+      // exposes event creation to admins, but nothing enforced that
+      // server-side: any member could otherwise write an events doc
+      // directly and set an arbitrary `admin` field on it. Both are
+      // asserted here rather than trusting the client-provided `admin`.
+      allow create: if request.auth.uid == get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.admin
+                    && request.resource.data.admin == request.auth.uid
+                    && request.resource.data.maxParticipants > 0
+                    && request.resource.data.maxParticipants <= get(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.maxEventCapacity;
       // Admin can update/delete events. Note: maxParticipants updates are handled via Cloud Function for safety
       allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/groups/$(resource.data.groupId)).data.admin;
 

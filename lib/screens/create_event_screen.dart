@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/services/event_cache_service.dart';
 import 'dart:developer' as developer;
 
 enum CommitmentDeadlineOption {
@@ -35,11 +36,37 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   TimeOfDay? _deadlineTime;
   bool _isLoading = false;
   CommitmentDeadlineOption _deadlineOption = CommitmentDeadlineOption.twoDays;
+  int _maxEventCapacity = 60; // Default value
 
   @override
   void initState() {
     super.initState();
+    _fetchGroupMaxCapacity();
     _prefillFromPreviousEvent();
+  }
+
+  Future<void> _fetchGroupMaxCapacity() async {
+    try {
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(widget.groupId)
+          .get();
+
+      if (groupDoc.exists && mounted) {
+        final groupData = groupDoc.data();
+        setState(() {
+          _maxEventCapacity = groupData?['maxEventCapacity'] ?? 60;
+        });
+      }
+    } catch (e, st) {
+      developer.log(
+        'Error fetching group max capacity',
+        name: 'CreateEventScreen',
+        error: e,
+        stackTrace: st,
+      );
+      // Use default value if fetch fails
+    }
   }
 
   Future<void> _prefillFromPreviousEvent() async {
@@ -226,6 +253,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         'status': 'active', // Add default status
       });
 
+      // Invalidate event cache to ensure fresh data
+      EventCacheService().invalidate(widget.groupId);
+
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -305,7 +335,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 Semantics(
                   label: 'commitment_deadline_dropdown',
                   child: DropdownButtonFormField<CommitmentDeadlineOption>(
-                    value: _deadlineOption,
+                    initialValue: _deadlineOption,
                     decoration: const InputDecoration(
                       labelText: 'Commitment Deadline (relative)',
                       border: OutlineInputBorder(),
@@ -365,13 +395,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   label: 'max_participants_field',
                   child: TextFormField(
                     controller: _maxParticipantsController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Max Participants',
+                      helperText: 'Maximum allowed: $_maxEventCapacity',
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || int.tryParse(value) == null) {
                         return 'Please enter a valid number.';
+                      }
+                      final maxParticipants = int.parse(value);
+                      if (maxParticipants <= 0) {
+                        return 'Must be greater than 0.';
+                      }
+                      if (maxParticipants > _maxEventCapacity) {
+                        return 'Cannot exceed $_maxEventCapacity (group limit).';
                       }
                       return null;
                     },

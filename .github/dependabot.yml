@@ -5,7 +5,26 @@
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/functions"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
+
+  - package-ecosystem: "npm"
+    directory: "/main"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+
+  - package-ecosystem: "pip"
+    directory: "/tests"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"

@@ -40,7 +40,7 @@ Firebase Crashlytics provides real-time crash reporting that helps you track, pr
 ### Package
 ```yaml
 # pubspec.yaml
-firebase_crashlytics: ^4.2.2
+firebase_crashlytics: ^5.0.6
 ```
 
 ### Initialization (`lib/main.dart`)
@@ -348,10 +348,7 @@ await CrashlyticsService().setCrashlyticsCollectionEnabled(false);
 - [x] User ID set on sign-in
 - [x] User ID cleared on sign-out
 - [x] Auth errors logged
-- [ ] Cloud Function errors logged (TODO: Add to screens)
-- [ ] Firestore errors logged (TODO: Add to services)
-- [ ] Wallet errors logged (TODO: Add to wallet operations)
-- [ ] Event errors logged (TODO: Add to event screens)
+- [x] Cloud Function/Firestore/Wallet/Event errors logged (via centralized `lib/helpers/error_handler.dart` on the client and `functions/src/utils/errorHandler.ts` on the backend)
 - [x] Test crash verified in Firebase Console
 
 ## Platform-Specific Setup

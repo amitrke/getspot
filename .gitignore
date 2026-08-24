@@ -66,9 +66,13 @@ fastlane/test_output
 fastlane/app_store_connect_api_key.json
 *.p8
 
-# Fastlane metadata downloads
-fastlane/metadata
-fastlane/screenshots
+# Play Console service account key (NEVER COMMIT THIS)
+play_store_key.json
+
+# fastlane/metadata and fastlane/screenshots are intentionally version-
+# controlled (see docs/IOS_RELEASE_AUTOMATION.md / ANDROID_RELEASE_AUTOMATION.md)
+# — they're the source of truth pushed to the stores via CI, not a local
+# download cache.
 
 # Ruby/Bundler
 vendor/bundle/
@@ -87,3 +91,18 @@ screenshots/test-results/
 # Store screenshots (COMMIT THESE - used for App Store/Play Store)
 # Located in screenshots/store/ - these should be tracked in git
 !screenshots/store/
+
+# Python test suite
+tests/venv/
+tests/.pytest_cache/
+tests/__pycache__/
+tests/*.pyc
+tests/report.html
+tests/.coverage
+tests/htmlcov/
+
+# CRITICAL: Test service account keys (NEVER COMMIT!)
+tests/serviceAccountKey.json
+tests/*-firebase-adminsdk-*.json
+tests/credentials.json
+servicesAccountKey.json

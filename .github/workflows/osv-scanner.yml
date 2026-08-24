@@ -1,0 +1,57 @@
+# CodeQL's default setup only covers JS/TS + GitHub Actions, so it doesn't
+# scan the Flutter/Dart app code or Python tests. OSV-Scanner fills that gap
+# by checking pubspec.lock, package-lock.json, and requirements.txt/similar
+# against the OSV vulnerability database, and uploads findings to the
+# Security > Code scanning tab like CodeQL does.
+#
+# This workflow uses actions that are not certified by GitHub. They are
+# provided by a third-party (Google) and are governed by separate terms of
+# service, privacy policy, and support documentation.
+# https://google.github.io/osv-scanner/github-action/
+
+name: OSV-Scanner
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    # Diff-scanning PRs into main would run `git checkout main` inside the
+    # reusable workflow, which is ambiguous in this repo because of the
+    # top-level main/ directory ("'main' could be both a local file and a
+    # tracking branch") and fails the job. Not a coverage gap: a develop -> main
+    # PR was already diff-scanned as a feature branch's PR into develop, and
+    # gets scanned again post-merge via the push trigger above.
+    branches:
+      - develop
+  schedule:
+    - cron: '0 8 * * 1' # Weekly, Monday 08:00 UTC
+  workflow_dispatch:
+
+permissions:
+  # actions: read is required by the reusable workflows below to upload the
+  # SARIF file to code scanning. See:
+  # https://github.com/github/codeql-action/issues/2117
+  actions: read
+  security-events: write
+  contents: read
+
+jobs:
+  scan-scheduled:
+    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67" # v2.5.1
+    with:
+      scan-args: |-
+        -r
+        --skip-git
+        ./
+
+  scan-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@6e4298ebc4db23e847df9b2e2de2939d6f066c67" # v2.5.1
+    with:
+      scan-args: |-
+        -r
+        --skip-git
+        ./

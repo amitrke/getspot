@@ -17,22 +17,24 @@ class AuthService {
   final AnalyticsService _analytics = AnalyticsService();
   final CrashlyticsService _crashlytics = CrashlyticsService();
 
-  GoogleSignIn _getGoogleSignIn() {
+  // GoogleSignIn is now a singleton in v7.x
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+
+  // Initialize GoogleSignIn with platform-specific configuration
+  Future<void> _initializeGoogleSignIn() async {
     if (kIsWeb) {
-      return GoogleSignIn(
+      await _googleSignIn.initialize(
         clientId: "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
       );
     } else if (Platform.isAndroid) {
-      return GoogleSignIn(
+      await _googleSignIn.initialize(
         serverClientId: "932396176333-3gb68omehtpqigsc4733tvfojm72dur6.apps.googleusercontent.com",
       );
     } else {
       // For iOS and other platforms, the configuration is often handled via plist files
-      return GoogleSignIn();
+      await _googleSignIn.initialize();
     }
   }
-
-  late final GoogleSignIn _googleSignIn = _getGoogleSignIn();
 
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
@@ -68,10 +70,13 @@ class AuthService {
       // Trigger the authentication flow (mobile)
       developer.log('Starting Google Sign-In flow', name: 'AuthService');
 
+      // Initialize GoogleSignIn (required in v7.x)
+      await _initializeGoogleSignIn();
+
       // Sign out first to ensure clean state
       await _googleSignIn.signOut();
 
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
 
       if (googleUser == null) {
         developer.log('Google Sign-In cancelled by user', name: 'AuthService');
@@ -80,13 +85,23 @@ class AuthService {
 
       developer.log('Google account selected: ${googleUser.email}', name: 'AuthService');
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      // Obtain the auth details from the request (property in v7.x, not async)
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      // In v7.x, accessToken is obtained from authorizationClient if needed
+      // For Firebase Auth, idToken is the primary requirement
+      String? accessToken;
+      try {
+        final authorization = await googleUser.authorizationClient
+            .authorizationForScopes(const []);
+        accessToken = authorization?.accessToken;
+      } catch (e) {
+        developer.log('Could not get access token: $e', name: 'AuthService');
+      }
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
+        accessToken: accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -231,6 +246,17 @@ class AuthService {
           'email': email,
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        // Send the verification email. Don't fail the signup if this
+        // errors — the user can still request another one from the
+        // verify-email screen.
+        try {
+          await updatedUser.sendEmailVerification();
+        } catch (e) {
+          developer.log('Error sending verification email: $e',
+              name: 'AuthService');
+        }
+
         return userCredential;
       }
       return null;
@@ -278,12 +304,27 @@ class AuthService {
       // Clear crashlytics user ID
       await _crashlytics.clearUserId();
 
-      // Sign out from Google first
-      await _googleSignIn.signOut();
+      // On web, signInWithGoogle() never calls _initializeGoogleSignIn() —
+      // it signs in via Firebase's signInWithPopup directly instead, so
+      // _googleSignIn (the GoogleSignIn.instance singleton) is never
+      // initialized regardless of how the user signed in. Calling
+      // .signOut()/.disconnect() on it awaits an internal Completer that
+      // only ever completes inside .initialize() — on web that hangs this
+      // method forever instead of throwing, silently breaking the sign-out
+      // button. Skip both entirely on web; there's no google_sign_in
+      // session to clear there anyway.
+      if (!kIsWeb) {
+        // Sign out from Google first
+        await _googleSignIn.signOut();
 
-      // Disconnect Google account to ensure fresh sign-in next time
-      if (!kIsWeb && await _googleSignIn.isSignedIn()) {
-        await _googleSignIn.disconnect();
+        // Disconnect Google account to ensure fresh sign-in next time
+        // In v7.x, we can safely call disconnect without checking
+        try {
+          await _googleSignIn.disconnect();
+        } catch (e) {
+          // Disconnect may fail if not signed in, which is fine
+          developer.log('Google disconnect note: $e', name: 'AuthService');
+        }
       }
 
       // Sign out from Firebase

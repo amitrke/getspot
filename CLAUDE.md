@@ -82,7 +82,7 @@ Used for asynchronous, multi-step operations:
 - Function updates document with final status (`"Confirmed"`, `"Waitlisted"`, etc.)
 - Client's real-time listener updates UI automatically
 
-**Key Functions:** `processEventRegistration`, `withdrawFromEvent`, `processWaitlist`
+**Key Functions:** `processEventRegistration`, `withdrawFromEvent` (calls `processWaitlist` utility internally)
 
 ### 2. Callable Function Pattern (Group Creation)
 Used for atomic, synchronous operations requiring transactionality:
@@ -136,13 +136,30 @@ For efficient queries without expensive collection group queries:
 ### Flutter (`lib/`)
 - `main.dart` - App entry point
 - `firebase_options.dart` - Firebase configuration
-- `screens/` - UI screens (home, login, group details, event details, etc.)
+- `screens/` - UI screens
+  - `home_screen.dart` - Home/dashboard with group list
+  - `login_screen.dart` - Authentication UI
+  - `group_details_screen.dart` - Group information and events
+  - `event_details_screen.dart` - Event information and participant list
+  - `create_event_screen.dart` - Event creation form
+  - `group_members_screen.dart` - Members list and management
+  - `join_group_screen.dart` - Join group by code
+  - `wallet_screen.dart` - User wallet and transaction history
+  - `member_profile_screen.dart` - Member profile details
+  - `onboarding_screen.dart` - New user onboarding flow
+  - `faq_screen.dart` - FAQ and help screen
 - `services/` - Business logic services
   - `auth_service.dart` - Authentication logic
   - `group_service.dart` - Group and membership queries
   - `notification_service.dart` - Push notification handling
   - `user_cache_service.dart` - User profile caching (15min TTL)
   - `group_cache_service.dart` - Group metadata caching (30min TTL)
+  - `transaction_cache_service.dart` - Transaction history caching (30min TTL)
+  - `event_cache_service.dart` - Event list caching with cache-first streams (10min TTL)
+  - `announcement_cache_service.dart` - Announcement caching with cache-first streams (10min TTL)
+  - `analytics_service.dart` - Firebase Analytics event tracking
+  - `crashlytics_service.dart` - Error logging and crash reporting
+  - `feature_flag_service.dart` - Remote Config/feature flags
 - `widgets/` - Reusable UI components
 - `models/` - Data models
 - `helpers/` - Utility functions
@@ -181,13 +198,20 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
 
 ## Important Notes
 
-- **Security:** Firestore Security Rules enforce read/write permissions. Functions operate in trusted environment with admin SDK.
+- **Security:**
+  - Firestore Security Rules enforce read/write permissions. Functions operate in trusted environment with admin SDK.
+  - **App Check:** Active on client-side (metrics-only mode). See `docs/FIREBASE_APP_CHECK.md` for enforcement details.
+  - Register debug tokens in Firebase Console for development builds.
 - **Real-time Updates:** Client uses Firestore real-time listeners for UI updates (participants, wallet balance, etc.).
 - **Push Notifications:** FCM tokens stored in `/users/{uid}.fcmTokens` array. Managed by `updateFcmToken` function.
 - **Data Lifecycle:** `dataLifecycle.ts` handles account deletion requests and data retention policies.
-- **Caching:** `UserCacheService` and `GroupCacheService` cache frequently-accessed data with TTL. Always call `invalidate()` after updates:
-  - `UserCacheService().invalidate(userId)` after updating user display name
-  - `GroupCacheService().invalidate(groupId)` after updating group metadata (when implemented)
+- **Caching:** Multiple cache services reduce Firestore reads with TTL-based expiration. Always call `invalidate()` after updates:
+  - `UserCacheService().invalidate(userId)` - after updating user display name
+  - `GroupCacheService().invalidate(groupId)` - after updating group metadata
+  - `TransactionCacheService().invalidate(groupId, userId)` - after creating transactions
+  - `EventCacheService().invalidate(groupId)` - after creating/cancelling events
+  - `AnnouncementCacheService().invalidate(groupId)` - after posting announcements
+  - Cache-first pattern: Events and announcements emit cached data immediately, then stream real-time updates
 - **Crashlytics:**
   - Configured in `lib/main.dart` (lines 37-48) to capture Flutter errors and async errors
   - Collection is **explicitly enabled** via `setCrashlyticsCollectionEnabled(true)` on startup

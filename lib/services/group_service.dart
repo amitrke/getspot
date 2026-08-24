@@ -31,14 +31,29 @@ class GroupService {
         .where('status', isEqualTo: 'pending')
         .snapshots();
 
-    return CombineLatestStream.combine2(
+    // Listen to participant status changes for this user
+    // This ensures the UI updates when user registers/withdraws from events
+    // Limited to 100 to prevent unbounded queries at scale
+    final participantsStream = _firestore
+        .collectionGroup('participants')
+        .where('uid', isEqualTo: user.uid)
+        .limit(100)
+        .snapshots();
+
+    return CombineLatestStream.combine3(
       membershipsStream,
       pendingRequestsStream,
+      participantsStream,
       (
         QuerySnapshot<Map<String, dynamic>> memberships,
         QuerySnapshot<Map<String, dynamic>> pendingRequests,
+        QuerySnapshot<Map<String, dynamic>> participants,
       ) {
-        return {'memberships': memberships, 'pendingRequests': pendingRequests};
+        return {
+          'memberships': memberships,
+          'pendingRequests': pendingRequests,
+          'participants': participants
+        };
       },
     ).asyncMap((data) async {
       final memberships =
@@ -75,11 +90,19 @@ class GroupService {
     }
 
     try {
-      final groupsSnapshot = await _firestore
-          .collection('groups')
-          .where(FieldPath.documentId, whereIn: allGroupIds)
-          .get();
-      final groupDocs = {for (var doc in groupsSnapshot.docs) doc.id: doc};
+      // Individual gets rather than a whereIn(documentId) query: /groups
+      // denies `list` entirely (Firestore can't redact fields per query, so
+      // an open list would let any authenticated user enumerate every
+      // group's admin uid, negativeBalanceLimit, etc.) but `get` by a known
+      // ID stays open — including for allGroupIds' pending-join-request
+      // groups, which the caller isn't a member of yet.
+      final groupSnapshots = await Future.wait(
+        allGroupIds.map((groupId) => _firestore.collection('groups').doc(groupId).get()),
+      );
+      final groupDocs = {
+        for (var doc in groupSnapshots)
+          if (doc.exists) doc.id: doc
+      };
 
       final memberViewModels =
           await _fetchMemberViewModels(user.uid, memberships.docs, groupDocs);

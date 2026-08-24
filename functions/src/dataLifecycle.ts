@@ -22,6 +22,7 @@ export const runDataLifecycleManagement = (db: admin.firestore.Firestore) => onS
       await archiveOldTransactions(db);
       await archiveInactiveGroups(db);
       await archiveInactiveUsers(db);
+      await deleteExpiredArchivedUsers();
       await deleteOldJoinRequests(db);
 
       functions.logger.info("Data lifecycle management job completed successfully.");
@@ -269,6 +270,52 @@ async function archiveInactiveUsers(db: admin.firestore.Firestore) {
   } while (pageToken);
 
   functions.logger.info(`Archived ${archivedCount} inactive users.`);
+}
+
+/**
+ * Deletes the Firebase Authentication record for users whose archived data
+ * has passed the 2-year retention window documented in DATA_RETENTION.md.
+ * GCS Object Lifecycle Management independently deletes the archive JSON
+ * file at the same age threshold, but it has no way to call the Firebase
+ * Auth Admin SDK — so this step is the only thing that removes the Auth
+ * record itself, which archiveInactiveUsers() never did.
+ * @return {Promise<void>} Resolves when the sweep completes.
+ */
+async function deleteExpiredArchivedUsers() {
+  functions.logger.info("Starting deleteExpiredArchivedUsers job.");
+  const bucket = admin.storage().bucket(ARCHIVE_BUCKET_NAME);
+  const auth = admin.auth();
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 730); // 2 years, matches the GCS lifecycle rule.
+
+  const [files] = await bucket.getFiles({prefix: "archive/users/"});
+
+  let deletedCount = 0;
+  for (const file of files) {
+    const [metadata] = await file.getMetadata();
+    const timeCreated = metadata.timeCreated ? new Date(metadata.timeCreated) : null;
+    if (!timeCreated || timeCreated >= cutoff) continue;
+
+    const match = file.name.match(/^archive\/users\/(.+)\.json$/);
+    if (!match) continue;
+    const userId = match[1];
+
+    try {
+      await auth.deleteUser(userId);
+      functions.logger.info(`Deleted expired Auth record for archived user ${userId}.`);
+      deletedCount++;
+    } catch (error) {
+      const authError = error as {code?: string};
+      if (authError.code === "auth/user-not-found") {
+        functions.logger.info(`Auth record for ${userId} was already gone; skipping.`);
+      } else {
+        functions.logger.error(`Error deleting Auth record for ${userId}:`, error);
+      }
+    }
+  }
+
+  functions.logger.info(`Deleted ${deletedCount} expired archived-user Auth records.`);
 }
 
 /**

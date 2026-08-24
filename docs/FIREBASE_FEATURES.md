@@ -2,7 +2,7 @@
 
 This document tracks Firebase features currently used in GetSpot and recommends additional features to enhance the application.
 
-**Last Updated:** 2025-10-13
+**Last Updated:** 2025-01-18
 
 ---
 
@@ -57,7 +57,7 @@ This document tracks Firebase features currently used in GetSpot and recommends 
 - `manageJoinRequest` - Approve/deny group requests
 - `createGroup` - Atomic group creation
 - `cancelEvent` - Event cancellation with refunds
-- `sendNotification` - Push notification delivery
+- `notifyOnNewEvent` / `notifyOnAnnouncement` / `sendEventReminders` - Push notification delivery
 - `runDataLifecycleManagement` - Scheduled data cleanup
 
 **Files:**
@@ -129,7 +129,7 @@ await CrashlyticsService().setCustomKey('group_id', groupId);
 
 **Files:**
 - `lib/services/notification_service.dart`
-- `functions/src/sendNotification.ts`
+- `functions/src/notifyOnNewEvent.ts`, `functions/src/notifyOnAnnouncement.ts`, `functions/src/sendEventReminders.ts`
 - `lib/main.dart:18-28` - Background handler
 
 **Notification Types:**
@@ -144,15 +144,15 @@ await CrashlyticsService().setCustomKey('group_id', groupId);
 ### 7. Firebase Hosting
 **Status:** Production | **Added:** Launch
 
-**Purpose:** Web app hosting
+**Purpose:** Web app + marketing site hosting (two Firebase Hosting sites in one project)
 
 **Implementation:**
-- Hosts Flutter web build
-- Custom domain: www.getspot.org
-- Serves from `build/web`
+- `app` target (`getspot01` site) - Flutter web build, custom domain `app.getspot.org`, serves from `build/web`
+- `main` target (`getspot01-main` site) - marketing site (Next.js, static export), custom domain `www.getspot.org`/`getspot.org`, serves from `main/out`, redirects old `/join/{code}` links to `app.getspot.org`
 
 **Files:**
 - `firebase.json` - Hosting configuration
+- `.firebaserc` - Hosting target mapping
 
 ---
 
@@ -180,6 +180,43 @@ if (FeatureFlagService().canAccessCrashTest(userId)) {
   // Show debug tools
 }
 ```
+
+---
+
+### 9. Firebase App Check
+**Status:** Production (Metrics-Only) | **Added:** 2025-01-18
+
+**Purpose:** Protect backend from abuse and unauthorized access
+
+**Implementation:**
+- Platform-specific attestation providers
+- iOS: DeviceCheck (production), Debug (development)
+- Android: Play Integrity API (production), Debug (development)
+- Web: ReCAPTCHA v3
+- **NOT enforced** on backend yet (metrics-only mode)
+
+**Files:**
+- `lib/main.dart:56-74` - Client initialization
+- `functions/src/index.ts:44-60` - Backend enforcement (commented)
+- `docs/FIREBASE_APP_CHECK.md` - Complete setup guide
+
+**Security Benefits:**
+- Verifies requests come from legitimate app
+- Prevents bot abuse of Cloud Functions
+- Rate limiting and traffic analysis
+- Essential before scaling
+
+**Current Status:**
+- ✅ Client-side App Check active
+- ✅ Collecting metrics in Firebase Console
+- ⏳ Backend enforcement pending (monitor first)
+- 📊 Target: >95% valid token rate before enforcement
+
+**Next Steps:**
+1. Register debug tokens for development
+2. Monitor metrics for 1-2 weeks
+3. Enable enforcement on security-critical functions
+4. Full enforcement after validation
 
 ---
 
@@ -212,67 +249,53 @@ if (FeatureFlagService().canAccessCrashTest(userId)) {
 
 ---
 
-#### 2. Firebase App Check
-**Effort:** Medium (4-8 hours) | **Impact:** High (Security)
+#### 2. ~~Firebase App Check~~ (IMPLEMENTED)
+**Status:** ✅ **COMPLETED** (Metrics-Only Mode) | **Added:** 2025-01-18
 
-**Why:** Protect backend from abuse and unauthorized access
+**What You Have:**
+- ✅ Client-side App Check active on all platforms
+- ✅ iOS: DeviceCheck (production) / Debug (development)
+- ✅ Android: Play Integrity API (production) / Debug (development)
+- ✅ Web: ReCAPTCHA v3
+- ✅ Backend prepared for enforcement (commented out)
 
-**Benefits:**
-- Verify requests come from legitimate app
-- Prevent bot abuse of Cloud Functions
-- Protect Firestore from unauthorized clients
-- Essential for production security
+**Documentation:** See `docs/FIREBASE_APP_CHECK.md`
 
-**Implementation Plan:**
-1. Enable App Check in Firebase Console
-2. Add dependency: `firebase_app_check: ^0.3.0`
-3. Configure attestation providers:
-   - iOS: DeviceCheck (production), Debug (development)
-   - Android: Play Integrity API (production), Debug (development)
-   - Web: reCAPTCHA v3
-4. Enforce App Check in Cloud Functions
-5. Enable Firestore App Check enforcement
+**Next Steps:**
+1. Register debug tokens in Firebase Console
+2. Monitor metrics (target >95% valid tokens)
+3. Enable enforcement on Cloud Functions after validation
 
-**Estimated Cost:** Free (within generous limits)
-
-**Priority:** ⭐⭐⭐⭐⭐ (Critical before scaling)
-
-**Security Note:** Prevents malicious actors from calling your Cloud Functions directly
+**Priority:** ✅ **DONE** - Now in monitoring phase
 
 ---
 
 ### Priority 2: High Impact, Medium Effort
 
-#### 3. Firebase Dynamic Links
-**Effort:** Medium (6-10 hours) | **Impact:** High (UX)
+#### 3. ~~Firebase Dynamic Links~~ Native Deep Links (ALREADY IMPLEMENTED)
+**Status:** ✅ **COMPLETED** | **Deprecated Service:** Firebase Dynamic Links ended August 2025
 
-**Why:** Better sharing and deep linking
+**Current Implementation:** Native Universal Links (iOS) + App Links (Android)
 
-**Benefits:**
-- Smart event invitation links
-- Group invitation links (replace codes)
-- Deep linking to specific screens
-- App install attribution
-- Works across platforms (iOS/Android/Web)
+**What You Have:**
+- ✅ Group sharing via `https://app.getspot.org/join/{GROUP_CODE}`
+- ✅ Native deep linking (no third-party dependency)
+- ✅ Flutter web fallback for non-app users
+- ✅ Share functionality in group details screen
+- ✅ `app_links` package for deep link handling
 
-**Use Cases:**
-- "Join this event" → Opens app to event details or App Store if not installed
-- "Join my group" → Direct link instead of typing group code
-- Share event results/photos
-- Re-engagement campaigns
+**Why Native is Better:**
+- ✅ Not deprecated (Firebase Dynamic Links shut down in 2025)
+- ✅ No API limits or costs
+- ✅ Better performance (no redirect)
+- ✅ Full control over URLs
+- ✅ Simpler implementation
 
-**Implementation Plan:**
-1. Configure Dynamic Links in Firebase Console
-2. Add dependency: `firebase_dynamic_links: ^5.5.0`
-3. Create link patterns:
-   - `https://getspot.page.link/event/{eventId}`
-   - `https://getspot.page.link/group/{groupCode}`
-4. Handle incoming links in app
-5. Update sharing features to use Dynamic Links
+**Documentation:** See `docs/DEEP_LINKS.md`
 
-**Estimated Cost:** Free (within limits, then $1/1000 links)
+**Future Enhancement:** Extend to event sharing (`/event/{eventId}`)
 
-**Priority:** ⭐⭐⭐⭐ (Significantly improves UX)
+**Priority:** ✅ **DONE** - No action needed
 
 ---
 
@@ -399,23 +422,26 @@ Several pre-built extensions could be useful:
 
 ## Implementation Roadmap
 
-### Phase 1: Performance & Security (This Month)
-**Total Time:** 6-12 hours
+### Phase 1: Performance & Security
+**Status:** ✅ **MOSTLY COMPLETE**
 
 1. ✅ Firebase Remote Config (Completed 2025-10-13)
-2. 🎯 Firebase Performance Monitoring (2-4 hours)
-3. 🎯 Firebase App Check (4-8 hours)
+2. ✅ Firebase App Check (Completed 2025-01-18 - Metrics-Only)
+3. 🎯 Firebase Performance Monitoring (Next - 2-4 hours)
 
 **Rationale:** Foundation for scaling safely
 
 ---
 
-### Phase 2: Enhanced Sharing (Next Month)
-**Total Time:** 6-10 hours
+### Phase 2: Enhanced Sharing
+**Status:** ✅ **COMPLETED**
 
-4. 🎯 Firebase Dynamic Links (6-10 hours)
+~~4. Firebase Dynamic Links~~
+- ✅ Native deep linking already implemented
+- ✅ Group sharing via Universal Links / App Links
+- See: `docs/DEEP_LINKS.md`
 
-**Rationale:** Significant UX improvement for viral growth
+**Future:** Extend to event sharing (2-4 hours)
 
 ---
 

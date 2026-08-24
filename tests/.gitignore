@@ -1,0 +1,39 @@
+# Service account keys (NEVER COMMIT THESE!)
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+credentials.json
+
+# Environment files
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Test outputs
+.pytest_cache/
+.coverage
+htmlcov/
+*.html
+report.html
+report.xml
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

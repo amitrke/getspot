@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:getspot/firebase_options.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/screens/login_screen.dart';
+import 'package:getspot/screens/verify_email_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
 import 'package:getspot/screens/group_details_screen.dart';
 import 'dart:developer' as developer;
@@ -50,6 +52,26 @@ void main() async {
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialize Firebase App Check for security
+  // Protects backend resources from abuse and unauthorized access
+  await FirebaseAppCheck.instance.activate(
+    // iOS: Use DeviceCheck for production, Debug provider for development
+    // Android: Use Play Integrity for production, Debug provider for development
+    // Web: Use ReCAPTCHA v3
+    providerAndroid: kDebugMode
+        ? const AndroidDebugProvider()
+        : const AndroidPlayIntegrityProvider(),
+    providerApple: kDebugMode
+        ? const AppleDebugProvider()
+        : const AppleDeviceCheckProvider(),
+    providerWeb: ReCaptchaV3Provider('6LcNYKYqAAAAADQGaWv-f3W8kVxaFT84HMO9JfSX'),
+  );
+
+  developer.log(
+    'App Check activated - Provider: ${kDebugMode ? 'Debug' : 'Production'}',
+    name: 'AppCheck',
   );
 
   // Initialize Firebase Crashlytics
@@ -180,7 +202,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     // Parse the deep link
-    // Expected format: https://getspot.org/join/{GROUP_CODE}
+    // Expected format: https://app.getspot.org/join/{GROUP_CODE}
     if (uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'join') {
       final groupCode = uri.pathSegments[1];
       if (groupCode.isNotEmpty) {
@@ -342,6 +364,16 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // User is logged in
         if (user != null) {
+          // Email/password accounts must verify their address before
+          // reaching the app; Google/Apple sign-in already asserts a
+          // verified email. userChanges() fires on reload(), so once the
+          // user verifies and taps "I've verified" this swaps to
+          // HomeScreen automatically.
+          if (!user.emailVerified) {
+            developer.log('Showing VerifyEmailScreen for user: ${user.uid}', name: 'AuthWrapper');
+            return const VerifyEmailScreen();
+          }
+
           developer.log('Showing HomeScreen for user: ${user.uid}', name: 'AuthWrapper');
           // Set analytics user ID
           _analytics.setUserId(user.uid);

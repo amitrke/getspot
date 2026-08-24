@@ -1,0 +1,84 @@
+# Validates Firebase Functions changes by installing, linting, building, and
+# running the unit test suite (against the Firestore emulator — no secrets
+# needed). On push to develop, additionally runs a dry-run deploy (no
+# changes made) to catch invalid triggers/config that only surface against
+# the real project.
+#
+# Also runs on pull_request (including Dependabot PRs) so lint/build/test
+# failures are caught before merge instead of only after landing on develop.
+# The Google Cloud auth + dry-run-deploy steps are skipped for pull_request
+# because GitHub does not pass repo secrets to workflows triggered by
+# Dependabot pull requests — lint + build + test alone still catch the
+# class of breakage (e.g. an incompatible TypeScript major bump, or a
+# regression in the wallet/registration transaction logic) that matters most.
+
+name: Dry Run Firebase Functions Deploy
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'functions/**'
+  pull_request:
+    paths:
+      - 'functions/**'
+  workflow_dispatch:
+
+jobs:
+  dry_run_functions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        # The Firestore emulator (used by the unit test suite below) requires
+        # JDK 21+; ubuntu-latest's default java isn't guaranteed to satisfy that.
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22' # Match the version in package.json
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - name: Install Functions Dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: ./functions
+
+      - name: Lint
+        run: npm run lint
+        working-directory: ./functions
+
+      - name: Build TypeScript
+        run: pnpm run build
+        working-directory: ./functions
+
+      - name: Run unit tests
+        run: npm test
+        working-directory: ./functions
+
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push'
+        uses: 'google-github-actions/auth@v3'
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}'
+
+      - name: Dry run deploy to Firebase
+        uses: w9jds/firebase-action@9ad0d519471afe1de970603de47075637414bfe9 # v15.27.0
+        with:
+          args: deploy --only functions --dry-run
+        env:
+          GCP_SA_KEY: ${{ secrets.GITHUBACTIONSDEPLOY }}
