@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import en from "@/content/en";
+import { alternateLanguages } from "@/content/routes";
+import "../globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GetSpot — Organize sports meetups with ease",
-  description:
-    "GetSpot helps organizers schedule events, manage participants, and handle group payments for badminton and other sports meetups.",
+  title: en.home.metaTitle,
+  description: en.home.metaDescription,
+  alternates: {
+    languages: alternateLanguages("home"),
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
