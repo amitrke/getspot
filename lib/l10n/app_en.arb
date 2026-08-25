@@ -941,5 +941,267 @@
   "profileFallbackGroupName": "Group",
   "@profileFallbackGroupName": {
     "description": "Fallback shown in place of a group's name if it's missing"
+  },
+
+  "groupDetailsFallbackTitle": "Group Details",
+  "@groupDetailsFallbackTitle": {
+    "description": "App bar title fallback if the group has no name"
+  },
+  "groupDetailsShareTooltip": "Share Group",
+  "@groupDetailsShareTooltip": {
+    "description": "Tooltip for the share icon button"
+  },
+  "groupDetailsLeaveGroupMenuItem": "Leave Group",
+  "@groupDetailsLeaveGroupMenuItem": {
+    "description": "Popup menu item to leave the group"
+  },
+  "groupDetailsEventsTab": "Events",
+  "@groupDetailsEventsTab": {
+    "description": "Tab label for the events list"
+  },
+  "groupDetailsAnnouncementsTab": "Announcements",
+  "@groupDetailsAnnouncementsTab": {
+    "description": "Tab label for announcements"
+  },
+  "groupDetailsAdminTab": "Admin",
+  "@groupDetailsAdminTab": {
+    "description": "Tab label for the admin management tab"
+  },
+  "groupDetailsCodeLabel": "Group Code: {code}",
+  "@groupDetailsCodeLabel": {
+    "description": "Shows the group's join code",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsCopyCodeTooltip": "Copy group code",
+  "@groupDetailsCopyCodeTooltip": {
+    "description": "Tooltip for the copy-code icon button"
+  },
+  "groupDetailsCodeUnavailableText": "Group Code unavailable",
+  "@groupDetailsCodeUnavailableText": {
+    "description": "Shown in place of the group code when it's not set"
+  },
+  "groupDetailsCodeUnavailableSnackbar": "Group code not available.",
+  "@groupDetailsCodeUnavailableSnackbar": {
+    "description": "SnackBar shown when trying to copy/share a missing group code"
+  },
+  "groupDetailsCodeCopiedSnackbar": "Group code \"{code}\" copied to clipboard.",
+  "@groupDetailsCodeCopiedSnackbar": {
+    "description": "SnackBar confirming the group code was copied",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsMembersButton": "Members",
+  "@groupDetailsMembersButton": {
+    "description": "Button to open the group members screen"
+  },
+  "groupDetailsMyWalletButton": "My Wallet",
+  "@groupDetailsMyWalletButton": {
+    "description": "Button to open the current user's wallet for this group"
+  },
+  "groupDetailsCreateEventButton": "Create Event",
+  "@groupDetailsCreateEventButton": {
+    "description": "FAB label to create a new event"
+  },
+
+  "groupDetailsShareInviteText": "Join our group on GetSpot!",
+  "@groupDetailsShareInviteText": {
+    "description": "First line of the group invite share message"
+  },
+  "groupDetailsShareGroupLabel": "Group: {name}",
+  "@groupDetailsShareGroupLabel": {
+    "description": "Line in the share message naming the group",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareTapToJoin": "Tap to join: {link}",
+  "@groupDetailsShareTapToJoin": {
+    "description": "Line in the share message with the deep link",
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareUseCode": "Or use code: {code} in the GetSpot app",
+  "@groupDetailsShareUseCode": {
+    "description": "Line in the share message with the fallback group code",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareSubject": "Join {name} on GetSpot",
+  "@groupDetailsShareSubject": {
+    "description": "Subject line for the share sheet",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareFallbackName": "our group",
+  "@groupDetailsShareFallbackName": {
+    "description": "Fallback for the group name in the share subject if missing"
+  },
+  "groupDetailsSharingNotSupported": "Sharing isn't supported in this browser. Invite message copied to clipboard instead.",
+  "@groupDetailsSharingNotSupported": {
+    "description": "SnackBar shown when the Web Share API isn't available and the invite was copied instead"
+  },
+  "groupDetailsErrorSharing": "Error sharing: {error}",
+  "@groupDetailsErrorSharing": {
+    "description": "SnackBar shown when sharing fails outside the web fallback case",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groupDetailsFallbackGroupNameGeneric": "this group",
+  "@groupDetailsFallbackGroupNameGeneric": {
+    "description": "Fallback for the group name when leaving a group, if missing"
+  },
+  "groupDetailsLeaveConfirmTitle": "Leave {groupName}?",
+  "@groupDetailsLeaveConfirmTitle": {
+    "description": "Confirmation dialog title before leaving a group",
+    "placeholders": {
+      "groupName": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsLeaveConfirmContent": "You'll need a new invite or the group code to rejoin. Make sure your wallet balance is settled and you're not registered for any upcoming events first.",
+  "@groupDetailsLeaveConfirmContent": {
+    "description": "Confirmation dialog body before leaving a group"
+  },
+  "groupDetailsLeaveButton": "Leave",
+  "@groupDetailsLeaveButton": {
+    "description": "Button to confirm leaving the group"
+  },
+  "groupDetailsLeftGroupSnackbar": "You've left {groupName}.",
+  "@groupDetailsLeftGroupSnackbar": {
+    "description": "SnackBar shown after successfully leaving a group",
+    "placeholders": {
+      "groupName": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsCouldNotLeave": "Could not leave the group.",
+  "@groupDetailsCouldNotLeave": {
+    "description": "Fallback SnackBar message when leaving a group fails with no message"
+  },
+  "groupDetailsErrorLeaving": "Error leaving group: {error}",
+  "@groupDetailsErrorLeaving": {
+    "description": "SnackBar shown when leaving a group throws a non-functions exception",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groupDetailsMustBeLoggedInAnnouncement": "You must be logged in to post an announcement.",
+  "@groupDetailsMustBeLoggedInAnnouncement": {
+    "description": "Error thrown when posting an announcement while signed out"
+  },
+  "groupDetailsAdminAuthorFallback": "Admin",
+  "@groupDetailsAdminAuthorFallback": {
+    "description": "Fallback author name for an announcement when the poster has no display name"
+  },
+  "groupDetailsErrorPostingAnnouncement": "Error posting announcement: {error}",
+  "@groupDetailsErrorPostingAnnouncement": {
+    "description": "SnackBar shown when posting an announcement fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsNewAnnouncementLabel": "New Announcement",
+  "@groupDetailsNewAnnouncementLabel": {
+    "description": "Label for the new announcement text field"
+  },
+  "groupDetailsErrorLoadingAnnouncements": "Error loading announcements.",
+  "@groupDetailsErrorLoadingAnnouncements": {
+    "description": "Shown when the announcements stream errors"
+  },
+  "groupDetailsNoAnnouncementsYet": "No announcements yet.",
+  "@groupDetailsNoAnnouncementsYet": {
+    "description": "Shown when a group has no announcements"
+  },
+  "groupDetailsPostedBy": "Posted by {author} on {date}",
+  "@groupDetailsPostedBy": {
+    "description": "Attribution line under an announcement",
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groupDetailsErrorLoadingEvents": "Error loading events.",
+  "@groupDetailsErrorLoadingEvents": {
+    "description": "Shown when the events stream errors"
+  },
+  "groupDetailsUpcomingEventsHeader": "Upcoming Events",
+  "@groupDetailsUpcomingEventsHeader": {
+    "description": "Header above the event list"
+  },
+  "groupDetailsNoDate": "No date",
+  "@groupDetailsNoDate": {
+    "description": "Fallback shown when an event has no timestamp"
+  },
+  "groupDetailsUnnamedEvent": "Unnamed Event",
+  "@groupDetailsUnnamedEvent": {
+    "description": "Fallback shown when an event has no name"
+  },
+  "groupDetailsNoLocation": "No location",
+  "@groupDetailsNoLocation": {
+    "description": "Fallback shown when an event has no location"
+  },
+
+  "groupDetailsPendingRequestsTitle": "Pending Requests",
+  "@groupDetailsPendingRequestsTitle": {
+    "description": "Header for the pending join requests list"
+  },
+  "groupDetailsDeniedRequestsTitle": "Denied Requests",
+  "@groupDetailsDeniedRequestsTitle": {
+    "description": "Header for the denied join requests list"
+  },
+  "groupDetailsErrorLoadingList": "Error loading {title}.\nCheck console for details.",
+  "@groupDetailsErrorLoadingList": {
+    "description": "Shown when a join requests list fails to load",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsNoRequests": "No requests.",
+  "@groupDetailsNoRequests": {
+    "description": "Shown when a join requests list is empty"
+  },
+  "groupDetailsApproveButton": "Approve",
+  "@groupDetailsApproveButton": {
+    "description": "Button to approve a pending join request"
+  },
+  "groupDetailsDenyButton": "Deny",
+  "@groupDetailsDenyButton": {
+    "description": "Button to deny a pending join request"
   }
 }
