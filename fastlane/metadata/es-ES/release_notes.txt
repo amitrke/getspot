@@ -1,0 +1,13 @@
+Novedades
+- Mejoras de rendimiento: los eventos y las transacciones ahora se almacenan en caché localmente para una carga más rápida.
+- Botón de copia para que los administradores copien la lista de miembros inscritos en un evento.
+- Límite máximo de capacidad de eventos establecido en sesenta.
+- Manejo de la rotación horizontal en iOS y Android.
+- Se agregó Firebase App Check para mejorar la seguridad de la cuenta.
+
+Correcciones de errores
+- Corrección de la actualización de la caché de la vista de inicio.
+- Se corrigieron errores de autenticación de Iniciar sesión con Apple en iOS y Android.
+- Se corrigieron errores al unirse a un grupo mediante un enlace de invitación o enlace directo.
+- Se corrigió el manejo duplicado de solicitudes de unión y se mejoró el flujo de compartir/invitar en la web.
+- Mensajes de error más claros y creación de grupos más confiable.
