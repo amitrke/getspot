@@ -812,5 +812,134 @@
   "faqAdminsQ9Title": "What is the \"Commitment Deadline\"?",
   "faqAdminsQ9Body": "The commitment deadline is the last time before an event when a participant can withdraw and receive a guaranteed full refund. Set this deadline based on when you need to finalize attendance (e.g., 24 hours before the event). After the deadline, participants who withdraw only get refunded if someone from the waitlist takes their spot.",
   "faqAdminsQ10Title": "How do I cancel an event?",
-  "faqAdminsQ10Body": "Open the event details screen and select \"Cancel Event\" from the menu. All participants will be automatically refunded their fees, and they'll receive a notification about the cancellation. Consider sending an announcement explaining the reason for cancellation."
+  "faqAdminsQ10Body": "Open the event details screen and select \"Cancel Event\" from the menu. All participants will be automatically refunded their fees, and they'll receive a notification about the cancellation. Consider sending an announcement explaining the reason for cancellation.",
+
+  "commonOk": "OK",
+  "@commonOk": {
+    "description": "Generic OK button, used to dismiss dialogs"
+  },
+
+  "profileNotSignedIn": "Not signed in",
+  "@profileNotSignedIn": {
+    "description": "Shown if the profile screen somehow renders with no signed-in user"
+  },
+  "profileAppBarTitle": "My Profile",
+  "@profileAppBarTitle": {
+    "description": "Member profile screen app bar title"
+  },
+  "profileAnonymousName": "Anonymous",
+  "@profileAnonymousName": {
+    "description": "Fallback shown in place of the user's display name when none is set"
+  },
+  "profileDebugToolsTitle": "Debug Tools",
+  "@profileDebugToolsTitle": {
+    "description": "Header for the debug-only crash testing card"
+  },
+  "profileTestCrashButton": "Test Crash",
+  "@profileTestCrashButton": {
+    "description": "Debug button to trigger a fatal Crashlytics test crash"
+  },
+  "profileTestErrorButton": "Test Error",
+  "@profileTestErrorButton": {
+    "description": "Debug button to log a non-fatal Crashlytics test error"
+  },
+  "profileTestErrorLogged": "Test error logged to Crashlytics",
+  "@profileTestErrorLogged": {
+    "description": "SnackBar confirming the test error was logged"
+  },
+  "profileDeleteAccountButton": "Delete Account",
+  "@profileDeleteAccountButton": {
+    "description": "Button to start the account deletion flow"
+  },
+  "profileDeleteConfirmTitle": "Delete Account?",
+  "@profileDeleteConfirmTitle": {
+    "description": "Confirmation dialog title before deleting the account"
+  },
+  "profileDeleteConfirmContent": "This action is irreversible. All your data will be permanently deleted. If you have a positive balance in any of your groups, it will be forfeited. Are you sure you want to continue?",
+  "@profileDeleteConfirmContent": {
+    "description": "Confirmation dialog body before deleting the account"
+  },
+  "profileDeleteButton": "Delete",
+  "@profileDeleteButton": {
+    "description": "Button to confirm account deletion"
+  },
+  "profileErrorTitle": "Error",
+  "@profileErrorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "profileGroupBalancesHeader": "Group Balances",
+  "@profileGroupBalancesHeader": {
+    "description": "Header above the list of per-group wallet balances"
+  },
+  "profileNoGroupMemberships": "No group memberships yet.",
+  "@profileNoGroupMemberships": {
+    "description": "Shown when the user has no group memberships"
+  },
+  "profileBalanceError": "Error: {error}",
+  "@profileBalanceError": {
+    "description": "Shown when group balances fail to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotificationSettingsTitle": "Notification Settings",
+  "@profileNotificationSettingsTitle": {
+    "description": "Header for the notification settings card"
+  },
+  "profilePushNotificationsTitle": "Push Notifications",
+  "@profilePushNotificationsTitle": {
+    "description": "Title of the push notifications toggle"
+  },
+  "profilePushNotificationsSubtitle": "Receive notifications for new events, join approvals, and reminders",
+  "@profilePushNotificationsSubtitle": {
+    "description": "Subtitle explaining the push notifications toggle"
+  },
+  "profileNotificationsEnabled": "Notifications enabled",
+  "@profileNotificationsEnabled": {
+    "description": "SnackBar shown when notifications are turned on"
+  },
+  "profileNotificationsDisabled": "Notifications disabled",
+  "@profileNotificationsDisabled": {
+    "description": "SnackBar shown when notifications are turned off"
+  },
+  "profileErrorUpdatingSettings": "Error updating settings: {error}",
+  "@profileErrorUpdatingSettings": {
+    "description": "SnackBar shown when saving the notification toggle fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileEditNameTitle": "Edit Display Name",
+  "@profileEditNameTitle": {
+    "description": "Dialog title for editing the display name"
+  },
+  "profileNewNameLabel": "New Name",
+  "@profileNewNameLabel": {
+    "description": "Label for the new display name field"
+  },
+  "profileSaveButton": "Save",
+  "@profileSaveButton": {
+    "description": "Button to save the new display name"
+  },
+  "profileNameUpdated": "Display name updated successfully!",
+  "@profileNameUpdated": {
+    "description": "SnackBar shown after the display name is updated"
+  },
+  "profileGenericErrorOccurred": "An error occurred: {error}",
+  "@profileGenericErrorOccurred": {
+    "description": "SnackBar shown when updating the display name fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileFallbackGroupName": "Group",
+  "@profileFallbackGroupName": {
+    "description": "Fallback shown in place of a group's name if it's missing"
+  }
 }
