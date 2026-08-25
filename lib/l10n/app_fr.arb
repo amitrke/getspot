@@ -41,5 +41,41 @@
   "loginHaveAccountSignInLink": "Vous avez déjà un compte ? Connectez-vous",
   "loginPasswordResetSent": "Un lien de réinitialisation du mot de passe a été envoyé à votre adresse e-mail.",
   "loginGenericError": "Une erreur s'est produite.",
-  "loginSignInFailed": "Échec de la connexion : {error}"
+  "loginSignInFailed": "Échec de la connexion : {error}",
+
+  "appLogoSemanticLabel": "Logo de l'application",
+
+  "homeAppBarTitle": "Mes groupes",
+  "homeJoinGroupButton": "Rejoindre un groupe",
+  "homeCreateGroupButton": "Créer un groupe",
+  "homeErrorLoadingGroups": "Erreur lors du chargement des groupes",
+  "homeRetryButton": "Réessayer",
+  "homeWelcomeTitle": "Bienvenue sur GetSpot !",
+  "homeWelcomeDescription": "Voici votre espace pour gérer vos groupes sportifs et vos événements. Commencez par créer un nouveau groupe ou rejoignez-en un existant à l'aide d'un code.",
+
+  "verifyEmailStillNotVerified": "Toujours pas vérifié. Vérifiez votre boîte de réception (et vos courriers indésirables) pour le lien.",
+  "verifyEmailWaitBeforeResend": "Veuillez patienter un peu avant de demander un autre e-mail.",
+  "verifyEmailSent": "E-mail de vérification envoyé. Vérifiez votre boîte de réception.",
+  "verifyEmailCouldNotSend": "Impossible d'envoyer l'e-mail de vérification.",
+  "verifyEmailTitle": "Vérifiez votre e-mail",
+  "verifyEmailDescription": "Nous avons envoyé un lien de vérification à {email}. Cliquez dessus, puis revenez ici et appuyez sur « J'ai vérifié mon e-mail » ci-dessous.",
+  "verifyEmailFallbackAddress": "votre adresse e-mail",
+  "verifyEmailCheckButton": "J'ai vérifié mon e-mail",
+  "verifyEmailResendButton": "Renvoyer l'e-mail de vérification",
+  "verifyEmailSignOutButton": "Se déconnecter",
+
+  "walletAppBarTitle": "Portefeuille du groupe",
+  "walletRefreshTooltip": "Actualiser",
+  "walletHistoryHeader": "Historique",
+  "walletErrorMessage": "Erreur : {error}",
+  "walletCurrentBalance": "Solde actuel",
+  "walletNoTransactions": "Aucune transaction pour le moment.",
+
+  "groupItemPendingChip": "En attente",
+  "groupItemPendingApproval": "{count, plural, one{{count} membre en attente d'approbation} other{{count} membres en attente d'approbation}}",
+  "groupItemNoUpcomingEvents": "Aucun événement à venir",
+  "groupItemStatusNotRegistered": "Non inscrit",
+  "groupItemStatusConfirmed": "Confirmé",
+  "groupItemStatusWaitlisted": "Sur liste d'attente",
+  "groupItemStatusDenied": "Refusé"
 }

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'dart:developer' as developer;
 
@@ -29,8 +30,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       // it will automatically swap to HomeScreen once this flips to true.
       if (mounted && FirebaseAuth.instance.currentUser?.emailVerified != true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Still not verified. Check your inbox (and spam folder) for the link.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.verifyEmailStillNotVerified),
           ),
         );
       }
@@ -49,7 +50,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     if (_lastResendAt != null &&
         DateTime.now().difference(_lastResendAt!) < const Duration(seconds: 60)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please wait a bit before requesting another email.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.verifyEmailWaitBeforeResend)),
       );
       return;
     }
@@ -62,14 +63,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       _lastResendAt = DateTime.now();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Verification email sent. Check your inbox.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.verifyEmailSent)),
         );
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'Could not send verification email.'),
+            content: Text(e.message ?? AppLocalizations.of(context)!.verifyEmailCouldNotSend),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -85,7 +86,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final email = FirebaseAuth.instance.currentUser?.email ?? 'your email';
+    final l10n = AppLocalizations.of(context)!;
+    final email = FirebaseAuth.instance.currentUser?.email ?? l10n.verifyEmailFallbackAddress;
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -103,14 +105,13 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Verify your email',
+                    l10n.verifyEmailTitle,
                     style: Theme.of(context).textTheme.headlineSmall,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'We sent a verification link to $email. Click it, then come back and tap '
-                    '"I\'ve verified my email" below.',
+                    l10n.verifyEmailDescription(email),
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
@@ -124,7 +125,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('I\'ve verified my email'),
+                        : Text(l10n.verifyEmailCheckButton),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
@@ -136,12 +137,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Resend verification email'),
+                        : Text(l10n.verifyEmailResendButton),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => _authService.signOut(),
-                    child: const Text('Sign out'),
+                    child: Text(l10n.verifyEmailSignOutButton),
                   ),
                 ],
               ),

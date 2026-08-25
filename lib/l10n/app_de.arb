@@ -41,5 +41,41 @@
   "loginHaveAccountSignInLink": "Bereits ein Konto? Anmelden",
   "loginPasswordResetSent": "Ein Link zum Zurücksetzen des Passworts wurde an deine E-Mail-Adresse gesendet.",
   "loginGenericError": "Ein Fehler ist aufgetreten.",
-  "loginSignInFailed": "Anmeldung fehlgeschlagen: {error}"
+  "loginSignInFailed": "Anmeldung fehlgeschlagen: {error}",
+
+  "appLogoSemanticLabel": "App-Logo",
+
+  "homeAppBarTitle": "Meine Gruppen",
+  "homeJoinGroupButton": "Gruppe beitreten",
+  "homeCreateGroupButton": "Gruppe erstellen",
+  "homeErrorLoadingGroups": "Fehler beim Laden der Gruppen",
+  "homeRetryButton": "Erneut versuchen",
+  "homeWelcomeTitle": "Willkommen bei GetSpot!",
+  "homeWelcomeDescription": "Dies ist dein Bereich zur Verwaltung von Sportgruppen und Events. Beginne, indem du eine neue Gruppe erstellst oder einer bestehenden mit einem Code beitrittst.",
+
+  "verifyEmailStillNotVerified": "Noch nicht bestätigt. Überprüfe dein Postfach (und den Spam-Ordner) auf den Link.",
+  "verifyEmailWaitBeforeResend": "Bitte warte kurz, bevor du eine weitere E-Mail anforderst.",
+  "verifyEmailSent": "Bestätigungs-E-Mail gesendet. Überprüfe dein Postfach.",
+  "verifyEmailCouldNotSend": "Bestätigungs-E-Mail konnte nicht gesendet werden.",
+  "verifyEmailTitle": "Bestätige deine E-Mail-Adresse",
+  "verifyEmailDescription": "Wir haben einen Bestätigungslink an {email} gesendet. Klicke darauf und tippe anschließend unten auf „Ich habe meine E-Mail bestätigt“.",
+  "verifyEmailFallbackAddress": "deine E-Mail-Adresse",
+  "verifyEmailCheckButton": "Ich habe meine E-Mail bestätigt",
+  "verifyEmailResendButton": "Bestätigungs-E-Mail erneut senden",
+  "verifyEmailSignOutButton": "Abmelden",
+
+  "walletAppBarTitle": "Gruppen-Wallet",
+  "walletRefreshTooltip": "Aktualisieren",
+  "walletHistoryHeader": "Verlauf",
+  "walletErrorMessage": "Fehler: {error}",
+  "walletCurrentBalance": "Aktuelles Guthaben",
+  "walletNoTransactions": "Noch keine Transaktionen.",
+
+  "groupItemPendingChip": "Ausstehend",
+  "groupItemPendingApproval": "{count, plural, one{{count} Mitglied wartet auf Genehmigung} other{{count} Mitglieder warten auf Genehmigung}}",
+  "groupItemNoUpcomingEvents": "Keine bevorstehenden Events",
+  "groupItemStatusNotRegistered": "Nicht angemeldet",
+  "groupItemStatusConfirmed": "Bestätigt",
+  "groupItemStatusWaitlisted": "Auf der Warteliste",
+  "groupItemStatusDenied": "Abgelehnt"
 }

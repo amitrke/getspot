@@ -163,5 +163,149 @@
         "type": "String"
       }
     }
+  },
+
+  "appLogoSemanticLabel": "App Logo",
+  "@appLogoSemanticLabel": {
+    "description": "Accessibility label for the app logo image"
+  },
+
+  "homeAppBarTitle": "My Groups",
+  "@homeAppBarTitle": {
+    "description": "Home screen app bar title"
+  },
+  "homeJoinGroupButton": "Join a Group",
+  "@homeJoinGroupButton": {
+    "description": "Button on home screen to open the join-group modal"
+  },
+  "homeCreateGroupButton": "Create a Group",
+  "@homeCreateGroupButton": {
+    "description": "Button on home screen to open the create-group modal"
+  },
+  "homeErrorLoadingGroups": "Error loading groups",
+  "@homeErrorLoadingGroups": {
+    "description": "Title shown when the groups stream errors"
+  },
+  "homeRetryButton": "Retry",
+  "@homeRetryButton": {
+    "description": "Button to retry loading groups after an error"
+  },
+  "homeWelcomeTitle": "Welcome to GetSpot!",
+  "@homeWelcomeTitle": {
+    "description": "Title shown when the user has no groups yet"
+  },
+  "homeWelcomeDescription": "This is your space to manage sports groups and events. Get started by creating a new group or joining an existing one with a code.",
+  "@homeWelcomeDescription": {
+    "description": "Description shown when the user has no groups yet"
+  },
+
+  "verifyEmailStillNotVerified": "Still not verified. Check your inbox (and spam folder) for the link.",
+  "@verifyEmailStillNotVerified": {
+    "description": "SnackBar shown when the user taps check-verified but email is still unverified"
+  },
+  "verifyEmailWaitBeforeResend": "Please wait a bit before requesting another email.",
+  "@verifyEmailWaitBeforeResend": {
+    "description": "SnackBar shown when resending is rate-limited"
+  },
+  "verifyEmailSent": "Verification email sent. Check your inbox.",
+  "@verifyEmailSent": {
+    "description": "SnackBar shown after a verification email is resent"
+  },
+  "verifyEmailCouldNotSend": "Could not send verification email.",
+  "@verifyEmailCouldNotSend": {
+    "description": "Fallback SnackBar message when resending fails with no error message"
+  },
+  "verifyEmailTitle": "Verify your email",
+  "@verifyEmailTitle": {
+    "description": "Verify email screen title"
+  },
+  "verifyEmailDescription": "We sent a verification link to {email}. Click it, then come back and tap \"I've verified my email\" below.",
+  "@verifyEmailDescription": {
+    "description": "Instructions on the verify email screen",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailFallbackAddress": "your email",
+  "@verifyEmailFallbackAddress": {
+    "description": "Fallback text used in place of the email address if it's unavailable"
+  },
+  "verifyEmailCheckButton": "I've verified my email",
+  "@verifyEmailCheckButton": {
+    "description": "Button to check whether the email has been verified"
+  },
+  "verifyEmailResendButton": "Resend verification email",
+  "@verifyEmailResendButton": {
+    "description": "Button to resend the verification email"
+  },
+  "verifyEmailSignOutButton": "Sign out",
+  "@verifyEmailSignOutButton": {
+    "description": "Button to sign out from the verify email screen"
+  },
+
+  "walletAppBarTitle": "Group Wallet",
+  "@walletAppBarTitle": {
+    "description": "Wallet screen app bar title"
+  },
+  "walletRefreshTooltip": "Refresh",
+  "@walletRefreshTooltip": {
+    "description": "Tooltip for the wallet screen's refresh button"
+  },
+  "walletHistoryHeader": "History",
+  "@walletHistoryHeader": {
+    "description": "Header above the transaction history list"
+  },
+  "walletErrorMessage": "Error: {error}",
+  "@walletErrorMessage": {
+    "description": "Generic error message shown when balance or transactions fail to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "walletCurrentBalance": "Current Balance",
+  "@walletCurrentBalance": {
+    "description": "Label above the wallet balance amount"
+  },
+  "walletNoTransactions": "No transactions yet.",
+  "@walletNoTransactions": {
+    "description": "Shown when the transaction list is empty"
+  },
+
+  "groupItemPendingChip": "Pending",
+  "@groupItemPendingChip": {
+    "description": "Chip shown on a group list item when the user's membership is still pending"
+  },
+  "groupItemPendingApproval": "{count, plural, one{{count} member pending approval} other{{count} members pending approval}}",
+  "@groupItemPendingApproval": {
+    "description": "Shown to a group admin when members are awaiting join approval",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupItemNoUpcomingEvents": "No upcoming events",
+  "@groupItemNoUpcomingEvents": {
+    "description": "Shown on a group list item when there is no next event date"
+  },
+  "groupItemStatusNotRegistered": "Not Registered",
+  "@groupItemStatusNotRegistered": {
+    "description": "Event registration status label when the user hasn't registered"
+  },
+  "groupItemStatusConfirmed": "Confirmed",
+  "@groupItemStatusConfirmed": {
+    "description": "Event registration status label when confirmed"
+  },
+  "groupItemStatusWaitlisted": "Waitlisted",
+  "@groupItemStatusWaitlisted": {
+    "description": "Event registration status label when waitlisted"
+  },
+  "groupItemStatusDenied": "Denied",
+  "@groupItemStatusDenied": {
+    "description": "Event registration status label when denied"
   }
 }

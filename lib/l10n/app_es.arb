@@ -41,5 +41,41 @@
   "loginHaveAccountSignInLink": "¿Ya tienes una cuenta? Inicia sesión",
   "loginPasswordResetSent": "Se ha enviado un enlace de restablecimiento de contraseña a tu correo electrónico.",
   "loginGenericError": "Se produjo un error.",
-  "loginSignInFailed": "Error al iniciar sesión: {error}"
+  "loginSignInFailed": "Error al iniciar sesión: {error}",
+
+  "appLogoSemanticLabel": "Logotipo de la app",
+
+  "homeAppBarTitle": "Mis grupos",
+  "homeJoinGroupButton": "Unirse a un grupo",
+  "homeCreateGroupButton": "Crear un grupo",
+  "homeErrorLoadingGroups": "Error al cargar los grupos",
+  "homeRetryButton": "Reintentar",
+  "homeWelcomeTitle": "¡Bienvenido a GetSpot!",
+  "homeWelcomeDescription": "Este es tu espacio para gestionar grupos y eventos deportivos. Comienza creando un nuevo grupo o uniéndote a uno existente con un código.",
+
+  "verifyEmailStillNotVerified": "Aún no verificado. Revisa tu bandeja de entrada (y la carpeta de spam) para ver el enlace.",
+  "verifyEmailWaitBeforeResend": "Espera un poco antes de solicitar otro correo.",
+  "verifyEmailSent": "Correo de verificación enviado. Revisa tu bandeja de entrada.",
+  "verifyEmailCouldNotSend": "No se pudo enviar el correo de verificación.",
+  "verifyEmailTitle": "Verifica tu correo electrónico",
+  "verifyEmailDescription": "Enviamos un enlace de verificación a {email}. Haz clic en él y luego vuelve aquí y toca \"He verificado mi correo\" a continuación.",
+  "verifyEmailFallbackAddress": "tu correo electrónico",
+  "verifyEmailCheckButton": "He verificado mi correo",
+  "verifyEmailResendButton": "Reenviar correo de verificación",
+  "verifyEmailSignOutButton": "Cerrar sesión",
+
+  "walletAppBarTitle": "Billetera del grupo",
+  "walletRefreshTooltip": "Actualizar",
+  "walletHistoryHeader": "Historial",
+  "walletErrorMessage": "Error: {error}",
+  "walletCurrentBalance": "Saldo actual",
+  "walletNoTransactions": "Aún no hay transacciones.",
+
+  "groupItemPendingChip": "Pendiente",
+  "groupItemPendingApproval": "{count, plural, one{{count} miembro pendiente de aprobación} other{{count} miembros pendientes de aprobación}}",
+  "groupItemNoUpcomingEvents": "No hay próximos eventos",
+  "groupItemStatusNotRegistered": "No registrado",
+  "groupItemStatusConfirmed": "Confirmado",
+  "groupItemStatusWaitlisted": "En lista de espera",
+  "groupItemStatusDenied": "Rechazado"
 }
