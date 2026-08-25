@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/event_cache_service.dart';
 import 'package:getspot/services/transaction_cache_service.dart';
 import 'dart:developer' as developer;
@@ -37,6 +38,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     // No longer need to fetch admin status - it's passed as a parameter
   }
 
+  // Formats a dollar amount with the locale-correct decimal separator,
+  // keeping the literal "$" prefix (not itself a translation concern).
+  String _fmtAmount(double amount) {
+    final locale = Localizations.localeOf(context).toString();
+    return '\$${NumberFormat('0.00', locale).format(amount)}';
+  }
+
   Future<void> _showRegistrationConfirmationDialog(Map<String, dynamic> eventData) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -57,7 +65,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('You are not a member of this group.'),
+              content: Text(AppLocalizations.of(context)!.eventDetailsNotAMember),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -96,34 +104,35 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         showDialog(
           context: context,
           builder: (BuildContext context) {
+            final l10n = AppLocalizations.of(context)!;
             return AlertDialog(
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.red),
-                  SizedBox(width: 8),
-                  Text('Insufficient Balance'),
+                  const Icon(Icons.warning, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(l10n.eventDetailsInsufficientBalanceTitle),
                 ],
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Current Balance: \$${walletBalance.toStringAsFixed(2)}'),
-                  Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
-                  Text('New Balance: \$${newBalance.toStringAsFixed(2)}'),
+                  Text(l10n.eventDetailsCurrentBalanceAmount(_fmtAmount(walletBalance))),
+                  Text(l10n.eventDetailsEventFeeAmount(_fmtAmount(fee))),
+                  Text(l10n.eventDetailsNewBalanceAmount(_fmtAmount(newBalance))),
                   const SizedBox(height: 16),
-                  Text('Allowed Negative Limit: \$${negativeBalanceLimit.toStringAsFixed(2)}'),
+                  Text(l10n.eventDetailsAllowedNegativeLimit(_fmtAmount(negativeBalanceLimit))),
                   const SizedBox(height: 16),
-                  const Text(
-                    'You do not have sufficient balance to register for this event. Please contact your group admin to add funds.',
-                    style: TextStyle(color: Colors.red),
+                  Text(
+                    l10n.eventDetailsInsufficientBalanceMessage,
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
+                  child: Text(l10n.commonOk),
                 ),
               ],
             );
@@ -157,7 +166,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.eventDetailsGenericError(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -174,22 +183,23 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Register for Event?'),
+          title: Text(l10n.eventDetailsRegisterTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                eventData['name'] ?? 'Event',
+                eventData['name'] ?? l10n.eventDetailsFallbackEventName,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 16),
-              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              Text(l10n.eventDetailsEventFeeAmount(_fmtAmount(fee))),
               const Divider(height: 24),
-              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(l10n.eventDetailsCurrentBalanceAmount(_fmtAmount(currentBalance))),
               Text(
-                'New Balance: \$${newBalance.toStringAsFixed(2)}',
+                l10n.eventDetailsNewBalanceAmount(_fmtAmount(newBalance)),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
@@ -197,14 +207,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _registerForEvent();
               },
-              child: const Text('Confirm Registration'),
+              child: Text(l10n.eventDetailsConfirmRegistrationButton),
             ),
           ],
         );
@@ -222,12 +232,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning, color: Colors.orange),
-              SizedBox(width: 8),
-              Text('Low Balance Warning'),
+              const Icon(Icons.warning, color: Colors.orange),
+              const SizedBox(width: 8),
+              Text(l10n.eventDetailsLowBalanceWarningTitle),
             ],
           ),
           content: Column(
@@ -235,29 +246,29 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                eventData['name'] ?? 'Event',
+                eventData['name'] ?? l10n.eventDetailsFallbackEventName,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 16),
-              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              Text(l10n.eventDetailsEventFeeAmount(_fmtAmount(fee))),
               const Divider(height: 24),
-              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
+              Text(l10n.eventDetailsCurrentBalanceAmount(_fmtAmount(currentBalance))),
               Text(
-                'New Balance: \$${newBalance.toStringAsFixed(2)} (negative)',
+                l10n.eventDetailsNewBalanceNegative(_fmtAmount(newBalance)),
                 style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
               ),
-              Text('Allowed Limit: \$${negativeLimit.toStringAsFixed(2)}'),
+              Text(l10n.eventDetailsAllowedLimit(_fmtAmount(negativeLimit))),
               const SizedBox(height: 16),
-              const Text(
-                'You\'ll have a negative balance after registration. Please coordinate payment with your group admin.',
-                style: TextStyle(fontSize: 13),
+              Text(
+                l10n.eventDetailsNegativeBalanceWarning,
+                style: const TextStyle(fontSize: 13),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             ElevatedButton(
               onPressed: () {
@@ -265,7 +276,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 _registerForEvent();
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: const Text('I Understand, Register'),
+              child: Text(l10n.eventDetailsUnderstandRegisterButton),
             ),
           ],
         );
@@ -282,48 +293,49 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.list, color: Colors.blue),
-              SizedBox(width: 8),
-              Text('Join Waitlist?'),
+              const Icon(Icons.list, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text(l10n.eventDetailsJoinWaitlistTitle),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'This event is full. You\'ll be added to the waitlist.',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text('Fee: \$${fee.toStringAsFixed(2)} (charged now, refunded if not confirmed)'),
-              const Divider(height: 24),
-              Text('Current Balance: \$${currentBalance.toStringAsFixed(2)}'),
               Text(
-                'New Balance: \$${newBalance.toStringAsFixed(2)}',
+                l10n.eventDetailsEventFullMessage,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'You\'ll be automatically confirmed if a spot opens.',
-                style: TextStyle(fontSize: 13),
+              Text(l10n.eventDetailsWaitlistFeeInfo(_fmtAmount(fee))),
+              const Divider(height: 24),
+              Text(l10n.eventDetailsCurrentBalanceAmount(_fmtAmount(currentBalance))),
+              Text(
+                l10n.eventDetailsNewBalanceAmount(_fmtAmount(newBalance)),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.eventDetailsAutoConfirmInfo,
+                style: const TextStyle(fontSize: 13),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _registerForEvent();
               },
-              child: const Text('Join Waitlist'),
+              child: Text(l10n.eventDetailsJoinWaitlistButton),
             ),
           ],
         );
@@ -339,7 +351,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('You must be logged in to register.');
+        throw Exception(AppLocalizations.of(context)!.eventDetailsMustBeLoggedInRegister);
       }
 
       final participantRef = FirebaseFirestore.instance
@@ -350,7 +362,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
       await participantRef.set({
         'uid': user.uid,
-        'displayName': user.displayName ?? 'No Name',
+        'displayName': user.displayName ?? AppLocalizations.of(context)!.commonNoName,
         'photoURL': user.photoURL,
         'status': 'requested',
         'registeredAt': FieldValue.serverTimestamp(),
@@ -358,8 +370,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Your registration request has been submitted!'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.eventDetailsRegistrationSubmitted),
             backgroundColor: Colors.green,
           ),
         );
@@ -374,7 +386,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error submitting request: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.eventDetailsErrorSubmittingRequest(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -401,7 +413,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.data['message'] ?? 'Withdrawal successful.'),
+            content: Text(result.data['message'] ?? AppLocalizations.of(context)!.eventDetailsWithdrawalSuccessful),
             backgroundColor: Colors.green,
           ),
         );
@@ -416,7 +428,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'An unknown error occurred.'),
+            content: Text(e.message ?? AppLocalizations.of(context)!.createGroupUnknownError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -431,7 +443,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('An unexpected error occurred.'),
+            content: Text(AppLocalizations.of(context)!.createGroupUnexpectedError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -463,7 +475,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.data['message'] ?? 'Event cancelled successfully.'),
+            content: Text(result.data['message'] ?? AppLocalizations.of(context)!.eventDetailsCancelledSuccessfully),
             backgroundColor: Colors.green,
           ),
         );
@@ -478,7 +490,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'An unknown error occurred.'),
+            content: Text(e.message ?? AppLocalizations.of(context)!.createGroupUnknownError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -493,7 +505,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('An unexpected error occurred.'),
+            content: Text(AppLocalizations.of(context)!.createGroupUnexpectedError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -523,7 +535,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.data['message'] ?? 'Capacity updated successfully.'),
+            content: Text(result.data['message'] ?? AppLocalizations.of(context)!.eventDetailsCapacityUpdated),
             backgroundColor: Colors.green,
           ),
         );
@@ -538,7 +550,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'An unknown error occurred.'),
+            content: Text(e.message ?? AppLocalizations.of(context)!.createGroupUnknownError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -553,7 +565,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('An unexpected error occurred.'),
+            content: Text(AppLocalizations.of(context)!.createGroupUnexpectedError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -573,30 +585,31 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     final waitlistCount = eventData['waitlistCount'] ?? 0;
     final capacityController = TextEditingController(text: currentCapacity.toString());
 
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Update Event Capacity'),
+          title: Text(l10n.eventDetailsUpdateCapacityTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Current capacity: $currentCapacity'),
-              Text('Confirmed participants: $confirmedCount'),
-              Text('Waitlisted participants: $waitlistCount'),
+              Text(l10n.eventDetailsCurrentCapacity(currentCapacity)),
+              Text(l10n.eventDetailsConfirmedParticipants(confirmedCount)),
+              Text(l10n.eventDetailsWaitlistedParticipants(waitlistCount)),
               const SizedBox(height: 16),
               TextField(
                 controller: capacityController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'New Capacity',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.eventDetailsNewCapacityLabel,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Note: Cannot reduce below $confirmedCount (current confirmed count)',
+                l10n.eventDetailsCannotReduceBelow(confirmedCount),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.secondary,
                     ),
@@ -605,19 +618,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: const Text('Update'),
+              child: Text(l10n.eventDetailsUpdateButton),
               onPressed: () {
                 final newCapacity = int.tryParse(capacityController.text);
                 if (newCapacity == null || newCapacity <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Please enter a valid positive number.'),
+                      content: Text(l10n.eventDetailsValidPositiveNumber),
                       backgroundColor: Theme.of(context).colorScheme.error,
                     ),
                   );
@@ -644,6 +657,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     int confirmedCount,
     int waitlistCount,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final isIncreasing = newCapacity > oldCapacity;
     final change = (newCapacity - oldCapacity).abs();
 
@@ -651,35 +665,29 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     if (isIncreasing) {
       final canPromote = math.min(change, waitlistCount);
       if (canPromote > 0) {
-        message = 'Increasing capacity by $change spots.\n\n'
-            '$canPromote user(s) will be automatically promoted from the waitlist.\n\n'
-            'Continue?';
+        message = l10n.eventDetailsIncreaseCapacityWithPromote(change, canPromote);
       } else {
-        message = 'Increasing capacity by $change spots.\n\n'
-            'No waitlisted users to promote.\n\n'
-            'Continue?';
+        message = l10n.eventDetailsIncreaseCapacityNoPromote(change);
       }
     } else {
-      message = 'Decreasing capacity by $change spots (from $oldCapacity to $newCapacity).\n\n'
-          'This will not affect current confirmed participants.\n\n'
-          'Continue?';
+      message = l10n.eventDetailsDecreaseCapacity(change, oldCapacity, newCapacity);
     }
 
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Confirm Capacity Change'),
+          title: Text(l10n.eventDetailsConfirmCapacityChangeTitle),
           content: Text(message),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: const Text('Confirm'),
+              child: Text(l10n.commonConfirm),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 _updateEventCapacity(newCapacity);
@@ -695,19 +703,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final l10n = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Confirm Cancellation'),
-          content: const Text(
-              'Are you sure you want to cancel this event? This action is irreversible and will refund all registered participants.'),
+          title: Text(l10n.eventDetailsConfirmCancellationTitle),
+          content: Text(l10n.eventDetailsCancelConfirmMessage),
           actions: <Widget>[
             TextButton(
-              child: const Text('Nevermind'),
+              child: Text(l10n.eventDetailsNevermindButton),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Confirm Cancellation'),
+              child: Text(l10n.eventDetailsConfirmCancellationButton),
               onPressed: () {
                 Navigator.of(context).pop();
                 _cancelEvent(groupId);
@@ -728,16 +736,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       isAfterDeadline = DateTime.now().isAfter(deadlineTimestamp.toDate());
     }
 
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+
     String refundInfo;
     Color refundColor;
     IconData refundIcon;
 
     if (isAfterDeadline) {
-      refundInfo = 'Refund: May be forfeited (depends on waitlist)';
+      refundInfo = l10n.eventDetailsRefundMayBeForfeited;
       refundColor = Colors.orange;
       refundIcon = Icons.warning;
     } else {
-      refundInfo = 'Refund: \$${fee.toStringAsFixed(2)} (full refund)';
+      refundInfo = l10n.eventDetailsRefundFullAmount(_fmtAmount(fee));
       refundColor = Colors.green;
       refundIcon = Icons.check_circle;
     }
@@ -746,17 +757,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm Withdrawal'),
+          title: Text(l10n.eventDetailsConfirmWithdrawalTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                eventData['name'] ?? 'Event',
+                eventData['name'] ?? l10n.eventDetailsFallbackEventName,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 16),
-              Text('Event Fee: \$${fee.toStringAsFixed(2)}'),
+              Text(l10n.eventDetailsEventFeeAmount(_fmtAmount(fee))),
               const Divider(height: 24),
               Row(
                 children: [
@@ -776,22 +787,24 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               const SizedBox(height: 16),
               if (deadlineTimestamp != null) ...[
                 Text(
-                  'Commitment Deadline: ${DateFormat.yMMMd().add_jm().format(deadlineTimestamp.toDate())}',
+                  l10n.eventDetailsCommitmentDeadlineLabel(
+                    DateFormat.yMMMd(locale).add_jm().format(deadlineTimestamp.toDate()),
+                  ),
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 8),
               ],
               Text(
                 isAfterDeadline
-                    ? 'The commitment deadline has passed. If you withdraw now, your fee will only be refunded if someone from the waitlist takes your spot.'
-                    : 'You are withdrawing before the commitment deadline. You will receive a full refund of your fee.',
+                    ? l10n.eventDetailsDeadlinePassedMessage
+                    : l10n.eventDetailsBeforeDeadlineMessage,
                 style: const TextStyle(fontSize: 13),
               ),
             ],
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -804,7 +817,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 Navigator.of(context).pop();
                 _withdrawFromEvent();
               },
-              child: const Text('Confirm Withdrawal'),
+              child: Text(l10n.eventDetailsConfirmWithdrawalButton),
             ),
           ],
         );
@@ -814,9 +827,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Event Details'),
+        title: Text(l10n.eventDetailsAppBarTitle),
       ),
       body: SafeArea(
         child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -829,12 +843,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return const Center(child: Text('Error loading event details.'));
+              return Center(child: Text(l10n.eventDetailsErrorLoading));
             }
             if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Center(child: Text('Event not found.'));
+              return Center(child: Text(l10n.eventDetailsNotFound));
             }
 
+            final locale = Localizations.localeOf(context).toString();
             final event = snapshot.data!.data()!;
             final eventTimestamp = event['eventTimestamp'] as Timestamp?;
             final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
@@ -854,10 +869,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         borderRadius: BorderRadius.circular(8.0),
                         border: Border.all(color: Colors.red),
                       ),
-                      child: const Text(
-                        'Event Cancelled',
+                      child: Text(
+                        l10n.eventDetailsCancelledBanner,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.red,
                           fontWeight: FontWeight.bold,
                         ),
@@ -865,33 +880,33 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     ),
                   if (isCancelled) const SizedBox(height: 16),
                   Text(
-                    event['name'] ?? 'Unnamed Event',
+                    event['name'] ?? l10n.groupDetailsUnnamedEvent,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 12),
                   _buildCompactDetailRow(
                     icon: Icons.location_on,
-                    value: event['location'] ?? 'No location set',
+                    value: event['location'] ?? l10n.eventDetailsNoLocationSet,
                   ),
                   _buildCompactDetailRow(
                     icon: Icons.calendar_today,
                     value: eventTimestamp != null
-                        ? DateFormat.yMMMd()
+                        ? DateFormat.yMMMd(locale)
                             .add_jm()
                             .format(eventTimestamp.toDate())
-                        : 'No date set',
+                        : l10n.eventDetailsNoDateSet,
                   ),
                   _buildCompactDetailRow(
                     icon: Icons.attach_money,
-                    value: '${event['fee'] ?? 0} credits',
+                    value: l10n.eventDetailsFeeCredits('${event['fee'] ?? 0}'),
                   ),
                   _buildCompactDetailRow(
                     icon: Icons.timer,
                     value: deadlineTimestamp != null
-                        ? DateFormat.yMMMd()
+                        ? DateFormat.yMMMd(locale)
                             .add_jm()
                             .format(deadlineTimestamp.toDate())
-                        : 'No deadline',
+                        : l10n.eventDetailsNoDeadline,
                   ),
                   const SizedBox(height: 12),
                   const Divider(),
@@ -899,8 +914,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                     child: ListView(
                       children: [
                         _buildParticipantList(
-                          title:
-                              'Confirmed (${event['confirmedCount'] ?? 0}/${event['maxParticipants'] ?? 'N/A'})',
+                          title: l10n.eventDetailsConfirmedHeader(
+                            '${event['confirmedCount'] ?? 0}',
+                            '${event['maxParticipants'] ?? 'N/A'}',
+                          ),
                           status: 'confirmed',
                           showUpdateButton: _isAdmin && !isCancelled,
                           onUpdatePressed: () => _showUpdateCapacityDialog(event),
@@ -908,7 +925,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildParticipantList(
-                          title: 'Waitlist (${event['waitlistCount'] ?? 0})',
+                          title: l10n.eventDetailsWaitlistHeader('${event['waitlistCount'] ?? 0}'),
                           status: 'waitlisted',
                         ),
                       ],
@@ -940,9 +957,9 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (participants.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No participants to copy'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.eventDetailsNoParticipantsToCopy),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -955,9 +972,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       buffer.writeln('=' * title.length);
       buffer.writeln();
 
+      final noNameFallback = mounted ? AppLocalizations.of(context)!.commonNoName : 'No Name';
       for (int i = 0; i < participants.length; i++) {
         final participant = participants[i].data();
-        final displayName = participant['displayName'] ?? 'No Name';
+        final displayName = participant['displayName'] ?? noNameFallback;
         buffer.writeln('${i + 1}. $displayName');
       }
 
@@ -967,7 +985,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Copied ${participants.length} ${participants.length == 1 ? 'participant' : 'participants'} to clipboard'),
+            content: Text(AppLocalizations.of(context)!.eventDetailsCopiedParticipants(participants.length)),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
           ),
@@ -983,7 +1001,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error copying list: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.eventDetailsErrorCopyingList(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 3),
           ),
@@ -999,6 +1017,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     VoidCallback? onUpdatePressed,
     bool isUpdating = false,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1016,7 +1035,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               IconButton(
                 onPressed: () => _copyParticipantList(status, title),
                 icon: const Icon(Icons.copy, size: 20),
-                tooltip: 'Copy list',
+                tooltip: l10n.eventDetailsCopyListTooltip,
                 style: IconButton.styleFrom(
                   foregroundColor: Colors.grey[700],
                 ),
@@ -1033,7 +1052,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('Update'),
+                label: Text(l10n.eventDetailsUpdateButton),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
@@ -1056,11 +1075,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return const Text('Error loading participants.');
+              return Text(l10n.eventDetailsErrorLoadingParticipants);
             }
             final participants = snapshot.data?.docs ?? [];
             if (participants.isEmpty) {
-              return const Text('No participants in this list yet.');
+              return Text(l10n.eventDetailsNoParticipantsYet);
             }
             return ListView.builder(
               shrinkWrap: true,
@@ -1069,7 +1088,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               itemBuilder: (context, index) {
                 final participant = participants[index].data();
                 final photoUrl = participant['photoURL'] as String?;
-                final displayName = participant['displayName'] ?? 'No Name';
+                final displayName = participant['displayName'] ?? l10n.commonNoName;
                 final uid = participant['uid'] as String?;
 
                 return Semantics(
@@ -1093,7 +1112,19 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     );
   }
 
+  String _participantStatusLabel(AppLocalizations l10n, String status) {
+    switch (status) {
+      case 'requested':
+        return l10n.eventDetailsStatusRequested;
+      case 'withdrawn_penalty':
+        return l10n.eventDetailsStatusWithdrawnPenalty;
+      default:
+        return status.isNotEmpty ? '${status[0].toUpperCase()}${status.substring(1)}' : status;
+    }
+  }
+
   Widget _buildActionButton(Map<String, dynamic> eventData) {
+    final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const SizedBox.shrink();
@@ -1112,7 +1143,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: _isCancelling
                 ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Cancel Event'),
+                : Text(l10n.eventDetailsCancelEventButton),
           ),
         ),
       );
@@ -1120,12 +1151,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
     if (isCancelled) {
       buttons.add(
-        const ElevatedButton(
+        ElevatedButton(
           onPressed: null,
-          style: ButtonStyle(
+          style: const ButtonStyle(
             backgroundColor: WidgetStatePropertyAll(Colors.grey),
           ),
-          child: Text('Event Cancelled'),
+          child: Text(l10n.eventDetailsCancelledBanner),
         ),
       );
     } else {
@@ -1156,7 +1187,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   child: _isWithdrawing
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Withdraw'),
+                      : Text(l10n.eventDetailsWithdrawButton),
                 ),
               );
             } else if (status == null || status == 'withdrawn') {
@@ -1166,7 +1197,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   onPressed: _isRegistering ? null : () => _showRegistrationConfirmationDialog(eventData),
                   child: _isRegistering
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Register'),
+                      : Text(l10n.eventDetailsRegisterButton),
                 ),
               );
             } else { // Handles withdrawn_penalty, requested, etc.
@@ -1175,7 +1206,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey,
                 ),
-                child: Text('Your status: ${status[0].toUpperCase()}${status.substring(1)}'),
+                child: Text(l10n.eventDetailsYourStatus(_participantStatusLabel(l10n, status))),
               );
             }
             return button;

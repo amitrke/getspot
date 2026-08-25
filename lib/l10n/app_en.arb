@@ -1203,5 +1203,426 @@
   "groupDetailsDenyButton": "Deny",
   "@groupDetailsDenyButton": {
     "description": "Button to deny a pending join request"
+  },
+
+  "eventDetailsNotAMember": "You are not a member of this group.",
+  "@eventDetailsNotAMember": {
+    "description": "Shown when trying to register but the wallet member doc doesn't exist"
+  },
+  "eventDetailsInsufficientBalanceTitle": "Insufficient Balance",
+  "@eventDetailsInsufficientBalanceTitle": {
+    "description": "Dialog title when the user can't afford the event fee even with the negative balance limit"
+  },
+  "eventDetailsCurrentBalanceAmount": "Current Balance: {amount}",
+  "@eventDetailsCurrentBalanceAmount": {
+    "description": "Shows the user's current wallet balance, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsEventFeeAmount": "Event Fee: {amount}",
+  "@eventDetailsEventFeeAmount": {
+    "description": "Shows the event's fee, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNewBalanceAmount": "New Balance: {amount}",
+  "@eventDetailsNewBalanceAmount": {
+    "description": "Shows the wallet balance after registering, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsAllowedNegativeLimit": "Allowed Negative Limit: {amount}",
+  "@eventDetailsAllowedNegativeLimit": {
+    "description": "Shows the group's negative balance limit, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsInsufficientBalanceMessage": "You do not have sufficient balance to register for this event. Please contact your group admin to add funds.",
+  "@eventDetailsInsufficientBalanceMessage": {
+    "description": "Explanation shown when the user can't afford to register"
+  },
+  "eventDetailsGenericError": "Error: {error}",
+  "@eventDetailsGenericError": {
+    "description": "SnackBar shown when preparing the registration dialog fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsRegisterTitle": "Register for Event?",
+  "@eventDetailsRegisterTitle": {
+    "description": "Normal registration confirmation dialog title"
+  },
+  "eventDetailsFallbackEventName": "Event",
+  "@eventDetailsFallbackEventName": {
+    "description": "Fallback shown in place of the event name in dialogs if missing"
+  },
+  "eventDetailsConfirmRegistrationButton": "Confirm Registration",
+  "@eventDetailsConfirmRegistrationButton": {
+    "description": "Button to confirm normal registration"
+  },
+  "eventDetailsLowBalanceWarningTitle": "Low Balance Warning",
+  "@eventDetailsLowBalanceWarningTitle": {
+    "description": "Dialog title when registering would leave a negative but allowed balance"
+  },
+  "eventDetailsNewBalanceNegative": "New Balance: {amount} (negative)",
+  "@eventDetailsNewBalanceNegative": {
+    "description": "Shows the resulting negative wallet balance, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsAllowedLimit": "Allowed Limit: {amount}",
+  "@eventDetailsAllowedLimit": {
+    "description": "Shows the group's negative balance limit, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNegativeBalanceWarning": "You'll have a negative balance after registration. Please coordinate payment with your group admin.",
+  "@eventDetailsNegativeBalanceWarning": {
+    "description": "Explanation shown before allowing a negative-balance registration"
+  },
+  "eventDetailsUnderstandRegisterButton": "I Understand, Register",
+  "@eventDetailsUnderstandRegisterButton": {
+    "description": "Button to confirm registration despite a negative balance"
+  },
+  "eventDetailsJoinWaitlistTitle": "Join Waitlist?",
+  "@eventDetailsJoinWaitlistTitle": {
+    "description": "Waitlist confirmation dialog title"
+  },
+  "eventDetailsEventFullMessage": "This event is full. You'll be added to the waitlist.",
+  "@eventDetailsEventFullMessage": {
+    "description": "Explanation shown when the event is full"
+  },
+  "eventDetailsWaitlistFeeInfo": "Fee: {amount} (charged now, refunded if not confirmed)",
+  "@eventDetailsWaitlistFeeInfo": {
+    "description": "Explains the fee is charged upfront when joining a waitlist, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsAutoConfirmInfo": "You'll be automatically confirmed if a spot opens.",
+  "@eventDetailsAutoConfirmInfo": {
+    "description": "Explanation of waitlist auto-promotion"
+  },
+  "eventDetailsJoinWaitlistButton": "Join Waitlist",
+  "@eventDetailsJoinWaitlistButton": {
+    "description": "Button to confirm joining the waitlist"
+  },
+  "eventDetailsMustBeLoggedInRegister": "You must be logged in to register.",
+  "@eventDetailsMustBeLoggedInRegister": {
+    "description": "Error thrown when registering while signed out"
+  },
+  "eventDetailsRegistrationSubmitted": "Your registration request has been submitted!",
+  "@eventDetailsRegistrationSubmitted": {
+    "description": "SnackBar shown after successfully submitting a registration request"
+  },
+  "eventDetailsErrorSubmittingRequest": "Error submitting request: {error}",
+  "@eventDetailsErrorSubmittingRequest": {
+    "description": "SnackBar shown when submitting a registration request fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsWithdrawalSuccessful": "Withdrawal successful.",
+  "@eventDetailsWithdrawalSuccessful": {
+    "description": "Fallback SnackBar text after withdrawing when the function returns no message"
+  },
+  "eventDetailsCancelledSuccessfully": "Event cancelled successfully.",
+  "@eventDetailsCancelledSuccessfully": {
+    "description": "Fallback SnackBar text after cancelling an event when the function returns no message"
+  },
+  "eventDetailsCapacityUpdated": "Capacity updated successfully.",
+  "@eventDetailsCapacityUpdated": {
+    "description": "Fallback SnackBar text after updating capacity when the function returns no message"
+  },
+  "eventDetailsUpdateCapacityTitle": "Update Event Capacity",
+  "@eventDetailsUpdateCapacityTitle": {
+    "description": "Dialog title for updating event capacity"
+  },
+  "eventDetailsCurrentCapacity": "Current capacity: {count}",
+  "@eventDetailsCurrentCapacity": {
+    "description": "Shows the event's current max participants",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsConfirmedParticipants": "Confirmed participants: {count}",
+  "@eventDetailsConfirmedParticipants": {
+    "description": "Shows the number of confirmed participants",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsWaitlistedParticipants": "Waitlisted participants: {count}",
+  "@eventDetailsWaitlistedParticipants": {
+    "description": "Shows the number of waitlisted participants",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsNewCapacityLabel": "New Capacity",
+  "@eventDetailsNewCapacityLabel": {
+    "description": "Label for the new capacity input field"
+  },
+  "eventDetailsCannotReduceBelow": "Note: Cannot reduce below {count} (current confirmed count)",
+  "@eventDetailsCannotReduceBelow": {
+    "description": "Helper text explaining the minimum allowed capacity",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsUpdateButton": "Update",
+  "@eventDetailsUpdateButton": {
+    "description": "Button to submit the capacity update"
+  },
+  "eventDetailsValidPositiveNumber": "Please enter a valid positive number.",
+  "@eventDetailsValidPositiveNumber": {
+    "description": "Validation error for the new capacity field"
+  },
+  "eventDetailsIncreaseCapacityWithPromote": "Increasing capacity by {change} spots.\n\n{promoted, plural, one{{promoted} user will be automatically promoted from the waitlist.} other{{promoted} users will be automatically promoted from the waitlist.}}\n\nContinue?",
+  "@eventDetailsIncreaseCapacityWithPromote": {
+    "description": "Confirmation message when raising capacity will promote waitlisted users",
+    "placeholders": {
+      "change": {
+        "type": "int"
+      },
+      "promoted": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsIncreaseCapacityNoPromote": "Increasing capacity by {change} spots.\n\nNo waitlisted users to promote.\n\nContinue?",
+  "@eventDetailsIncreaseCapacityNoPromote": {
+    "description": "Confirmation message when raising capacity with no one to promote",
+    "placeholders": {
+      "change": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsDecreaseCapacity": "Decreasing capacity by {change} spots (from {oldCap} to {newCap}).\n\nThis will not affect current confirmed participants.\n\nContinue?",
+  "@eventDetailsDecreaseCapacity": {
+    "description": "Confirmation message when lowering capacity",
+    "placeholders": {
+      "change": {
+        "type": "int"
+      },
+      "oldCap": {
+        "type": "int"
+      },
+      "newCap": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsConfirmCapacityChangeTitle": "Confirm Capacity Change",
+  "@eventDetailsConfirmCapacityChangeTitle": {
+    "description": "Capacity change confirmation dialog title"
+  },
+  "eventDetailsConfirmCancellationTitle": "Confirm Cancellation",
+  "@eventDetailsConfirmCancellationTitle": {
+    "description": "Event cancellation confirmation dialog title"
+  },
+  "eventDetailsCancelConfirmMessage": "Are you sure you want to cancel this event? This action is irreversible and will refund all registered participants.",
+  "@eventDetailsCancelConfirmMessage": {
+    "description": "Event cancellation confirmation dialog body"
+  },
+  "eventDetailsNevermindButton": "Nevermind",
+  "@eventDetailsNevermindButton": {
+    "description": "Button to dismiss the cancellation confirmation without cancelling"
+  },
+  "eventDetailsConfirmCancellationButton": "Confirm Cancellation",
+  "@eventDetailsConfirmCancellationButton": {
+    "description": "Button to confirm cancelling the event"
+  },
+  "eventDetailsRefundMayBeForfeited": "Refund: May be forfeited (depends on waitlist)",
+  "@eventDetailsRefundMayBeForfeited": {
+    "description": "Refund info shown when withdrawing after the commitment deadline"
+  },
+  "eventDetailsRefundFullAmount": "Refund: {amount} (full refund)",
+  "@eventDetailsRefundFullAmount": {
+    "description": "Refund info shown when withdrawing before the commitment deadline, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsConfirmWithdrawalTitle": "Confirm Withdrawal",
+  "@eventDetailsConfirmWithdrawalTitle": {
+    "description": "Withdrawal confirmation dialog title"
+  },
+  "eventDetailsCommitmentDeadlineLabel": "Commitment Deadline: {date}",
+  "@eventDetailsCommitmentDeadlineLabel": {
+    "description": "Shows the event's commitment deadline",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsDeadlinePassedMessage": "The commitment deadline has passed. If you withdraw now, your fee will only be refunded if someone from the waitlist takes your spot.",
+  "@eventDetailsDeadlinePassedMessage": {
+    "description": "Withdrawal explanation shown after the commitment deadline"
+  },
+  "eventDetailsBeforeDeadlineMessage": "You are withdrawing before the commitment deadline. You will receive a full refund of your fee.",
+  "@eventDetailsBeforeDeadlineMessage": {
+    "description": "Withdrawal explanation shown before the commitment deadline"
+  },
+  "eventDetailsConfirmWithdrawalButton": "Confirm Withdrawal",
+  "@eventDetailsConfirmWithdrawalButton": {
+    "description": "Button to confirm withdrawing from the event"
+  },
+  "eventDetailsAppBarTitle": "Event Details",
+  "@eventDetailsAppBarTitle": {
+    "description": "Event details screen app bar title"
+  },
+  "eventDetailsErrorLoading": "Error loading event details.",
+  "@eventDetailsErrorLoading": {
+    "description": "Shown when the event document stream errors"
+  },
+  "eventDetailsNotFound": "Event not found.",
+  "@eventDetailsNotFound": {
+    "description": "Shown when the event document doesn't exist"
+  },
+  "eventDetailsCancelledBanner": "Event Cancelled",
+  "@eventDetailsCancelledBanner": {
+    "description": "Banner/button text shown when an event has been cancelled"
+  },
+  "eventDetailsNoLocationSet": "No location set",
+  "@eventDetailsNoLocationSet": {
+    "description": "Fallback shown when an event has no location"
+  },
+  "eventDetailsNoDateSet": "No date set",
+  "@eventDetailsNoDateSet": {
+    "description": "Fallback shown when an event has no timestamp"
+  },
+  "eventDetailsFeeCredits": "{fee} credits",
+  "@eventDetailsFeeCredits": {
+    "description": "Shows the event fee in virtual credits",
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNoDeadline": "No deadline",
+  "@eventDetailsNoDeadline": {
+    "description": "Fallback shown when an event has no commitment deadline"
+  },
+  "eventDetailsConfirmedHeader": "Confirmed ({count}/{max})",
+  "@eventDetailsConfirmedHeader": {
+    "description": "Header for the confirmed participants list",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsWaitlistHeader": "Waitlist ({count})",
+  "@eventDetailsWaitlistHeader": {
+    "description": "Header for the waitlist",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNoParticipantsToCopy": "No participants to copy",
+  "@eventDetailsNoParticipantsToCopy": {
+    "description": "SnackBar shown when trying to copy an empty participant list"
+  },
+  "eventDetailsCopiedParticipants": "{count, plural, one{Copied {count} participant to clipboard} other{Copied {count} participants to clipboard}}",
+  "@eventDetailsCopiedParticipants": {
+    "description": "SnackBar confirming the participant list was copied",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsErrorCopyingList": "Error copying list: {error}",
+  "@eventDetailsErrorCopyingList": {
+    "description": "SnackBar shown when copying the participant list fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsCopyListTooltip": "Copy list",
+  "@eventDetailsCopyListTooltip": {
+    "description": "Tooltip for the copy-participant-list icon button"
+  },
+  "eventDetailsErrorLoadingParticipants": "Error loading participants.",
+  "@eventDetailsErrorLoadingParticipants": {
+    "description": "Shown when a participant list stream errors"
+  },
+  "eventDetailsNoParticipantsYet": "No participants in this list yet.",
+  "@eventDetailsNoParticipantsYet": {
+    "description": "Shown when a participant list is empty"
+  },
+  "eventDetailsCancelEventButton": "Cancel Event",
+  "@eventDetailsCancelEventButton": {
+    "description": "Button to start the cancel-event flow"
+  },
+  "eventDetailsWithdrawButton": "Withdraw",
+  "@eventDetailsWithdrawButton": {
+    "description": "Button to start the withdraw flow"
+  },
+  "eventDetailsRegisterButton": "Register",
+  "@eventDetailsRegisterButton": {
+    "description": "Button to start the register flow"
+  },
+  "eventDetailsYourStatus": "Your status: {status}",
+  "@eventDetailsYourStatus": {
+    "description": "Shown for participant statuses without a dedicated action button",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsStatusRequested": "Requested",
+  "@eventDetailsStatusRequested": {
+    "description": "Participant status label: registration request submitted, awaiting processing"
+  },
+  "eventDetailsStatusWithdrawnPenalty": "Withdrawn (Penalty)",
+  "@eventDetailsStatusWithdrawnPenalty": {
+    "description": "Participant status label: withdrew after the deadline with no waitlist replacement, fee forfeited"
   }
 }
