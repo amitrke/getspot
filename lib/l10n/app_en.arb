@@ -307,5 +307,319 @@
   "groupItemStatusDenied": "Denied",
   "@groupItemStatusDenied": {
     "description": "Event registration status label when denied"
+  },
+
+  "commonCancel": "Cancel",
+  "@commonCancel": {
+    "description": "Generic cancel button, used in several dialogs/forms"
+  },
+  "commonConfirm": "Confirm",
+  "@commonConfirm": {
+    "description": "Generic confirm button, used in dialogs"
+  },
+  "commonDone": "Done",
+  "@commonDone": {
+    "description": "Generic done button, used in dialogs"
+  },
+  "commonBack": "Back",
+  "@commonBack": {
+    "description": "Generic back button"
+  },
+  "commonNoName": "No Name",
+  "@commonNoName": {
+    "description": "Fallback shown in place of a user's display name when none is set"
+  },
+  "commonAlreadyMember": "You're already a member of this group.",
+  "@commonAlreadyMember": {
+    "description": "Shown when a user tries to join a group they're already in"
+  },
+  "commonCouldNotOpenGroup": "Could not open the group. Please try again.",
+  "@commonCouldNotOpenGroup": {
+    "description": "SnackBar shown when opening a found group fails"
+  },
+  "commonJoinRequestSent": "Your request to join has been sent!",
+  "@commonJoinRequestSent": {
+    "description": "SnackBar shown after a join request is successfully sent"
+  },
+  "commonMustBeLoggedIn": "You must be logged in to send a request.",
+  "@commonMustBeLoggedIn": {
+    "description": "Error thrown when sending a join request while signed out"
+  },
+  "commonGroupNoLongerExists": "This group no longer exists.",
+  "@commonGroupNoLongerExists": {
+    "description": "Shown when the target group was deleted before it could be opened"
+  },
+  "commonGoToGroup": "Go to Group",
+  "@commonGoToGroup": {
+    "description": "Button to navigate to a group the user is already a member of"
+  },
+  "commonRequestToJoin": "Request to Join",
+  "@commonRequestToJoin": {
+    "description": "Button to send a join request"
+  },
+
+  "joinScreenAppBarTitle": "Join Group",
+  "@joinScreenAppBarTitle": {
+    "description": "JoinGroupScreen app bar title"
+  },
+  "joinScreenLookupError": "An error occurred while looking up the group. Please try again.",
+  "@joinScreenLookupError": {
+    "description": "Error shown when looking up a group by deep-link code fails"
+  },
+  "joinScreenNotFoundWithCode": "No group found with code: {code}",
+  "@joinScreenNotFoundWithCode": {
+    "description": "Error shown when the deep-link group code doesn't match any group",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenGoBackButton": "Go Back",
+  "@joinScreenGoBackButton": {
+    "description": "Button shown on the error state to leave the screen"
+  },
+  "joinScreenInvitedTo": "You've been invited to join:",
+  "@joinScreenInvitedTo": {
+    "description": "Label above the invited group's name"
+  },
+  "joinScreenUnnamedGroup": "Unnamed Group",
+  "@joinScreenUnnamedGroup": {
+    "description": "Fallback shown if the found group has no name"
+  },
+  "joinScreenAboutGroup": "About this group:",
+  "@joinScreenAboutGroup": {
+    "description": "Label above the group's description"
+  },
+  "joinScreenGroupCodeLabel": "Group Code: {code}",
+  "@joinScreenGroupCodeLabel": {
+    "description": "Shows the group code being joined",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenRequestPendingMessage": "Your request to join this group is pending approval.",
+  "@joinScreenRequestPendingMessage": {
+    "description": "Shown when the user already has a pending join request"
+  },
+  "joinScreenPreviousRequestStatus": "Your previous request was {status}. Contact the group admin for help.",
+  "@joinScreenPreviousRequestStatus": {
+    "description": "Shown when the user has a previous non-pending join request",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenRequestPendingButton": "Request Pending",
+  "@joinScreenRequestPendingButton": {
+    "description": "Disabled button label while a join request is pending"
+  },
+  "joinScreenRequestStatusButton": "Request {status}",
+  "@joinScreenRequestStatusButton": {
+    "description": "Disabled button label showing a non-pending request status",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenAlreadyHaveRequest": "You already have a request to join this group ({status}).",
+  "@joinScreenAlreadyHaveRequest": {
+    "description": "SnackBar shown when sending a join request fails because one already exists",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenSomethingWrong": "Something went wrong.",
+  "@joinScreenSomethingWrong": {
+    "description": "Fallback shown in an unexpected state"
+  },
+
+  "joinModalTitle": "Join a Group",
+  "@joinModalTitle": {
+    "description": "Join group modal title"
+  },
+  "joinModalNotFoundGeneric": "No group found with that code.",
+  "@joinModalNotFoundGeneric": {
+    "description": "Error shown when a manually entered group code doesn't match any group"
+  },
+  "joinModalErrorGeneric": "An error occurred. Please try again.",
+  "@joinModalErrorGeneric": {
+    "description": "Generic error shown when the group lookup fails"
+  },
+  "joinModalCodeFieldLabel": "Enter Group Code",
+  "@joinModalCodeFieldLabel": {
+    "description": "Label for the group code text field"
+  },
+  "joinModalCodeValidatorEmpty": "Please enter a code.",
+  "@joinModalCodeValidatorEmpty": {
+    "description": "Validation error when the group code field is empty"
+  },
+  "joinModalFindGroupButton": "Find Group",
+  "@joinModalFindGroupButton": {
+    "description": "Button to look up a group by the entered code"
+  },
+
+  "membersScreenTitle": "Members",
+  "@membersScreenTitle": {
+    "description": "Group members screen app bar title"
+  },
+  "membersScreenError": "Error: {error}",
+  "@membersScreenError": {
+    "description": "Shown when the members list fails to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenNoMembersYet": "No members yet.",
+  "@membersScreenNoMembersYet": {
+    "description": "Shown when a group has no members"
+  },
+  "membersScreenBalanceLabel": "Balance: {balance}",
+  "@membersScreenBalanceLabel": {
+    "description": "Shows a member's wallet balance",
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenRemoveConfirmTitle": "Remove {name}?",
+  "@membersScreenRemoveConfirmTitle": {
+    "description": "Confirmation dialog title before removing a member",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenRemoveConfirmContent": "This action cannot be undone.",
+  "@membersScreenRemoveConfirmContent": {
+    "description": "Confirmation dialog body before removing a member"
+  },
+  "membersScreenRemoveButton": "Remove",
+  "@membersScreenRemoveButton": {
+    "description": "Button to confirm removing a member"
+  },
+  "membersScreenCreditDialogTitle": "Credit {name}",
+  "@membersScreenCreditDialogTitle": {
+    "description": "Dialog title for adding wallet credit to a member",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenAmountLabel": "Amount",
+  "@membersScreenAmountLabel": {
+    "description": "Label for the credit amount field"
+  },
+  "membersScreenAmountValidatorEmpty": "Please enter an amount",
+  "@membersScreenAmountValidatorEmpty": {
+    "description": "Validation error when the amount field is empty"
+  },
+  "membersScreenAmountValidatorInvalid": "Please enter a valid number",
+  "@membersScreenAmountValidatorInvalid": {
+    "description": "Validation error when the amount isn't a valid number"
+  },
+  "membersScreenAmountValidatorPositive": "Amount must be positive",
+  "@membersScreenAmountValidatorPositive": {
+    "description": "Validation error when the amount is zero or negative"
+  },
+  "membersScreenAmountValidatorDecimals": "Please enter up to two decimal places",
+  "@membersScreenAmountValidatorDecimals": {
+    "description": "Validation error when the amount has more than 2 decimal places"
+  },
+  "membersScreenDescriptionOptionalLabel": "Description (optional)",
+  "@membersScreenDescriptionOptionalLabel": {
+    "description": "Label for the optional credit note field"
+  },
+  "membersScreenAddCreditsTooltip": "Add Credits",
+  "@membersScreenAddCreditsTooltip": {
+    "description": "Tooltip for the add-credits icon button"
+  },
+  "membersScreenRemoveMemberOption": "Remove Member",
+  "@membersScreenRemoveMemberOption": {
+    "description": "Popup menu option to remove a member (enabled state)"
+  },
+  "membersScreenRemoveBalanceNonZero": "Remove (balance > 0)",
+  "@membersScreenRemoveBalanceNonZero": {
+    "description": "Popup menu option to remove a member (disabled, non-zero balance)"
+  },
+  "membersScreenGenericError": "Error",
+  "@membersScreenGenericError": {
+    "description": "Fallback SnackBar text when a functions exception has no message"
+  },
+  "membersScreenUnexpectedError": "Unexpected error",
+  "@membersScreenUnexpectedError": {
+    "description": "Fallback SnackBar text for a non-functions exception"
+  },
+
+  "createGroupTitle": "Create New Group",
+  "@createGroupTitle": {
+    "description": "Create group modal title"
+  },
+  "createGroupNameLabel": "Group Name",
+  "@createGroupNameLabel": {
+    "description": "Label for the group name field"
+  },
+  "createGroupNameValidatorEmpty": "Please enter a group name.",
+  "@createGroupNameValidatorEmpty": {
+    "description": "Validation error when the group name field is empty"
+  },
+  "createGroupDescriptionLabel": "Description",
+  "@createGroupDescriptionLabel": {
+    "description": "Label for the group description field"
+  },
+  "createGroupDescriptionValidatorEmpty": "Please enter a description.",
+  "@createGroupDescriptionValidatorEmpty": {
+    "description": "Validation error when the group description field is empty"
+  },
+  "createGroupLimitLabel": "Negative Balance Limit",
+  "@createGroupLimitLabel": {
+    "description": "Label for the negative balance limit field"
+  },
+  "createGroupLimitHelper": "Max negative balance a member can have.",
+  "@createGroupLimitHelper": {
+    "description": "Helper text under the negative balance limit field"
+  },
+  "createGroupLimitValidatorInvalid": "Please enter a valid number.",
+  "@createGroupLimitValidatorInvalid": {
+    "description": "Validation error when the negative balance limit isn't a valid number"
+  },
+  "createGroupCreateButton": "Create",
+  "@createGroupCreateButton": {
+    "description": "Button to submit the create-group form"
+  },
+  "createGroupSuccessTitle": "Group Created!",
+  "@createGroupSuccessTitle": {
+    "description": "Dialog title shown after a group is created"
+  },
+  "createGroupShareCode": "Share this code with your members:",
+  "@createGroupShareCode": {
+    "description": "Instruction shown above the new group's code"
+  },
+  "createGroupCopyCodeButton": "Copy Code",
+  "@createGroupCopyCodeButton": {
+    "description": "Button to copy the new group code to the clipboard"
+  },
+  "createGroupCodeCopiedSnackbar": "Group code copied!",
+  "@createGroupCodeCopiedSnackbar": {
+    "description": "SnackBar shown after copying the group code"
+  },
+  "createGroupUnknownError": "An unknown error occurred.",
+  "@createGroupUnknownError": {
+    "description": "Fallback SnackBar text when group creation fails with no message"
+  },
+  "createGroupUnexpectedError": "An unexpected error occurred.",
+  "@createGroupUnexpectedError": {
+    "description": "SnackBar text for a non-functions exception during group creation"
   }
 }
