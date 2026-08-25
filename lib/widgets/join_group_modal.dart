@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 
 import '../screens/group_details_screen.dart';
 
@@ -59,13 +60,14 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
         _isAlreadyMember = isAlreadyMember;
       });
     } on FirebaseFunctionsException catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _errorMessage =
-            e.code == 'not-found' ? 'No group found with that code.' : 'An error occurred. Please try again.';
+            e.code == 'not-found' ? l10n.joinModalNotFoundGeneric : l10n.joinModalErrorGeneric;
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'An error occurred. Please try again.';
+        _errorMessage = AppLocalizations.of(context)!.joinModalErrorGeneric;
       });
     } finally {
       setState(() {
@@ -110,7 +112,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
       if (!groupDoc.exists) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'This group no longer exists.';
+          _errorMessage = AppLocalizations.of(context)!.commonGroupNoLongerExists;
         });
         return;
       }
@@ -128,7 +130,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open the group. Please try again.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.commonCouldNotOpenGroup)),
         );
       }
     }
@@ -144,7 +146,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('You must be logged in to send a request.');
+        throw Exception(AppLocalizations.of(context)!.commonMustBeLoggedIn);
       }
 
       final groupId = _foundGroup!['groupId'] as String;
@@ -153,7 +155,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
 
       await requestRef.set({
         'uid': user.uid,
-        'displayName': user.displayName ?? 'No Name',
+        'displayName': user.displayName ?? AppLocalizations.of(context)!.commonNoName,
         'requestedAt': FieldValue.serverTimestamp(),
         'status': 'pending',
       });
@@ -161,8 +163,8 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Your request to join has been sent!'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.commonJoinRequestSent),
           backgroundColor: Colors.green,
         ),
       );
@@ -194,7 +196,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Join a Group',
+            AppLocalizations.of(context)!.joinModalTitle,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 24),
@@ -211,16 +213,17 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
   }
 
   Widget _buildSearchForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Form(
       key: _formKey,
       child: Column(
         children: [
           TextFormField(
             controller: _codeController,
-            decoration: const InputDecoration(labelText: 'Enter Group Code'),
+            decoration: InputDecoration(labelText: l10n.joinModalCodeFieldLabel),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter a code.';
+                return l10n.joinModalCodeValidatorEmpty;
               }
               return null;
             },
@@ -231,7 +234,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
             children: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: Text(l10n.commonCancel),
               ),
               const SizedBox(width: 8),
               if (_isLoading)
@@ -239,7 +242,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
               else
                 ElevatedButton(
                   onPressed: _findGroup,
-                  child: const Text('Find Group'),
+                  child: Text(l10n.joinModalFindGroupButton),
                 ),
             ],
           ),
@@ -249,6 +252,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
   }
 
   Widget _buildGroupDetails() {
+    final l10n = AppLocalizations.of(context)!;
     final groupData = _foundGroup!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,8 +269,8 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
             children: [
               Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
               const SizedBox(width: 8),
-              const Expanded(
-                child: Text('You\'re already a member of this group.'),
+              Expanded(
+                child: Text(l10n.commonAlreadyMember),
               ),
             ],
           ),
@@ -282,7 +286,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
                   _codeController.clear();
                 });
               },
-              child: const Text('Back'),
+              child: Text(l10n.commonBack),
             ),
             const SizedBox(width: 8),
             if (_isLoading)
@@ -290,7 +294,7 @@ class _JoinGroupModalState extends State<JoinGroupModal> {
             else
               ElevatedButton(
                 onPressed: _isAlreadyMember ? _goToGroup : _sendJoinRequest,
-                child: Text(_isAlreadyMember ? 'Go to Group' : 'Request to Join'),
+                child: Text(_isAlreadyMember ? l10n.commonGoToGroup : l10n.commonRequestToJoin),
               ),
           ],
         ),

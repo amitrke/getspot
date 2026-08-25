@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/transaction_cache_service.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -48,9 +49,10 @@ class _WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Group Wallet'),
+        title: Text(l10n.walletAppBarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -58,7 +60,7 @@ class _WalletScreenState extends State<WalletScreen> {
               _invalidateCache();
               _loadData();
             },
-            tooltip: 'Refresh',
+            tooltip: l10n.walletRefreshTooltip,
           ),
         ],
       ),
@@ -78,10 +80,10 @@ class _WalletScreenState extends State<WalletScreen> {
               const SliverToBoxAdapter(
                 child: Divider(height: 1),
               ),
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(l10n.walletHistoryHeader, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
               SliverFillRemaining(
@@ -101,6 +103,8 @@ class _BalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       future: future,
       builder: (context, snapshot) {
@@ -123,13 +127,13 @@ class _BalanceCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Center(
-                child: Text('Error: ${snapshot.error}'),
+                child: Text(l10n.walletErrorMessage(snapshot.error.toString())),
               ),
             ),
           );
         }
         final balance = snapshot.data?.data()?['walletBalance'] ?? 0;
-        final formattedBalance = NumberFormat.currency(symbol: '', decimalDigits: 2).format(balance);
+        final formattedBalance = NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(balance);
 
         return Card(
           elevation: 4,
@@ -139,7 +143,7 @@ class _BalanceCard extends StatelessWidget {
             child: Center(
               child: Column(
                 children: [
-                  const Text('Current Balance', style: TextStyle(fontSize: 20, color: Colors.grey)),
+                  Text(l10n.walletCurrentBalance, style: const TextStyle(fontSize: 20, color: Colors.grey)),
                   const SizedBox(height: 8),
                   Text(formattedBalance, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
                 ],
@@ -158,6 +162,8 @@ class _TransactionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return FutureBuilder<List<CachedTransaction>?>(
       future: future,
       builder: (context, snapshot) {
@@ -165,11 +171,11 @@ class _TransactionList extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text(l10n.walletErrorMessage(snapshot.error.toString())));
         }
         final transactions = snapshot.data ?? [];
         if (transactions.isEmpty) {
-          return const Center(child: Text('No transactions yet.'));
+          return Center(child: Text(l10n.walletNoTransactions));
         }
 
         return ListView.separated(
@@ -183,9 +189,9 @@ class _TransactionList extends StatelessWidget {
             final timestamp = transaction.createdAt;
 
             final isCredit = type == 'credit';
-            final amountText = '${isCredit ? '+' : '-'}${NumberFormat.currency(symbol: '', decimalDigits: 2).format(amount)}';
+            final amountText = '${isCredit ? '+' : '-'}${NumberFormat.currency(locale: locale, symbol: '', decimalDigits: 2).format(amount)}';
             final amountColor = isCredit ? Colors.green : Colors.red;
-            final formattedDate = timestamp != null ? DateFormat.yMMMd().format(timestamp) : '';
+            final formattedDate = timestamp != null ? DateFormat.yMMMd(locale).format(timestamp) : '';
 
             return ListTile(
               title: Text(description),

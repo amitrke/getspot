@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'dart:developer' as developer;
 
 import 'group_details_screen.dart';
@@ -74,21 +75,22 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
         name: 'JoinGroupScreen',
       );
     } on FirebaseFunctionsException catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       if (e.code == 'not-found') {
         setState(() {
-          _errorMessage = 'No group found with code: ${widget.groupCode}';
+          _errorMessage = l10n.joinScreenNotFoundWithCode(widget.groupCode);
         });
         developer.log('No group found with code: ${widget.groupCode}', name: 'JoinGroupScreen');
       } else {
         developer.log('Error finding group', name: 'JoinGroupScreen', error: e);
         setState(() {
-          _errorMessage = 'An error occurred while looking up the group. Please try again.';
+          _errorMessage = l10n.joinScreenLookupError;
         });
       }
     } catch (e) {
       developer.log('Error finding group', name: 'JoinGroupScreen', error: e);
       setState(() {
-        _errorMessage = 'An error occurred while looking up the group. Please try again.';
+        _errorMessage = AppLocalizations.of(context)!.joinScreenLookupError;
       });
     } finally {
       setState(() {
@@ -154,7 +156,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
       if (!groupDoc.exists) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'This group no longer exists.';
+          _errorMessage = AppLocalizations.of(context)!.commonGroupNoLongerExists;
         });
         return;
       }
@@ -172,7 +174,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open the group. Please try again.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.commonCouldNotOpenGroup)),
         );
       }
     }
@@ -188,7 +190,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('You must be logged in to send a request.');
+        throw Exception(AppLocalizations.of(context)!.commonMustBeLoggedIn);
       }
 
       final groupId = _foundGroup!['groupId'] as String;
@@ -197,7 +199,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
 
       await requestRef.set({
         'uid': user.uid,
-        'displayName': user.displayName ?? 'No Name',
+        'displayName': user.displayName ?? AppLocalizations.of(context)!.commonNoName,
         'requestedAt': FieldValue.serverTimestamp(),
         'status': 'pending',
       });
@@ -207,8 +209,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Your request to join has been sent!'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.commonJoinRequestSent),
             backgroundColor: Colors.green,
           ),
         );
@@ -233,7 +235,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
             SnackBar(
               content: Text(
                 status != null
-                    ? 'You already have a request to join this group ($status).'
+                    ? AppLocalizations.of(context)!.joinScreenAlreadyHaveRequest(status)
                     : e.toString(),
               ),
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -254,7 +256,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Join Group'),
+        title: Text(AppLocalizations.of(context)!.joinScreenAppBarTitle),
       ),
       body: SafeArea(
         child: Padding(
@@ -268,6 +270,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
     if (_errorMessage != null) {
       return Center(
         child: Column(
@@ -287,7 +290,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Go Back'),
+              child: Text(l10n.joinScreenGoBackButton),
             ),
           ],
         ),
@@ -308,14 +311,14 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'You\'ve been invited to join:',
+            l10n.joinScreenInvitedTo,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.grey.shade600,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
-            groupData['name'] ?? 'Unnamed Group',
+            groupData['name'] ?? l10n.joinScreenUnnamedGroup,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -323,7 +326,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
           const SizedBox(height: 16),
           if (groupData['description'] != null && groupData['description'].toString().isNotEmpty) ...[
             Text(
-              'About this group:',
+              l10n.joinScreenAboutGroup,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: Colors.grey.shade600,
                   ),
@@ -338,7 +341,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
           const Divider(),
           const SizedBox(height: 16),
           Text(
-            'Group Code: ${widget.groupCode}',
+            l10n.joinScreenGroupCodeLabel(widget.groupCode),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey.shade600,
                 ),
@@ -349,8 +352,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text('You\'re already a member of this group.'),
+                Expanded(
+                  child: Text(l10n.commonAlreadyMember),
                 ),
               ],
             ),
@@ -360,8 +363,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
               children: [
                 Icon(Icons.hourglass_top, color: Colors.orange.shade700, size: 20),
                 const SizedBox(width: 8),
-                const Expanded(
-                  child: Text('Your request to join this group is pending approval.'),
+                Expanded(
+                  child: Text(l10n.joinScreenRequestPendingMessage),
                 ),
               ],
             ),
@@ -372,7 +375,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                 Icon(Icons.info_outline, color: Colors.grey.shade600, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Your previous request was $_existingRequestStatus. Contact the group admin for help.'),
+                  child: Text(l10n.joinScreenPreviousRequestStatus(_existingRequestStatus!)),
                 ),
               ],
             ),
@@ -402,10 +405,12 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                     )
                   : Text(
                       _isAlreadyMember
-                          ? 'Go to Group'
+                          ? l10n.commonGoToGroup
                           : (_existingRequestStatus == 'pending'
-                              ? 'Request Pending'
-                              : (_existingRequestStatus != null ? 'Request $_existingRequestStatus' : 'Request to Join')),
+                              ? l10n.joinScreenRequestPendingButton
+                              : (_existingRequestStatus != null
+                                  ? l10n.joinScreenRequestStatusButton(_existingRequestStatus!)
+                                  : l10n.commonRequestToJoin)),
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
@@ -415,13 +420,13 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
             width: double.infinity,
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
           ),
         ],
       );
     }
 
-    return const Center(child: Text('Something went wrong.'));
+    return Center(child: Text(l10n.joinScreenSomethingWrong));
   }
 }
