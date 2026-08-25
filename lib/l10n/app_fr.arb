@@ -148,5 +148,30 @@
   "createGroupCopyCodeButton": "Copier le code",
   "createGroupCodeCopiedSnackbar": "Code de groupe copié !",
   "createGroupUnknownError": "Une erreur inconnue s'est produite.",
-  "createGroupUnexpectedError": "Une erreur inattendue s'est produite."
+  "createGroupUnexpectedError": "Une erreur inattendue s'est produite.",
+
+  "commonValidatorInvalidNumber": "Veuillez saisir un nombre valide.",
+
+  "createEventAppBarTitle": "Créer un nouvel événement",
+  "createEventNameLabel": "Nom de l'événement",
+  "createEventNameValidatorEmpty": "Veuillez saisir un nom.",
+  "createEventLocationLabel": "Lieu",
+  "createEventLocationValidatorEmpty": "Veuillez saisir un lieu.",
+  "createEventDateTimeLabel": "Date et heure de l'événement",
+  "createEventDeadlineDropdownLabel": "Date limite d'engagement (relative)",
+  "createEventDeadlineOptionDaysBefore": "{days, plural, one{{days} jour avant l'événement} other{{days} jours avant l'événement}}",
+  "createEventDeadlineOptionCustom": "Date et heure personnalisées",
+  "createEventDeadlineLabel": "Date limite d'engagement",
+  "createEventFeeLabel": "Frais",
+  "createEventFeeHelper": "Coût de l'événement en monnaie virtuelle.",
+  "createEventMaxParticipantsLabel": "Participants maximum",
+  "createEventMaxParticipantsHelper": "Maximum autorisé : {max}",
+  "createEventMaxParticipantsValidatorPositive": "Doit être supérieur à 0.",
+  "createEventMaxParticipantsValidatorExceedsLimit": "Ne peut pas dépasser {max} (limite du groupe).",
+  "createEventSubmitButton": "Créer l'événement",
+  "createEventSelectDateToCalculate": "Sélectionnez la date de l'événement pour calculer",
+  "createEventSelectDateAndTime": "Sélectionnez une date et une heure",
+  "createEventSelectDatesTimes": "Veuillez sélectionner toutes les dates et heures.",
+  "createEventMustBeLoggedIn": "Vous devez être connecté pour créer un événement.",
+  "createEventErrorCreating": "Erreur lors de la création de l'événement : {error}"
 }

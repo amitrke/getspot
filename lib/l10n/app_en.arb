@@ -621,5 +621,119 @@
   "createGroupUnexpectedError": "An unexpected error occurred.",
   "@createGroupUnexpectedError": {
     "description": "SnackBar text for a non-functions exception during group creation"
+  },
+
+  "commonValidatorInvalidNumber": "Please enter a valid number.",
+  "@commonValidatorInvalidNumber": {
+    "description": "Generic validation error for a numeric field"
+  },
+
+  "createEventAppBarTitle": "Create New Event",
+  "@createEventAppBarTitle": {
+    "description": "Create event screen app bar title"
+  },
+  "createEventNameLabel": "Event Name",
+  "@createEventNameLabel": {
+    "description": "Label for the event name field"
+  },
+  "createEventNameValidatorEmpty": "Please enter a name.",
+  "@createEventNameValidatorEmpty": {
+    "description": "Validation error when the event name field is empty"
+  },
+  "createEventLocationLabel": "Location",
+  "@createEventLocationLabel": {
+    "description": "Label for the event location field"
+  },
+  "createEventLocationValidatorEmpty": "Please enter a location.",
+  "@createEventLocationValidatorEmpty": {
+    "description": "Validation error when the location field is empty"
+  },
+  "createEventDateTimeLabel": "Event Date & Time",
+  "@createEventDateTimeLabel": {
+    "description": "Label for the event date/time picker"
+  },
+  "createEventDeadlineDropdownLabel": "Commitment Deadline (relative)",
+  "@createEventDeadlineDropdownLabel": {
+    "description": "Label for the relative commitment deadline dropdown"
+  },
+  "createEventDeadlineOptionDaysBefore": "{days, plural, one{{days} day before the event} other{{days} days before the event}}",
+  "@createEventDeadlineOptionDaysBefore": {
+    "description": "Relative deadline dropdown option, e.g. '2 days before the event'",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "createEventDeadlineOptionCustom": "Custom date & time",
+  "@createEventDeadlineOptionCustom": {
+    "description": "Relative deadline dropdown option for a manually picked date/time"
+  },
+  "createEventDeadlineLabel": "Commitment Deadline",
+  "@createEventDeadlineLabel": {
+    "description": "Label for the custom commitment deadline picker"
+  },
+  "createEventFeeLabel": "Fee",
+  "@createEventFeeLabel": {
+    "description": "Label for the event fee field"
+  },
+  "createEventFeeHelper": "Cost of the event in virtual currency.",
+  "@createEventFeeHelper": {
+    "description": "Helper text under the fee field"
+  },
+  "createEventMaxParticipantsLabel": "Max Participants",
+  "@createEventMaxParticipantsLabel": {
+    "description": "Label for the max participants field"
+  },
+  "createEventMaxParticipantsHelper": "Maximum allowed: {max}",
+  "@createEventMaxParticipantsHelper": {
+    "description": "Helper text under the max participants field, showing the group's cap",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "createEventMaxParticipantsValidatorPositive": "Must be greater than 0.",
+  "@createEventMaxParticipantsValidatorPositive": {
+    "description": "Validation error when max participants is zero or negative"
+  },
+  "createEventMaxParticipantsValidatorExceedsLimit": "Cannot exceed {max} (group limit).",
+  "@createEventMaxParticipantsValidatorExceedsLimit": {
+    "description": "Validation error when max participants exceeds the group's cap",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "createEventSubmitButton": "Create Event",
+  "@createEventSubmitButton": {
+    "description": "Button to submit the create-event form"
+  },
+  "createEventSelectDateToCalculate": "Select event date to calculate",
+  "@createEventSelectDateToCalculate": {
+    "description": "Placeholder shown in a date/time picker before a date is chosen"
+  },
+  "createEventSelectDateAndTime": "Select a date and time",
+  "@createEventSelectDateAndTime": {
+    "description": "Fallback placeholder for an empty date/time picker value"
+  },
+  "createEventSelectDatesTimes": "Please select all dates and times.",
+  "@createEventSelectDatesTimes": {
+    "description": "SnackBar shown when submitting without picking event/deadline date and time"
+  },
+  "createEventMustBeLoggedIn": "You must be logged in to create an event.",
+  "@createEventMustBeLoggedIn": {
+    "description": "Error thrown when creating an event while signed out"
+  },
+  "createEventErrorCreating": "Error creating event: {error}",
+  "@createEventErrorCreating": {
+    "description": "SnackBar shown when event creation fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }
