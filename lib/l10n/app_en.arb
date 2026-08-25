@@ -1,0 +1,167 @@
+{
+  "@@locale": "en",
+
+  "pleaseSignInToJoinGroup": "Please sign in to join a group",
+  "@pleaseSignInToJoinGroup": {
+    "description": "SnackBar shown when a signed-out user taps a group invite/join deep link"
+  },
+
+  "onboardingPage1Title": "Create or Join Groups",
+  "@onboardingPage1Title": {
+    "description": "Onboarding carousel page 1 title"
+  },
+  "onboardingPage1Description": "Start by creating your own sports group or join existing ones using a unique group code shared by organizers.",
+  "@onboardingPage1Description": {
+    "description": "Onboarding carousel page 1 description"
+  },
+  "onboardingPage2Title": "Manage Events",
+  "@onboardingPage2Title": {
+    "description": "Onboarding carousel page 2 title"
+  },
+  "onboardingPage2Description": "Create events with details like date, location, capacity, and fees. Members can register instantly if spots are available.",
+  "@onboardingPage2Description": {
+    "description": "Onboarding carousel page 2 description"
+  },
+  "onboardingPage3Title": "Track Payments",
+  "@onboardingPage3Title": {
+    "description": "Onboarding carousel page 3 title"
+  },
+  "onboardingPage3Description": "Virtual wallets help track event fees and payments. Note: No real money is processed through the app.",
+  "@onboardingPage3Description": {
+    "description": "Onboarding carousel page 3 description"
+  },
+  "onboardingPage4Title": "Commitment System",
+  "@onboardingPage4Title": {
+    "description": "Onboarding carousel page 4 title"
+  },
+  "onboardingPage4Description": "Set commitment deadlines for events. Members can withdraw before the deadline for a full refund, ensuring fair play.",
+  "@onboardingPage4Description": {
+    "description": "Onboarding carousel page 4 description"
+  },
+  "onboardingPage5Title": "Stay Updated",
+  "@onboardingPage5Title": {
+    "description": "Onboarding carousel page 5 title"
+  },
+  "onboardingPage5Description": "Get notifications for event registrations, confirmations, waitlist updates, and group announcements.",
+  "@onboardingPage5Description": {
+    "description": "Onboarding carousel page 5 description"
+  },
+  "onboardingSkipButton": "Skip",
+  "@onboardingSkipButton": {
+    "description": "Button to skip the onboarding carousel"
+  },
+  "onboardingBackButton": "Back",
+  "@onboardingBackButton": {
+    "description": "Button to go to the previous onboarding page"
+  },
+  "onboardingGetStartedButton": "Get Started",
+  "@onboardingGetStartedButton": {
+    "description": "Button on the last onboarding page to finish onboarding"
+  },
+  "onboardingNextButton": "Next",
+  "@onboardingNextButton": {
+    "description": "Button to go to the next onboarding page"
+  },
+
+  "loginSignIn": "Sign In",
+  "@loginSignIn": {
+    "description": "Login screen title and submit button label when in sign-in mode"
+  },
+  "loginCreateAccount": "Create Account",
+  "@loginCreateAccount": {
+    "description": "Login screen title when in registration mode"
+  },
+  "loginResetPasswordTitle": "Reset Password",
+  "@loginResetPasswordTitle": {
+    "description": "Login screen title when in forgot-password mode"
+  },
+  "loginWelcomeTitle": "Welcome to GetSpot",
+  "@loginWelcomeTitle": {
+    "description": "Login screen title before the email form is shown"
+  },
+  "loginGetIphoneApp": "Get the iPhone App",
+  "@loginGetIphoneApp": {
+    "description": "Button linking to the App Store, shown to iOS web visitors"
+  },
+  "loginGetAndroidApp": "Get the Android App",
+  "@loginGetAndroidApp": {
+    "description": "Button linking to the Play Store, shown to Android web visitors"
+  },
+  "loginSignInWithApple": "Sign in with Apple",
+  "@loginSignInWithApple": {
+    "description": "Apple sign-in button label"
+  },
+  "loginSignInWithGoogle": "Sign in with Google",
+  "@loginSignInWithGoogle": {
+    "description": "Google sign-in button label"
+  },
+  "loginSignInWithEmail": "Sign in with Email",
+  "@loginSignInWithEmail": {
+    "description": "Button that reveals the email/password form"
+  },
+  "loginOrDivider": "OR",
+  "@loginOrDivider": {
+    "description": "Divider text between social sign-in buttons and the email option"
+  },
+  "loginDisplayNameLabel": "Display Name",
+  "@loginDisplayNameLabel": {
+    "description": "Label for the display name field, shown when registering"
+  },
+  "loginEmailLabel": "Email",
+  "@loginEmailLabel": {
+    "description": "Label for the email field"
+  },
+  "loginPasswordLabel": "Password",
+  "@loginPasswordLabel": {
+    "description": "Label for the password field"
+  },
+  "loginValidatorEnterName": "Please enter your name",
+  "@loginValidatorEnterName": {
+    "description": "Validation error when the display name field is empty"
+  },
+  "loginValidatorInvalidEmail": "Invalid email",
+  "@loginValidatorInvalidEmail": {
+    "description": "Validation error when the email field is empty or missing @"
+  },
+  "loginValidatorPasswordLength": "Password must be at least 6 characters",
+  "@loginValidatorPasswordLength": {
+    "description": "Validation error when the password is too short"
+  },
+  "loginRegisterButton": "Register",
+  "@loginRegisterButton": {
+    "description": "Submit button label when in registration mode"
+  },
+  "loginSendResetLinkButton": "Send Reset Link",
+  "@loginSendResetLinkButton": {
+    "description": "Submit button label when in forgot-password mode"
+  },
+  "loginForgotPassword": "Forgot Password?",
+  "@loginForgotPassword": {
+    "description": "Link to switch to forgot-password mode"
+  },
+  "loginNoAccountRegisterLink": "Don't have an account? Register",
+  "@loginNoAccountRegisterLink": {
+    "description": "Link to switch to registration mode"
+  },
+  "loginHaveAccountSignInLink": "Already have an account? Sign In",
+  "@loginHaveAccountSignInLink": {
+    "description": "Link to switch back to sign-in mode"
+  },
+  "loginPasswordResetSent": "Password reset link sent to your email.",
+  "@loginPasswordResetSent": {
+    "description": "SnackBar confirming a password reset email was sent"
+  },
+  "loginGenericError": "An error occurred.",
+  "@loginGenericError": {
+    "description": "Fallback SnackBar message when a FirebaseAuthException has no message"
+  },
+  "loginSignInFailed": "Failed to sign in: {error}",
+  "@loginSignInFailed": {
+    "description": "SnackBar shown when Apple or Google sign-in throws an exception",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/helpers/platform_helper.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'package:getspot/widgets/app_logo.dart';
@@ -110,8 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
           await _authService.sendPasswordResetEmail(_emailController.text);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Password reset link sent to your email.'),
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.loginPasswordResetSent),
               ),
             );
             _setAuthMode(AuthMode.signIn);
@@ -122,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? "An error occurred."),
+            content: Text(e.message ?? AppLocalizations.of(context)!.loginGenericError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -138,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -153,11 +155,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     _showEmailForm
                         ? (_authMode == AuthMode.signIn
-                            ? 'Sign In'
+                            ? l10n.loginSignIn
                             : _authMode == AuthMode.register
-                                ? 'Create Account'
-                                : 'Reset Password')
-                        : 'Welcome to GetSpot',
+                                ? l10n.loginCreateAccount
+                                : l10n.loginResetPasswordTitle)
+                        : l10n.loginWelcomeTitle,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 24),
@@ -198,13 +200,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           final colorScheme = Theme.of(context).colorScheme;
                           messenger.showSnackBar(
                             SnackBar(
-                              content: Text('Failed to sign in: $e'),
+                              content: Text(l10n.loginSignInFailed(e.toString())),
                               backgroundColor: colorScheme.error,
                             ),
                           );
                         }
                       },
-                      label: const Text('Sign in with Apple'),
+                      label: Text(l10n.loginSignInWithApple),
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
                         backgroundColor: Colors.black,
@@ -241,26 +243,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         final colorScheme = Theme.of(context).colorScheme;
                         messenger.showSnackBar(
                           SnackBar(
-                            content: Text('Failed to sign in: $e'),
+                            content: Text(l10n.loginSignInFailed(e.toString())),
                             backgroundColor: colorScheme.error,
                           ),
                         );
                       }
                     },
-                    label: const Text('Sign in with Google'),
+                    label: Text(l10n.loginSignInWithGoogle),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Row(
+                  Row(
                     children: [
-                      Expanded(child: Divider()),
+                      const Expanded(child: Divider()),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text('OR'),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(l10n.loginOrDivider),
                       ),
-                      Expanded(child: Divider()),
+                      const Expanded(child: Divider()),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -278,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         backgroundColor: Colors.grey[200],
                         foregroundColor: Colors.black,
                       ),
-                      child: const Text('Sign in with Email'),
+                      child: Text(l10n.loginSignInWithEmail),
                     ),
                 ],
               ),
@@ -290,10 +292,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildIOSAppButton() {
+    final l10n = AppLocalizations.of(context)!;
     return OutlinedButton.icon(
       icon: const Icon(Icons.apple),
       onPressed: _launchAppStore,
-      label: const Text('Get the iPhone App'),
+      label: Text(l10n.loginGetIphoneApp),
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(double.infinity, 48),
         side: BorderSide(color: Theme.of(context).colorScheme.primary),
@@ -302,10 +305,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildAndroidAppButton() {
+    final l10n = AppLocalizations.of(context)!;
     return OutlinedButton.icon(
       icon: const Icon(Icons.android),
       onPressed: _launchPlayStore,
-      label: const Text('Get the Android App'),
+      label: Text(l10n.loginGetAndroidApp),
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(double.infinity, 48),
         side: BorderSide(color: Theme.of(context).colorScheme.primary),
@@ -314,6 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildAuthForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Form(
       key: _formKey,
       child: Column(
@@ -321,26 +326,27 @@ class _LoginScreenState extends State<LoginScreen> {
           if (_authMode == AuthMode.register)
             TextFormField(
               controller: _displayNameController,
-              decoration: const InputDecoration(labelText: 'Display Name'),
+              decoration: InputDecoration(labelText: l10n.loginDisplayNameLabel),
               validator: (value) =>
-                  value!.isEmpty ? 'Please enter your name' : null,
+                  value!.isEmpty ? l10n.loginValidatorEnterName : null,
             ),
           if (_authMode != AuthMode.signIn) const SizedBox(height: 16),
           TextFormField(
             controller: _emailController,
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(labelText: l10n.loginEmailLabel),
             keyboardType: TextInputType.emailAddress,
-            validator: (value) =>
-                value!.isEmpty || !value.contains('@') ? 'Invalid email' : null,
+            validator: (value) => value!.isEmpty || !value.contains('@')
+                ? l10n.loginValidatorInvalidEmail
+                : null,
           ),
           if (_authMode != AuthMode.forgotPassword) ...[
             const SizedBox(height: 16),
             TextFormField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: l10n.loginPasswordLabel),
               obscureText: true,
               validator: (value) => value!.length < 6
-                  ? 'Password must be at least 6 characters'
+                  ? l10n.loginValidatorPasswordLength
                   : null,
             ),
           ],
@@ -354,10 +360,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 minimumSize: const Size(double.infinity, 48),
               ),
               child: Text(_authMode == AuthMode.signIn
-                  ? 'Sign In'
+                  ? l10n.loginSignIn
                   : (_authMode == AuthMode.register
-                      ? 'Register'
-                      : 'Send Reset Link')),
+                      ? l10n.loginRegisterButton
+                      : l10n.loginSendResetLinkButton)),
             ),
           const SizedBox(height: 16),
           _buildAuthModeSwitch(),
@@ -367,23 +373,24 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildAuthModeSwitch() {
+    final l10n = AppLocalizations.of(context)!;
     if (_authMode == AuthMode.signIn) {
       return Column(
         children: [
           TextButton(
             onPressed: () => _setAuthMode(AuthMode.forgotPassword),
-            child: const Text('Forgot Password?'),
+            child: Text(l10n.loginForgotPassword),
           ),
           TextButton(
             onPressed: () => _setAuthMode(AuthMode.register),
-            child: const Text('Don\'t have an account? Register'),
+            child: Text(l10n.loginNoAccountRegisterLink),
           ),
         ],
       );
     } else {
       return TextButton(
         onPressed: () => _setAuthMode(AuthMode.signIn),
-        child: const Text('Already have an account? Sign In'),
+        child: Text(l10n.loginHaveAccountSignInLink),
       );
     }
   }
