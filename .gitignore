@@ -34,6 +34,12 @@ migrate_working_dir/
 /build/
 **/build/
 
+# Generated localization code (regenerated from lib/l10n/*.arb via
+# `generate: true` on every `flutter pub get`/build) — the .arb source
+# files themselves ARE committed, this is just the codegen output.
+lib/l10n/app_localizations.dart
+lib/l10n/app_localizations_*.dart
+
 # Symbolication related
 app.*.symbols
 

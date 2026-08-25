@@ -1,0 +1,13 @@
+Neuigkeiten
+- Leistungsverbesserungen — Events und Transaktionen werden jetzt lokal zwischengespeichert für schnelleres Laden.
+- Kopier-Schaltfläche für Administratoren, um die Liste der für ein Event angemeldeten Mitglieder zu kopieren.
+- Maximale Event-Kapazität auf sechzig festgelegt.
+- Unterstützung für horizontale Ausrichtung auf iOS und Android.
+- Firebase App Check für verbesserte Kontosicherheit hinzugefügt.
+
+Fehlerbehebungen
+- Fehler bei der Aktualisierung des Startbildschirm-Caches behoben.
+- Fehler bei der Apple-Anmeldung auf iOS und Android behoben.
+- Fehler beim Beitreten einer Gruppe über einen Einladungs- oder Deep-Link behoben.
+- Doppelte Beitrittsanfragen behoben und den Teilen-/Einladungsablauf im Web verbessert.
+- Klarere Fehlermeldungen und zuverlässigere Gruppenerstellung.

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/screens/create_event_screen.dart';
 import 'package:getspot/screens/event_details_screen.dart';
 import 'package:getspot/providers/participant_provider.dart';
@@ -88,28 +89,30 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   }
 
   void _copyGroupCode() {
+    final l10n = AppLocalizations.of(context)!;
     final code = widget.group['groupCode'] as String?;
     if (code == null || code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Group code not available.')),
+        SnackBar(content: Text(l10n.groupDetailsCodeUnavailableSnackbar)),
       );
       return;
     }
 
     Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Group code "$code" copied to clipboard.')),
+      SnackBar(content: Text(l10n.groupDetailsCodeCopiedSnackbar(code))),
     );
   }
 
   Future<void> _shareGroup() async {
+    final l10n = AppLocalizations.of(context)!;
     final code = widget.group['groupCode'] as String?;
     final name = widget.group['name'] as String?;
     final description = widget.group['description'] as String?;
 
     if (code == null || code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Group code not available.')),
+        SnackBar(content: Text(l10n.groupDetailsCodeUnavailableSnackbar)),
       );
       return;
     }
@@ -119,18 +122,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
 
     // Build share message
     final StringBuffer messageBuffer = StringBuffer();
-    messageBuffer.writeln('Join our group on GetSpot!');
+    messageBuffer.writeln(l10n.groupDetailsShareInviteText);
     messageBuffer.writeln();
     if (name != null && name.isNotEmpty) {
-      messageBuffer.writeln('Group: $name');
+      messageBuffer.writeln(l10n.groupDetailsShareGroupLabel(name));
     }
     if (description != null && description.isNotEmpty) {
       messageBuffer.writeln(description);
     }
     messageBuffer.writeln();
-    messageBuffer.writeln('Tap to join: $deepLink');
+    messageBuffer.writeln(l10n.groupDetailsShareTapToJoin(deepLink));
     messageBuffer.writeln();
-    messageBuffer.writeln('Or use code: $code in the GetSpot app');
+    messageBuffer.writeln(l10n.groupDetailsShareUseCode(code));
     final String message = messageBuffer.toString();
 
     try {
@@ -143,7 +146,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       await SharePlus.instance.share(
         ShareParams(
           text: message,
-          subject: 'Join ${name ?? "our group"} on GetSpot',
+          subject: l10n.groupDetailsShareSubject(name ?? l10n.groupDetailsShareFallbackName),
           sharePositionOrigin: sharePositionOrigin,
         ),
       );
@@ -160,14 +163,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         await Clipboard.setData(ClipboardData(text: message));
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sharing isn\'t supported in this browser. Invite message copied to clipboard instead.'),
+          SnackBar(
+            content: Text(l10n.groupDetailsSharingNotSupported),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error sharing: ${e.toString()}'),
+            content: Text(l10n.groupDetailsErrorSharing(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -176,7 +179,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   }
 
   Future<void> _leaveGroup() async {
-    final groupName = widget.group['name'] ?? 'this group';
+    final l10n = AppLocalizations.of(context)!;
+    final groupName = widget.group['name'] ?? l10n.groupDetailsFallbackGroupNameGeneric;
     final groupId = widget.group['groupId'] as String?;
     final user = FirebaseAuth.instance.currentUser;
     if (groupId == null || user == null) return;
@@ -184,14 +188,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: Text('Leave $groupName?'),
-            content: const Text(
-              'You\'ll need a new invite or the group code to rejoin. Make sure your wallet '
-              'balance is settled and you\'re not registered for any upcoming events first.',
-            ),
+            title: Text(l10n.groupDetailsLeaveConfirmTitle(groupName)),
+            content: Text(l10n.groupDetailsLeaveConfirmContent),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Leave')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.groupDetailsLeaveButton)),
             ],
           ),
         ) ??
@@ -215,7 +216,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You\'ve left $groupName.')),
+          SnackBar(content: Text(l10n.groupDetailsLeftGroupSnackbar(groupName))),
         );
       }
     } on FirebaseFunctionsException catch (e) {
@@ -223,7 +224,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'Could not leave the group.'),
+            content: Text(e.message ?? l10n.groupDetailsCouldNotLeave),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -233,7 +234,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error leaving group: ${e.toString()}'),
+            content: Text(l10n.groupDetailsErrorLeaving(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -244,13 +245,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   @override
   Widget build(BuildContext context) {
     developer.log('Building GroupDetailsScreen.', name: 'GroupDetailsScreen');
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.group['name'] ?? 'Group Details'),
+        title: Text(widget.group['name'] ?? l10n.groupDetailsFallbackTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            tooltip: 'Share Group',
+            tooltip: l10n.groupDetailsShareTooltip,
             onPressed: _shareGroup,
           ),
           if (!_isAdmin)
@@ -258,10 +260,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
               onSelected: (value) {
                 if (value == 'leave') _leaveGroup();
               },
-              itemBuilder: (context) => const [
+              itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'leave',
-                  child: Text('Leave Group'),
+                  child: Text(l10n.groupDetailsLeaveGroupMenuItem),
                 ),
               ],
             ),
@@ -269,14 +271,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: _isAdmin
-              ? const [
-                  Tab(icon: Icon(Icons.event), text: 'Events'),
-                  Tab(icon: Icon(Icons.announcement), text: 'Announcements'),
-                  Tab(icon: Icon(Icons.person_add), text: 'Admin'),
+              ? [
+                  Tab(icon: const Icon(Icons.event), text: l10n.groupDetailsEventsTab),
+                  Tab(icon: const Icon(Icons.announcement), text: l10n.groupDetailsAnnouncementsTab),
+                  Tab(icon: const Icon(Icons.person_add), text: l10n.groupDetailsAdminTab),
                 ]
-              : const [
-                  Tab(icon: Icon(Icons.event), text: 'Events'),
-                  Tab(icon: Icon(Icons.announcement), text: 'Announcements'),
+              : [
+                  Tab(icon: const Icon(Icons.event), text: l10n.groupDetailsEventsTab),
+                  Tab(icon: const Icon(Icons.announcement), text: l10n.groupDetailsAnnouncementsTab),
                 ],
         ),
       ),
@@ -303,12 +305,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Group Code: ${widget.group['groupCode']}',
+                        l10n.groupDetailsCodeLabel(widget.group['groupCode']),
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        tooltip: 'Copy group code',
+                        tooltip: l10n.groupDetailsCopyCodeTooltip,
                         onPressed: _copyGroupCode,
                         icon: const Icon(Icons.copy),
                       ),
@@ -317,7 +319,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                 )
               else
                 Text(
-                  'Group Code unavailable',
+                  l10n.groupDetailsCodeUnavailableText,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               const SizedBox(height: 24),
@@ -337,7 +339,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                         );
                       },
                       icon: const Icon(Icons.group),
-                      label: const Text('Members'),
+                      label: Text(l10n.groupDetailsMembersButton),
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -356,7 +358,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                       }
                     },
                     icon: const Icon(Icons.wallet),
-                    label: const Text('My Wallet'),
+                    label: Text(l10n.groupDetailsMyWalletButton),
                   ),
                 ],
               ),
@@ -406,7 +408,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                   ),
                 );
               },
-              label: const Text('Create Event'),
+              label: Text(l10n.groupDetailsCreateEventButton),
               icon: const Icon(Icons.add),
             )
           : null,
@@ -440,7 +442,7 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('You must be logged in to post an announcement.');
+        throw Exception(AppLocalizations.of(context)!.groupDetailsMustBeLoggedInAnnouncement);
       }
 
       await FirebaseFirestore.instance
@@ -450,7 +452,7 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
           .add({
             'content': _announcementController.text.trim(),
             'authorId': user.uid,
-            'authorName': user.displayName ?? 'Admin',
+            'authorName': user.displayName ?? AppLocalizations.of(context)!.groupDetailsAdminAuthorFallback,
             'createdAt': FieldValue.serverTimestamp(),
           });
 
@@ -463,7 +465,7 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error posting announcement: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.groupDetailsErrorPostingAnnouncement(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -479,6 +481,7 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: () {
         // Dismiss keyboard when tapping outside the TextField
@@ -494,9 +497,9 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                   Expanded(
                     child: TextField(
                       controller: _announcementController,
-                      decoration: const InputDecoration(
-                        labelText: 'New Announcement',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.groupDetailsNewAnnouncementLabel,
+                        border: const OutlineInputBorder(),
                       ),
                       maxLines: null,
                       textInputAction: TextInputAction.done,
@@ -529,14 +532,15 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return const Center(
-                    child: Text('Error loading announcements.'),
+                  return Center(
+                    child: Text(l10n.groupDetailsErrorLoadingAnnouncements),
                   );
                 }
                 final announcements = snapshot.data ?? [];
                 if (announcements.isEmpty) {
-                  return const Center(child: Text('No announcements yet.'));
+                  return Center(child: Text(l10n.groupDetailsNoAnnouncementsYet));
                 }
+                final locale = Localizations.localeOf(context).toString();
                 return ListView.builder(
                   keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   itemCount: announcements.length,
@@ -551,7 +555,10 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                       child: ListTile(
                         title: Text(announcement.content),
                         subtitle: Text(
-                          'Posted by ${announcement.authorName ?? 'Admin'} on ${createdAt != null ? DateFormat.yMMMd().format(createdAt) : ''}',
+                          l10n.groupDetailsPostedBy(
+                            announcement.authorName ?? l10n.groupDetailsAdminAuthorFallback,
+                            createdAt != null ? DateFormat.yMMMd(locale).format(createdAt) : '',
+                          ),
                         ),
                       ),
                     );
@@ -596,6 +603,7 @@ class _EventListState extends State<_EventList> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final eventCache = EventCacheService();
 
     return StreamBuilder<List<CachedEvent>>(
@@ -612,13 +620,13 @@ class _EventListState extends State<_EventList> {
             error: snapshot.error,
             stackTrace: snapshot.stackTrace,
           );
-          return const Center(child: Text('Error loading events.'));
+          return Center(child: Text(l10n.groupDetailsErrorLoadingEvents));
         }
 
         final events = snapshot.data ?? [];
 
         if (events.isEmpty) {
-          return const Center(child: Text('No upcoming events.'));
+          return Center(child: Text(l10n.groupItemNoUpcomingEvents));
         }
 
         return Column(
@@ -627,7 +635,7 @@ class _EventListState extends State<_EventList> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
-                'Upcoming Events',
+                l10n.groupDetailsUpcomingEventsHeader,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
@@ -693,17 +701,32 @@ class _EventListItemState extends State<_EventListItem> {
     }
   }
 
+  String _statusLabel(AppLocalizations l10n, String? status) {
+    switch (status) {
+      case 'confirmed':
+        return l10n.groupItemStatusConfirmed;
+      case 'waitlisted':
+        return l10n.groupItemStatusWaitlisted;
+      case 'denied':
+        return l10n.groupItemStatusDenied;
+      default:
+        return l10n.groupItemStatusNotRegistered;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     final eventData = widget.eventData;
     final eventTimestamp = eventData['eventTimestamp'] as Timestamp?;
     final formattedDate = eventTimestamp != null
-        ? DateFormat.yMMMEd().add_jm().format(eventTimestamp.toDate())
-        : 'No date';
+        ? DateFormat.yMMMEd(locale).add_jm().format(eventTimestamp.toDate())
+        : l10n.groupDetailsNoDate;
 
     return Card(
       child: ListTile(
-        title: Text(eventData['name'] ?? 'Unnamed Event'),
+        title: Text(eventData['name'] ?? l10n.groupDetailsUnnamedEvent),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -712,7 +735,7 @@ class _EventListItemState extends State<_EventListItem> {
               children: [
                 const Icon(Icons.location_on, size: 16),
                 const SizedBox(width: 4),
-                Text(eventData['location'] ?? 'No location'),
+                Text(eventData['location'] ?? l10n.groupDetailsNoLocation),
               ],
             ),
             const SizedBox(height: 4),
@@ -733,12 +756,12 @@ class _EventListItemState extends State<_EventListItem> {
                       final status = participantData?['status'] as String?;
 
                       if (participantData == null) {
-                        return const Row(
+                        return Row(
                           children: [
-                            Icon(Icons.help_outline,
+                            const Icon(Icons.help_outline,
                                 color: Colors.grey, size: 16),
-                            SizedBox(width: 4),
-                            Text('Not Registered'),
+                            const SizedBox(width: 4),
+                            Text(l10n.groupItemStatusNotRegistered),
                           ],
                         );
                       }
@@ -747,20 +770,16 @@ class _EventListItemState extends State<_EventListItem> {
                         children: [
                           _getStatusIcon(status),
                           const SizedBox(width: 4),
-                          Text(
-                            status != null
-                                ? '${status[0].toUpperCase()}${status.substring(1)}'
-                                : 'Not Registered',
-                          ),
+                          Text(_statusLabel(l10n, status)),
                         ],
                       );
                     },
                   )
-                : const Row(
+                : Row(
                     children: [
-                      Icon(Icons.help_outline, color: Colors.grey, size: 16),
-                      SizedBox(width: 4),
-                      Text('Not Registered'),
+                      const Icon(Icons.help_outline, color: Colors.grey, size: 16),
+                      const SizedBox(width: 4),
+                      Text(l10n.groupItemStatusNotRegistered),
                     ],
                   ),
           ],
@@ -791,18 +810,19 @@ class _AdminManagementTab extends StatelessWidget {
       'Building _AdminManagementTab with groupId: "$groupId"',
       name: 'GroupDetailsScreen',
     );
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       children: [
         _JoinRequestsList(
           groupId: groupId,
           status: 'pending',
-          title: 'Pending Requests',
+          title: l10n.groupDetailsPendingRequestsTitle,
         ),
         const SizedBox(height: 24),
         _JoinRequestsList(
           groupId: groupId,
           status: 'denied',
-          title: 'Denied Requests',
+          title: l10n.groupDetailsDeniedRequestsTitle,
         ),
       ],
     );
@@ -855,7 +875,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'An unknown error occurred.'),
+            content: Text(e.message ?? AppLocalizations.of(context)!.createGroupUnknownError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -864,7 +884,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('An unexpected error occurred.'),
+            content: Text(AppLocalizations.of(context)!.createGroupUnexpectedError),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -880,6 +900,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final query = FirebaseFirestore.instance
         .collection('groups')
         .doc(widget.groupId)
@@ -902,7 +923,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
           );
           return Center(
             child: Text(
-              'Error loading ${widget.title}.\nCheck console for details.',
+              l10n.groupDetailsErrorLoadingList(widget.title),
             ),
           );
         }
@@ -913,7 +934,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
           return Card(
             child: ListTile(
               title: Text(widget.title),
-              subtitle: const Text('No requests.'),
+              subtitle: Text(l10n.groupDetailsNoRequests),
             ),
           );
         }
@@ -940,7 +961,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
 
                 return Card(
                   child: ListTile(
-                    title: Text(requestData['displayName'] ?? 'No Name'),
+                    title: Text(requestData['displayName'] ?? l10n.commonNoName),
                     trailing: isLoading
                         ? const CircularProgressIndicator()
                         : _buildActionButtons(request.id),
@@ -955,17 +976,18 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
   }
 
   Widget _buildActionButtons(String requestedUserId) {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.status == 'pending') {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextButton(
             onPressed: () => _processRequest(requestedUserId, 'approve'),
-            child: const Text('Approve'),
+            child: Text(l10n.groupDetailsApproveButton),
           ),
           TextButton(
             onPressed: () => _processRequest(requestedUserId, 'deny'),
-            child: const Text('Deny'),
+            child: Text(l10n.groupDetailsDenyButton),
           ),
         ],
       );
@@ -976,7 +998,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
         style: TextButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.error,
         ),
-        child: const Text('Delete'),
+        child: Text(l10n.profileDeleteButton),
       );
     }
   }

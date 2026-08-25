@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/event_cache_service.dart';
 import 'dart:developer' as developer;
 
@@ -181,20 +182,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   }
 
   String _labelForOption(CommitmentDeadlineOption option) {
-    switch (option) {
-      case CommitmentDeadlineOption.oneDay:
-        return '1 day before the event';
-      case CommitmentDeadlineOption.twoDays:
-        return '2 days before the event';
-      case CommitmentDeadlineOption.threeDays:
-        return '3 days before the event';
-      case CommitmentDeadlineOption.fourDays:
-        return '4 days before the event';
-      case CommitmentDeadlineOption.fiveDays:
-        return '5 days before the event';
-      case CommitmentDeadlineOption.custom:
-        return 'Custom date & time';
+    final l10n = AppLocalizations.of(context)!;
+    final days = _daysBeforeForOption(option);
+    if (days == null) {
+      return l10n.createEventDeadlineOptionCustom;
     }
+    return l10n.createEventDeadlineOptionDaysBefore(days);
   }
 
   Future<void> _createEvent() async {
@@ -206,7 +199,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _deadlineDate == null ||
         _deadlineTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select all dates and times.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.createEventSelectDatesTimes)),
       );
       return;
     }
@@ -218,7 +211,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('You must be logged in to create an event.');
+        throw Exception(AppLocalizations.of(context)!.createEventMustBeLoggedIn);
       }
 
       final eventTimestamp = DateTime(
@@ -269,7 +262,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error creating event: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.createEventErrorCreating(e.toString())),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -285,8 +278,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Create New Event')),
+      appBar: AppBar(title: Text(l10n.createEventAppBarTitle)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -298,10 +292,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   label: 'event_name_field',
                   child: TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Event Name'),
+                    decoration: InputDecoration(labelText: l10n.createEventNameLabel),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a name.';
+                        return l10n.createEventNameValidatorEmpty;
                       }
                       return null;
                     },
@@ -312,10 +306,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   label: 'location_field',
                   child: TextFormField(
                     controller: _locationController,
-                    decoration: const InputDecoration(labelText: 'Location'),
+                    decoration: InputDecoration(labelText: l10n.createEventLocationLabel),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a location.';
+                        return l10n.createEventLocationValidatorEmpty;
                       }
                       return null;
                     },
@@ -325,7 +319,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 Semantics(
                   label: 'event_date_time_picker',
                   child: _buildDateTimePicker(
-                    label: 'Event Date & Time',
+                    label: l10n.createEventDateTimeLabel,
                     date: _eventDate,
                     time: _eventTime,
                     onTap: () => _pickDateTime(isEvent: true),
@@ -336,9 +330,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   label: 'commitment_deadline_dropdown',
                   child: DropdownButtonFormField<CommitmentDeadlineOption>(
                     initialValue: _deadlineOption,
-                    decoration: const InputDecoration(
-                      labelText: 'Commitment Deadline (relative)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.createEventDeadlineDropdownLabel,
+                      border: const OutlineInputBorder(),
                     ),
                     items: CommitmentDeadlineOption.values
                         .map(
@@ -366,7 +360,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     child: Semantics(
                       label: 'commitment_deadline_picker',
                       child: _buildDateTimePicker(
-                        label: 'Commitment Deadline',
+                        label: l10n.createEventDeadlineLabel,
                         date: _deadlineDate,
                         time: _deadlineTime,
                         onTap: () => _pickDateTime(isEvent: false),
@@ -377,14 +371,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   label: 'fee_field',
                   child: TextFormField(
                     controller: _feeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Fee',
-                      helperText: 'Cost of the event in virtual currency.',
+                    decoration: InputDecoration(
+                      labelText: l10n.createEventFeeLabel,
+                      helperText: l10n.createEventFeeHelper,
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || int.tryParse(value) == null) {
-                        return 'Please enter a valid number.';
+                        return l10n.commonValidatorInvalidNumber;
                       }
                       return null;
                     },
@@ -396,20 +390,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   child: TextFormField(
                     controller: _maxParticipantsController,
                     decoration: InputDecoration(
-                      labelText: 'Max Participants',
-                      helperText: 'Maximum allowed: $_maxEventCapacity',
+                      labelText: l10n.createEventMaxParticipantsLabel,
+                      helperText: l10n.createEventMaxParticipantsHelper(_maxEventCapacity),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || int.tryParse(value) == null) {
-                        return 'Please enter a valid number.';
+                        return l10n.commonValidatorInvalidNumber;
                       }
                       final maxParticipants = int.parse(value);
                       if (maxParticipants <= 0) {
-                        return 'Must be greater than 0.';
+                        return l10n.createEventMaxParticipantsValidatorPositive;
                       }
                       if (maxParticipants > _maxEventCapacity) {
-                        return 'Cannot exceed $_maxEventCapacity (group limit).';
+                        return l10n.createEventMaxParticipantsValidatorExceedsLimit(_maxEventCapacity);
                       }
                       return null;
                     },
@@ -423,7 +417,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     label: 'create_event_button',
                     child: ElevatedButton(
                       onPressed: _createEvent,
-                      child: const Text('Create Event'),
+                      child: Text(l10n.createEventSubmitButton),
                     ),
                   ),
               ],
@@ -440,11 +434,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     TimeOfDay? time,
     required VoidCallback onTap,
   }) {
-    final formattedDate = date != null ? DateFormat.yMMMd().format(date) : '';
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final formattedDate = date != null ? DateFormat.yMMMd(locale).format(date) : '';
     final formattedTime = time != null ? time.format(context) : '';
     final value = date != null
         ? '$formattedDate at $formattedTime'
-        : 'Select event date to calculate';
+        : l10n.createEventSelectDateToCalculate;
 
     return InkWell(
       onTap: onTap,
@@ -454,7 +450,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           border: const OutlineInputBorder(),
         ),
         child: Text(
-          value.isEmpty ? 'Select a date and time' : value,
+          value.isEmpty ? l10n.createEventSelectDateAndTime : value,
         ),
       ),
     );

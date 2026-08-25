@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:getspot/firebase_options.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/screens/login_screen.dart';
 import 'package:getspot/screens/verify_email_screen.dart';
@@ -112,6 +113,8 @@ class MyApp extends StatelessWidget {
       ),
       home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       navigatorObservers: [
         AnalyticsService().getAnalyticsObserver(),
       ],
@@ -194,8 +197,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (user == null) {
       developer.log('User not authenticated, cannot handle deep link', name: 'AuthWrapper');
       ScaffoldMessenger.of(navigatorContext).showSnackBar(
-        const SnackBar(
-          content: Text('Please sign in to join a group'),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(navigatorContext)!.pleaseSignInToJoinGroup,
+          ),
         ),
       );
       return;
