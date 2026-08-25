@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'package:getspot/services/group_cache_service.dart';
 import 'package:getspot/services/user_cache_service.dart';
@@ -22,6 +23,7 @@ class MemberProfileScreen extends StatelessWidget {
   Future<List<GroupBalance>> _fetchGroupBalances(
     String userId,
     List<QueryDocumentSnapshot<Map<String, dynamic>>> memberships,
+    AppLocalizations l10n,
   ) async {
     if (memberships.isEmpty) return [];
 
@@ -53,7 +55,7 @@ class MemberProfileScreen extends StatelessWidget {
       final group = groupsMap[groupId];
       final member = membersMap[groupId];
       return GroupBalance(
-        groupName: group?.name ?? 'Group',
+        groupName: group?.name ?? l10n.profileFallbackGroupName,
         balance: member?.data()?['walletBalance'] ?? 0,
       );
     }).toList();
@@ -61,14 +63,15 @@ class MemberProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return const Scaffold(body: Center(child: Text('Not signed in')));
+      return Scaffold(body: Center(child: Text(l10n.profileNotSignedIn)));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: Text(l10n.profileAppBarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -99,7 +102,7 @@ class MemberProfileScreen extends StatelessWidget {
                         ? Text(
                             user.displayName?.isNotEmpty == true
                                 ? user.displayName![0].toUpperCase()
-                                : 'A',
+                                : l10n.profileAnonymousName[0].toUpperCase(),
                             style: const TextStyle(fontSize: 32),
                           )
                         : null,
@@ -113,7 +116,7 @@ class MemberProfileScreen extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                user.displayName ?? 'Anonymous',
+                                user.displayName ?? l10n.profileAnonymousName,
                                 style: Theme.of(context).textTheme.headlineSmall,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -152,7 +155,7 @@ class MemberProfileScreen extends StatelessWidget {
                                 Icon(Icons.bug_report, color: Colors.orange.shade700),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Debug Tools',
+                                  l10n.profileDebugToolsTitle,
                                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                         color: Colors.orange.shade700,
                                       ),
@@ -168,7 +171,7 @@ class MemberProfileScreen extends StatelessWidget {
                                       CrashlyticsService().testCrash();
                                     },
                                     icon: const Icon(Icons.warning),
-                                    label: const Text('Test Crash'),
+                                    label: Text(l10n.profileTestCrashButton),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
                                       foregroundColor: Colors.white,
@@ -182,13 +185,13 @@ class MemberProfileScreen extends StatelessWidget {
                                       await CrashlyticsService().testError();
                                       if (!context.mounted) return;
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Test error logged to Crashlytics'),
+                                        SnackBar(
+                                          content: Text(l10n.profileTestErrorLogged),
                                         ),
                                       );
                                     },
                                     icon: const Icon(Icons.error_outline),
-                                    label: const Text('Test Error'),
+                                    label: Text(l10n.profileTestErrorButton),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.orange,
                                       foregroundColor: Colors.white,
@@ -209,17 +212,16 @@ class MemberProfileScreen extends StatelessWidget {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Delete Account?'),
-                      content: const Text(
-                          'This action is irreversible. All your data will be permanently deleted. If you have a positive balance in any of your groups, it will be forfeited. Are you sure you want to continue?'),
+                      title: Text(l10n.profileDeleteConfirmTitle),
+                      content: Text(l10n.profileDeleteConfirmContent),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
+                          child: Text(l10n.commonCancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Delete'),
+                          child: Text(l10n.profileDeleteButton),
                         ),
                       ],
                     ),
@@ -246,13 +248,13 @@ class MemberProfileScreen extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Error'),
+                          title: Text(l10n.profileErrorTitle),
                           content:
-                              Text(e.message ?? 'An unknown error occurred.'),
+                              Text(e.message ?? l10n.createGroupUnknownError),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('OK'),
+                              child: Text(l10n.commonOk),
                             ),
                           ],
                         ),
@@ -260,13 +262,13 @@ class MemberProfileScreen extends StatelessWidget {
                     }
                   }
                 },
-                child: const Text('Delete Account',
-                    style: TextStyle(color: Colors.red)),
+                child: Text(l10n.profileDeleteAccountButton,
+                    style: const TextStyle(color: Colors.red)),
               ),
               const SizedBox(height: 24),
               _buildNotificationSettings(context, user.uid),
               const SizedBox(height: 24),
-              Text('Group Balances',
+              Text(l10n.profileGroupBalancesHeader,
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               Expanded(
@@ -282,13 +284,13 @@ class MemberProfileScreen extends StatelessWidget {
                     }
                     final memberships = snapshot.data?.docs ?? [];
                     if (memberships.isEmpty) {
-                      return const Center(
-                          child: Text('No group memberships yet.'));
+                      return Center(
+                          child: Text(l10n.profileNoGroupMemberships));
                     }
 
                     // Use FutureBuilder at the top level, not in ListView
                     return FutureBuilder<List<GroupBalance>>(
-                      future: _fetchGroupBalances(user.uid, memberships),
+                      future: _fetchGroupBalances(user.uid, memberships, l10n),
                       builder: (context, balanceSnapshot) {
                         if (balanceSnapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -297,7 +299,7 @@ class MemberProfileScreen extends StatelessWidget {
                         }
                         if (balanceSnapshot.hasError) {
                           return Center(
-                              child: Text('Error: ${balanceSnapshot.error}'));
+                              child: Text(l10n.profileBalanceError(balanceSnapshot.error.toString())));
                         }
                         final balances = balanceSnapshot.data ?? [];
                         return ListView.builder(
@@ -307,7 +309,7 @@ class MemberProfileScreen extends StatelessWidget {
                             return ListTile(
                               title: Text(balance.groupName),
                               subtitle: Text(
-                                  'Balance: ${balance.balance.toStringAsFixed(2)}'),
+                                  l10n.membersScreenBalanceLabel(balance.balance.toStringAsFixed(2))),
                             );
                           },
                         );
@@ -324,13 +326,14 @@ class MemberProfileScreen extends StatelessWidget {
   }
 
   Widget _buildNotificationSettings(BuildContext context, String userId) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Notification Settings',
+            Text(l10n.profileNotificationSettingsTitle,
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
@@ -352,9 +355,8 @@ class MemberProfileScreen extends StatelessWidget {
                     userData?['notificationsEnabled'] ?? true;
 
                 return SwitchListTile(
-                  title: const Text('Push Notifications'),
-                  subtitle: const Text(
-                      'Receive notifications for new events, join approvals, and reminders'),
+                  title: Text(l10n.profilePushNotificationsTitle),
+                  subtitle: Text(l10n.profilePushNotificationsSubtitle),
                   value: notificationsEnabled,
                   onChanged: (bool value) async {
                     try {
@@ -369,15 +371,15 @@ class MemberProfileScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(value
-                              ? 'Notifications enabled'
-                              : 'Notifications disabled'),
+                              ? l10n.profileNotificationsEnabled
+                              : l10n.profileNotificationsDisabled),
                         ),
                       );
                     } catch (e) {
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Error updating settings: $e'),
+                          content: Text(l10n.profileErrorUpdatingSettings(e.toString())),
                           backgroundColor: Theme.of(context).colorScheme.error,
                         ),
                       );
@@ -394,19 +396,20 @@ class MemberProfileScreen extends StatelessWidget {
 
   void _showEditNameDialog(BuildContext context, User user) {
     final nameController = TextEditingController(text: user.displayName);
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit Display Name'),
+          title: Text(l10n.profileEditNameTitle),
           content: TextField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'New Name'),
+            decoration: InputDecoration(labelText: l10n.profileNewNameLabel),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             TextButton(
               onPressed: () async {
@@ -430,8 +433,8 @@ class MemberProfileScreen extends StatelessWidget {
                   if (!context.mounted) return;
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Display name updated successfully!')),
+                    SnackBar(
+                        content: Text(l10n.profileNameUpdated)),
                   );
                   // The UI will update automatically via the StreamBuilder
                 } catch (e) {
@@ -440,13 +443,13 @@ class MemberProfileScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                          'An error occurred: ${e.toString()}'),
+                          l10n.profileGenericErrorOccurred(e.toString())),
                       backgroundColor: Theme.of(context).colorScheme.error,
                     ),
                   );
                 }
               },
-              child: const Text('Save'),
+              child: Text(l10n.profileSaveButton),
             ),
           ],
         );

@@ -1,0 +1,1628 @@
+{
+  "@@locale": "en",
+
+  "pleaseSignInToJoinGroup": "Please sign in to join a group",
+  "@pleaseSignInToJoinGroup": {
+    "description": "SnackBar shown when a signed-out user taps a group invite/join deep link"
+  },
+
+  "onboardingPage1Title": "Create or Join Groups",
+  "@onboardingPage1Title": {
+    "description": "Onboarding carousel page 1 title"
+  },
+  "onboardingPage1Description": "Start by creating your own sports group or join existing ones using a unique group code shared by organizers.",
+  "@onboardingPage1Description": {
+    "description": "Onboarding carousel page 1 description"
+  },
+  "onboardingPage2Title": "Manage Events",
+  "@onboardingPage2Title": {
+    "description": "Onboarding carousel page 2 title"
+  },
+  "onboardingPage2Description": "Create events with details like date, location, capacity, and fees. Members can register instantly if spots are available.",
+  "@onboardingPage2Description": {
+    "description": "Onboarding carousel page 2 description"
+  },
+  "onboardingPage3Title": "Track Payments",
+  "@onboardingPage3Title": {
+    "description": "Onboarding carousel page 3 title"
+  },
+  "onboardingPage3Description": "Virtual wallets help track event fees and payments. Note: No real money is processed through the app.",
+  "@onboardingPage3Description": {
+    "description": "Onboarding carousel page 3 description"
+  },
+  "onboardingPage4Title": "Commitment System",
+  "@onboardingPage4Title": {
+    "description": "Onboarding carousel page 4 title"
+  },
+  "onboardingPage4Description": "Set commitment deadlines for events. Members can withdraw before the deadline for a full refund, ensuring fair play.",
+  "@onboardingPage4Description": {
+    "description": "Onboarding carousel page 4 description"
+  },
+  "onboardingPage5Title": "Stay Updated",
+  "@onboardingPage5Title": {
+    "description": "Onboarding carousel page 5 title"
+  },
+  "onboardingPage5Description": "Get notifications for event registrations, confirmations, waitlist updates, and group announcements.",
+  "@onboardingPage5Description": {
+    "description": "Onboarding carousel page 5 description"
+  },
+  "onboardingSkipButton": "Skip",
+  "@onboardingSkipButton": {
+    "description": "Button to skip the onboarding carousel"
+  },
+  "onboardingBackButton": "Back",
+  "@onboardingBackButton": {
+    "description": "Button to go to the previous onboarding page"
+  },
+  "onboardingGetStartedButton": "Get Started",
+  "@onboardingGetStartedButton": {
+    "description": "Button on the last onboarding page to finish onboarding"
+  },
+  "onboardingNextButton": "Next",
+  "@onboardingNextButton": {
+    "description": "Button to go to the next onboarding page"
+  },
+
+  "loginSignIn": "Sign In",
+  "@loginSignIn": {
+    "description": "Login screen title and submit button label when in sign-in mode"
+  },
+  "loginCreateAccount": "Create Account",
+  "@loginCreateAccount": {
+    "description": "Login screen title when in registration mode"
+  },
+  "loginResetPasswordTitle": "Reset Password",
+  "@loginResetPasswordTitle": {
+    "description": "Login screen title when in forgot-password mode"
+  },
+  "loginWelcomeTitle": "Welcome to GetSpot",
+  "@loginWelcomeTitle": {
+    "description": "Login screen title before the email form is shown"
+  },
+  "loginGetIphoneApp": "Get the iPhone App",
+  "@loginGetIphoneApp": {
+    "description": "Button linking to the App Store, shown to iOS web visitors"
+  },
+  "loginGetAndroidApp": "Get the Android App",
+  "@loginGetAndroidApp": {
+    "description": "Button linking to the Play Store, shown to Android web visitors"
+  },
+  "loginSignInWithApple": "Sign in with Apple",
+  "@loginSignInWithApple": {
+    "description": "Apple sign-in button label"
+  },
+  "loginSignInWithGoogle": "Sign in with Google",
+  "@loginSignInWithGoogle": {
+    "description": "Google sign-in button label"
+  },
+  "loginSignInWithEmail": "Sign in with Email",
+  "@loginSignInWithEmail": {
+    "description": "Button that reveals the email/password form"
+  },
+  "loginOrDivider": "OR",
+  "@loginOrDivider": {
+    "description": "Divider text between social sign-in buttons and the email option"
+  },
+  "loginDisplayNameLabel": "Display Name",
+  "@loginDisplayNameLabel": {
+    "description": "Label for the display name field, shown when registering"
+  },
+  "loginEmailLabel": "Email",
+  "@loginEmailLabel": {
+    "description": "Label for the email field"
+  },
+  "loginPasswordLabel": "Password",
+  "@loginPasswordLabel": {
+    "description": "Label for the password field"
+  },
+  "loginValidatorEnterName": "Please enter your name",
+  "@loginValidatorEnterName": {
+    "description": "Validation error when the display name field is empty"
+  },
+  "loginValidatorInvalidEmail": "Invalid email",
+  "@loginValidatorInvalidEmail": {
+    "description": "Validation error when the email field is empty or missing @"
+  },
+  "loginValidatorPasswordLength": "Password must be at least 6 characters",
+  "@loginValidatorPasswordLength": {
+    "description": "Validation error when the password is too short"
+  },
+  "loginRegisterButton": "Register",
+  "@loginRegisterButton": {
+    "description": "Submit button label when in registration mode"
+  },
+  "loginSendResetLinkButton": "Send Reset Link",
+  "@loginSendResetLinkButton": {
+    "description": "Submit button label when in forgot-password mode"
+  },
+  "loginForgotPassword": "Forgot Password?",
+  "@loginForgotPassword": {
+    "description": "Link to switch to forgot-password mode"
+  },
+  "loginNoAccountRegisterLink": "Don't have an account? Register",
+  "@loginNoAccountRegisterLink": {
+    "description": "Link to switch to registration mode"
+  },
+  "loginHaveAccountSignInLink": "Already have an account? Sign In",
+  "@loginHaveAccountSignInLink": {
+    "description": "Link to switch back to sign-in mode"
+  },
+  "loginPasswordResetSent": "Password reset link sent to your email.",
+  "@loginPasswordResetSent": {
+    "description": "SnackBar confirming a password reset email was sent"
+  },
+  "loginGenericError": "An error occurred.",
+  "@loginGenericError": {
+    "description": "Fallback SnackBar message when a FirebaseAuthException has no message"
+  },
+  "loginSignInFailed": "Failed to sign in: {error}",
+  "@loginSignInFailed": {
+    "description": "SnackBar shown when Apple or Google sign-in throws an exception",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "appLogoSemanticLabel": "App Logo",
+  "@appLogoSemanticLabel": {
+    "description": "Accessibility label for the app logo image"
+  },
+
+  "homeAppBarTitle": "My Groups",
+  "@homeAppBarTitle": {
+    "description": "Home screen app bar title"
+  },
+  "homeJoinGroupButton": "Join a Group",
+  "@homeJoinGroupButton": {
+    "description": "Button on home screen to open the join-group modal"
+  },
+  "homeCreateGroupButton": "Create a Group",
+  "@homeCreateGroupButton": {
+    "description": "Button on home screen to open the create-group modal"
+  },
+  "homeErrorLoadingGroups": "Error loading groups",
+  "@homeErrorLoadingGroups": {
+    "description": "Title shown when the groups stream errors"
+  },
+  "homeRetryButton": "Retry",
+  "@homeRetryButton": {
+    "description": "Button to retry loading groups after an error"
+  },
+  "homeWelcomeTitle": "Welcome to GetSpot!",
+  "@homeWelcomeTitle": {
+    "description": "Title shown when the user has no groups yet"
+  },
+  "homeWelcomeDescription": "This is your space to manage sports groups and events. Get started by creating a new group or joining an existing one with a code.",
+  "@homeWelcomeDescription": {
+    "description": "Description shown when the user has no groups yet"
+  },
+
+  "verifyEmailStillNotVerified": "Still not verified. Check your inbox (and spam folder) for the link.",
+  "@verifyEmailStillNotVerified": {
+    "description": "SnackBar shown when the user taps check-verified but email is still unverified"
+  },
+  "verifyEmailWaitBeforeResend": "Please wait a bit before requesting another email.",
+  "@verifyEmailWaitBeforeResend": {
+    "description": "SnackBar shown when resending is rate-limited"
+  },
+  "verifyEmailSent": "Verification email sent. Check your inbox.",
+  "@verifyEmailSent": {
+    "description": "SnackBar shown after a verification email is resent"
+  },
+  "verifyEmailCouldNotSend": "Could not send verification email.",
+  "@verifyEmailCouldNotSend": {
+    "description": "Fallback SnackBar message when resending fails with no error message"
+  },
+  "verifyEmailTitle": "Verify your email",
+  "@verifyEmailTitle": {
+    "description": "Verify email screen title"
+  },
+  "verifyEmailDescription": "We sent a verification link to {email}. Click it, then come back and tap \"I've verified my email\" below.",
+  "@verifyEmailDescription": {
+    "description": "Instructions on the verify email screen",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyEmailFallbackAddress": "your email",
+  "@verifyEmailFallbackAddress": {
+    "description": "Fallback text used in place of the email address if it's unavailable"
+  },
+  "verifyEmailCheckButton": "I've verified my email",
+  "@verifyEmailCheckButton": {
+    "description": "Button to check whether the email has been verified"
+  },
+  "verifyEmailResendButton": "Resend verification email",
+  "@verifyEmailResendButton": {
+    "description": "Button to resend the verification email"
+  },
+  "verifyEmailSignOutButton": "Sign out",
+  "@verifyEmailSignOutButton": {
+    "description": "Button to sign out from the verify email screen"
+  },
+
+  "walletAppBarTitle": "Group Wallet",
+  "@walletAppBarTitle": {
+    "description": "Wallet screen app bar title"
+  },
+  "walletRefreshTooltip": "Refresh",
+  "@walletRefreshTooltip": {
+    "description": "Tooltip for the wallet screen's refresh button"
+  },
+  "walletHistoryHeader": "History",
+  "@walletHistoryHeader": {
+    "description": "Header above the transaction history list"
+  },
+  "walletErrorMessage": "Error: {error}",
+  "@walletErrorMessage": {
+    "description": "Generic error message shown when balance or transactions fail to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "walletCurrentBalance": "Current Balance",
+  "@walletCurrentBalance": {
+    "description": "Label above the wallet balance amount"
+  },
+  "walletNoTransactions": "No transactions yet.",
+  "@walletNoTransactions": {
+    "description": "Shown when the transaction list is empty"
+  },
+
+  "groupItemPendingChip": "Pending",
+  "@groupItemPendingChip": {
+    "description": "Chip shown on a group list item when the user's membership is still pending"
+  },
+  "groupItemPendingApproval": "{count, plural, one{{count} member pending approval} other{{count} members pending approval}}",
+  "@groupItemPendingApproval": {
+    "description": "Shown to a group admin when members are awaiting join approval",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupItemNoUpcomingEvents": "No upcoming events",
+  "@groupItemNoUpcomingEvents": {
+    "description": "Shown on a group list item when there is no next event date"
+  },
+  "groupItemStatusNotRegistered": "Not Registered",
+  "@groupItemStatusNotRegistered": {
+    "description": "Event registration status label when the user hasn't registered"
+  },
+  "groupItemStatusConfirmed": "Confirmed",
+  "@groupItemStatusConfirmed": {
+    "description": "Event registration status label when confirmed"
+  },
+  "groupItemStatusWaitlisted": "Waitlisted",
+  "@groupItemStatusWaitlisted": {
+    "description": "Event registration status label when waitlisted"
+  },
+  "groupItemStatusDenied": "Denied",
+  "@groupItemStatusDenied": {
+    "description": "Event registration status label when denied"
+  },
+
+  "commonCancel": "Cancel",
+  "@commonCancel": {
+    "description": "Generic cancel button, used in several dialogs/forms"
+  },
+  "commonConfirm": "Confirm",
+  "@commonConfirm": {
+    "description": "Generic confirm button, used in dialogs"
+  },
+  "commonDone": "Done",
+  "@commonDone": {
+    "description": "Generic done button, used in dialogs"
+  },
+  "commonBack": "Back",
+  "@commonBack": {
+    "description": "Generic back button"
+  },
+  "commonNoName": "No Name",
+  "@commonNoName": {
+    "description": "Fallback shown in place of a user's display name when none is set"
+  },
+  "commonAlreadyMember": "You're already a member of this group.",
+  "@commonAlreadyMember": {
+    "description": "Shown when a user tries to join a group they're already in"
+  },
+  "commonCouldNotOpenGroup": "Could not open the group. Please try again.",
+  "@commonCouldNotOpenGroup": {
+    "description": "SnackBar shown when opening a found group fails"
+  },
+  "commonJoinRequestSent": "Your request to join has been sent!",
+  "@commonJoinRequestSent": {
+    "description": "SnackBar shown after a join request is successfully sent"
+  },
+  "commonMustBeLoggedIn": "You must be logged in to send a request.",
+  "@commonMustBeLoggedIn": {
+    "description": "Error thrown when sending a join request while signed out"
+  },
+  "commonGroupNoLongerExists": "This group no longer exists.",
+  "@commonGroupNoLongerExists": {
+    "description": "Shown when the target group was deleted before it could be opened"
+  },
+  "commonGoToGroup": "Go to Group",
+  "@commonGoToGroup": {
+    "description": "Button to navigate to a group the user is already a member of"
+  },
+  "commonRequestToJoin": "Request to Join",
+  "@commonRequestToJoin": {
+    "description": "Button to send a join request"
+  },
+
+  "joinScreenAppBarTitle": "Join Group",
+  "@joinScreenAppBarTitle": {
+    "description": "JoinGroupScreen app bar title"
+  },
+  "joinScreenLookupError": "An error occurred while looking up the group. Please try again.",
+  "@joinScreenLookupError": {
+    "description": "Error shown when looking up a group by deep-link code fails"
+  },
+  "joinScreenNotFoundWithCode": "No group found with code: {code}",
+  "@joinScreenNotFoundWithCode": {
+    "description": "Error shown when the deep-link group code doesn't match any group",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenGoBackButton": "Go Back",
+  "@joinScreenGoBackButton": {
+    "description": "Button shown on the error state to leave the screen"
+  },
+  "joinScreenInvitedTo": "You've been invited to join:",
+  "@joinScreenInvitedTo": {
+    "description": "Label above the invited group's name"
+  },
+  "joinScreenUnnamedGroup": "Unnamed Group",
+  "@joinScreenUnnamedGroup": {
+    "description": "Fallback shown if the found group has no name"
+  },
+  "joinScreenAboutGroup": "About this group:",
+  "@joinScreenAboutGroup": {
+    "description": "Label above the group's description"
+  },
+  "joinScreenGroupCodeLabel": "Group Code: {code}",
+  "@joinScreenGroupCodeLabel": {
+    "description": "Shows the group code being joined",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenRequestPendingMessage": "Your request to join this group is pending approval.",
+  "@joinScreenRequestPendingMessage": {
+    "description": "Shown when the user already has a pending join request"
+  },
+  "joinScreenPreviousRequestStatus": "Your previous request was {status}. Contact the group admin for help.",
+  "@joinScreenPreviousRequestStatus": {
+    "description": "Shown when the user has a previous non-pending join request",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenRequestPendingButton": "Request Pending",
+  "@joinScreenRequestPendingButton": {
+    "description": "Disabled button label while a join request is pending"
+  },
+  "joinScreenRequestStatusButton": "Request {status}",
+  "@joinScreenRequestStatusButton": {
+    "description": "Disabled button label showing a non-pending request status",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenAlreadyHaveRequest": "You already have a request to join this group ({status}).",
+  "@joinScreenAlreadyHaveRequest": {
+    "description": "SnackBar shown when sending a join request fails because one already exists",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "joinScreenSomethingWrong": "Something went wrong.",
+  "@joinScreenSomethingWrong": {
+    "description": "Fallback shown in an unexpected state"
+  },
+
+  "joinModalTitle": "Join a Group",
+  "@joinModalTitle": {
+    "description": "Join group modal title"
+  },
+  "joinModalNotFoundGeneric": "No group found with that code.",
+  "@joinModalNotFoundGeneric": {
+    "description": "Error shown when a manually entered group code doesn't match any group"
+  },
+  "joinModalErrorGeneric": "An error occurred. Please try again.",
+  "@joinModalErrorGeneric": {
+    "description": "Generic error shown when the group lookup fails"
+  },
+  "joinModalCodeFieldLabel": "Enter Group Code",
+  "@joinModalCodeFieldLabel": {
+    "description": "Label for the group code text field"
+  },
+  "joinModalCodeValidatorEmpty": "Please enter a code.",
+  "@joinModalCodeValidatorEmpty": {
+    "description": "Validation error when the group code field is empty"
+  },
+  "joinModalFindGroupButton": "Find Group",
+  "@joinModalFindGroupButton": {
+    "description": "Button to look up a group by the entered code"
+  },
+
+  "membersScreenTitle": "Members",
+  "@membersScreenTitle": {
+    "description": "Group members screen app bar title"
+  },
+  "membersScreenError": "Error: {error}",
+  "@membersScreenError": {
+    "description": "Shown when the members list fails to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenNoMembersYet": "No members yet.",
+  "@membersScreenNoMembersYet": {
+    "description": "Shown when a group has no members"
+  },
+  "membersScreenBalanceLabel": "Balance: {balance}",
+  "@membersScreenBalanceLabel": {
+    "description": "Shows a member's wallet balance",
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenRemoveConfirmTitle": "Remove {name}?",
+  "@membersScreenRemoveConfirmTitle": {
+    "description": "Confirmation dialog title before removing a member",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenRemoveConfirmContent": "This action cannot be undone.",
+  "@membersScreenRemoveConfirmContent": {
+    "description": "Confirmation dialog body before removing a member"
+  },
+  "membersScreenRemoveButton": "Remove",
+  "@membersScreenRemoveButton": {
+    "description": "Button to confirm removing a member"
+  },
+  "membersScreenCreditDialogTitle": "Credit {name}",
+  "@membersScreenCreditDialogTitle": {
+    "description": "Dialog title for adding wallet credit to a member",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "membersScreenAmountLabel": "Amount",
+  "@membersScreenAmountLabel": {
+    "description": "Label for the credit amount field"
+  },
+  "membersScreenAmountValidatorEmpty": "Please enter an amount",
+  "@membersScreenAmountValidatorEmpty": {
+    "description": "Validation error when the amount field is empty"
+  },
+  "membersScreenAmountValidatorInvalid": "Please enter a valid number",
+  "@membersScreenAmountValidatorInvalid": {
+    "description": "Validation error when the amount isn't a valid number"
+  },
+  "membersScreenAmountValidatorPositive": "Amount must be positive",
+  "@membersScreenAmountValidatorPositive": {
+    "description": "Validation error when the amount is zero or negative"
+  },
+  "membersScreenAmountValidatorDecimals": "Please enter up to two decimal places",
+  "@membersScreenAmountValidatorDecimals": {
+    "description": "Validation error when the amount has more than 2 decimal places"
+  },
+  "membersScreenDescriptionOptionalLabel": "Description (optional)",
+  "@membersScreenDescriptionOptionalLabel": {
+    "description": "Label for the optional credit note field"
+  },
+  "membersScreenAddCreditsTooltip": "Add Credits",
+  "@membersScreenAddCreditsTooltip": {
+    "description": "Tooltip for the add-credits icon button"
+  },
+  "membersScreenRemoveMemberOption": "Remove Member",
+  "@membersScreenRemoveMemberOption": {
+    "description": "Popup menu option to remove a member (enabled state)"
+  },
+  "membersScreenRemoveBalanceNonZero": "Remove (balance > 0)",
+  "@membersScreenRemoveBalanceNonZero": {
+    "description": "Popup menu option to remove a member (disabled, non-zero balance)"
+  },
+  "membersScreenGenericError": "Error",
+  "@membersScreenGenericError": {
+    "description": "Fallback SnackBar text when a functions exception has no message"
+  },
+  "membersScreenUnexpectedError": "Unexpected error",
+  "@membersScreenUnexpectedError": {
+    "description": "Fallback SnackBar text for a non-functions exception"
+  },
+
+  "createGroupTitle": "Create New Group",
+  "@createGroupTitle": {
+    "description": "Create group modal title"
+  },
+  "createGroupNameLabel": "Group Name",
+  "@createGroupNameLabel": {
+    "description": "Label for the group name field"
+  },
+  "createGroupNameValidatorEmpty": "Please enter a group name.",
+  "@createGroupNameValidatorEmpty": {
+    "description": "Validation error when the group name field is empty"
+  },
+  "createGroupDescriptionLabel": "Description",
+  "@createGroupDescriptionLabel": {
+    "description": "Label for the group description field"
+  },
+  "createGroupDescriptionValidatorEmpty": "Please enter a description.",
+  "@createGroupDescriptionValidatorEmpty": {
+    "description": "Validation error when the group description field is empty"
+  },
+  "createGroupLimitLabel": "Negative Balance Limit",
+  "@createGroupLimitLabel": {
+    "description": "Label for the negative balance limit field"
+  },
+  "createGroupLimitHelper": "Max negative balance a member can have.",
+  "@createGroupLimitHelper": {
+    "description": "Helper text under the negative balance limit field"
+  },
+  "createGroupLimitValidatorInvalid": "Please enter a valid number.",
+  "@createGroupLimitValidatorInvalid": {
+    "description": "Validation error when the negative balance limit isn't a valid number"
+  },
+  "createGroupCreateButton": "Create",
+  "@createGroupCreateButton": {
+    "description": "Button to submit the create-group form"
+  },
+  "createGroupSuccessTitle": "Group Created!",
+  "@createGroupSuccessTitle": {
+    "description": "Dialog title shown after a group is created"
+  },
+  "createGroupShareCode": "Share this code with your members:",
+  "@createGroupShareCode": {
+    "description": "Instruction shown above the new group's code"
+  },
+  "createGroupCopyCodeButton": "Copy Code",
+  "@createGroupCopyCodeButton": {
+    "description": "Button to copy the new group code to the clipboard"
+  },
+  "createGroupCodeCopiedSnackbar": "Group code copied!",
+  "@createGroupCodeCopiedSnackbar": {
+    "description": "SnackBar shown after copying the group code"
+  },
+  "createGroupUnknownError": "An unknown error occurred.",
+  "@createGroupUnknownError": {
+    "description": "Fallback SnackBar text when group creation fails with no message"
+  },
+  "createGroupUnexpectedError": "An unexpected error occurred.",
+  "@createGroupUnexpectedError": {
+    "description": "SnackBar text for a non-functions exception during group creation"
+  },
+
+  "commonValidatorInvalidNumber": "Please enter a valid number.",
+  "@commonValidatorInvalidNumber": {
+    "description": "Generic validation error for a numeric field"
+  },
+
+  "createEventAppBarTitle": "Create New Event",
+  "@createEventAppBarTitle": {
+    "description": "Create event screen app bar title"
+  },
+  "createEventNameLabel": "Event Name",
+  "@createEventNameLabel": {
+    "description": "Label for the event name field"
+  },
+  "createEventNameValidatorEmpty": "Please enter a name.",
+  "@createEventNameValidatorEmpty": {
+    "description": "Validation error when the event name field is empty"
+  },
+  "createEventLocationLabel": "Location",
+  "@createEventLocationLabel": {
+    "description": "Label for the event location field"
+  },
+  "createEventLocationValidatorEmpty": "Please enter a location.",
+  "@createEventLocationValidatorEmpty": {
+    "description": "Validation error when the location field is empty"
+  },
+  "createEventDateTimeLabel": "Event Date & Time",
+  "@createEventDateTimeLabel": {
+    "description": "Label for the event date/time picker"
+  },
+  "createEventDeadlineDropdownLabel": "Commitment Deadline (relative)",
+  "@createEventDeadlineDropdownLabel": {
+    "description": "Label for the relative commitment deadline dropdown"
+  },
+  "createEventDeadlineOptionDaysBefore": "{days, plural, one{{days} day before the event} other{{days} days before the event}}",
+  "@createEventDeadlineOptionDaysBefore": {
+    "description": "Relative deadline dropdown option, e.g. '2 days before the event'",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "createEventDeadlineOptionCustom": "Custom date & time",
+  "@createEventDeadlineOptionCustom": {
+    "description": "Relative deadline dropdown option for a manually picked date/time"
+  },
+  "createEventDeadlineLabel": "Commitment Deadline",
+  "@createEventDeadlineLabel": {
+    "description": "Label for the custom commitment deadline picker"
+  },
+  "createEventFeeLabel": "Fee",
+  "@createEventFeeLabel": {
+    "description": "Label for the event fee field"
+  },
+  "createEventFeeHelper": "Cost of the event in virtual currency.",
+  "@createEventFeeHelper": {
+    "description": "Helper text under the fee field"
+  },
+  "createEventMaxParticipantsLabel": "Max Participants",
+  "@createEventMaxParticipantsLabel": {
+    "description": "Label for the max participants field"
+  },
+  "createEventMaxParticipantsHelper": "Maximum allowed: {max}",
+  "@createEventMaxParticipantsHelper": {
+    "description": "Helper text under the max participants field, showing the group's cap",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "createEventMaxParticipantsValidatorPositive": "Must be greater than 0.",
+  "@createEventMaxParticipantsValidatorPositive": {
+    "description": "Validation error when max participants is zero or negative"
+  },
+  "createEventMaxParticipantsValidatorExceedsLimit": "Cannot exceed {max} (group limit).",
+  "@createEventMaxParticipantsValidatorExceedsLimit": {
+    "description": "Validation error when max participants exceeds the group's cap",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "createEventSubmitButton": "Create Event",
+  "@createEventSubmitButton": {
+    "description": "Button to submit the create-event form"
+  },
+  "createEventSelectDateToCalculate": "Select event date to calculate",
+  "@createEventSelectDateToCalculate": {
+    "description": "Placeholder shown in a date/time picker before a date is chosen"
+  },
+  "createEventSelectDateAndTime": "Select a date and time",
+  "@createEventSelectDateAndTime": {
+    "description": "Fallback placeholder for an empty date/time picker value"
+  },
+  "createEventSelectDatesTimes": "Please select all dates and times.",
+  "@createEventSelectDatesTimes": {
+    "description": "SnackBar shown when submitting without picking event/deadline date and time"
+  },
+  "createEventMustBeLoggedIn": "You must be logged in to create an event.",
+  "@createEventMustBeLoggedIn": {
+    "description": "Error thrown when creating an event while signed out"
+  },
+  "createEventErrorCreating": "Error creating event: {error}",
+  "@createEventErrorCreating": {
+    "description": "SnackBar shown when event creation fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "faqAppBarTitle": "Help & FAQ",
+  "@faqAppBarTitle": {
+    "description": "FAQ screen app bar title"
+  },
+  "faqForUsersHeader": "For Users",
+  "@faqForUsersHeader": {
+    "description": "Section header for user-facing FAQ entries"
+  },
+  "faqForAdminsHeader": "For Admins",
+  "@faqForAdminsHeader": {
+    "description": "Section header for admin-facing FAQ entries"
+  },
+  "faqHowItWorksButton": "How It Works",
+  "@faqHowItWorksButton": {
+    "description": "Button to open the onboarding carousel again"
+  },
+  "faqAboutHeader": "About",
+  "@faqAboutHeader": {
+    "description": "Section header for the app info card"
+  },
+  "faqAppTagline": "Organize sports meetups with ease",
+  "@faqAppTagline": {
+    "description": "Tagline shown under the app name in the About card"
+  },
+  "faqVersionLabel": "Version: ",
+  "@faqVersionLabel": {
+    "description": "Label before the app version number"
+  },
+  "faqBuildLabel": "Build: ",
+  "@faqBuildLabel": {
+    "description": "Label before the app build number"
+  },
+  "faqLoadingPlaceholder": "Loading...",
+  "@faqLoadingPlaceholder": {
+    "description": "Placeholder shown while version/build info loads"
+  },
+
+  "faqUsersQ1Title": "How do I join a group?",
+  "faqUsersQ1Body": "To join a group, you need a group code from the group's administrator. Once you have the code, go to the home screen and tap the \"Join Group\" button. Your request will be sent to the group admin for approval.",
+  "faqUsersQ2Title": "How do I register for an event?",
+  "faqUsersQ2Body": "Open the event from your group's event list and tap \"Register\". If you have sufficient wallet balance and the event isn't full, you'll be confirmed immediately. If the event is full but has a waitlist, you'll be added to the waitlist automatically.",
+  "faqUsersQ3Title": "Can I withdraw from an event after registering?",
+  "faqUsersQ3Body": "Yes, you can withdraw from an event by opening the event details and tapping \"Withdraw\". If you withdraw before the commitment deadline, you'll receive a full refund. If you withdraw after the deadline, you'll only receive a refund if someone from the waitlist takes your spot.",
+  "faqUsersQ4Title": "How does the wallet work?",
+  "faqUsersQ4Body": "Your wallet is used for event fees. When you register, the fee is deducted from your balance. If you need to add funds, please coordinate with your group admin directly (e.g., via cash or bank transfer). The admin can then update your wallet balance in the app.\n\nYou can view your transaction history by tapping on your wallet balance in the group details screen.\n\nPlease note: The wallet is for tracking purposes only and does not handle real money.",
+  "faqUsersQ5Title": "What happens if I don't have enough wallet balance?",
+  "faqUsersQ5Body": "If your wallet balance is insufficient for an event fee, you won't be able to register. Contact your group admin to add funds to your wallet. Remember to complete your real-money payment to the admin outside the app first.",
+  "faqUsersQ6Title": "How do I view my event history?",
+  "faqUsersQ6Body": "You can view all past and upcoming events in your group by opening the group details screen. Events are sorted by date, with upcoming events shown first. Tap on any event to see full details and participant list.",
+  "faqUsersQ7Title": "What does \"Waitlisted\" mean?",
+  "faqUsersQ7Body": "If an event is full, you can join the waitlist. If a confirmed participant withdraws, the first person on the waitlist (first-in-first-out order) is automatically promoted to \"Confirmed\" status. You won't be charged until you're confirmed.",
+  "faqUsersQ8Title": "Can I leave a group?",
+  "faqUsersQ8Body": "Yes, you can leave a group by opening the group details screen and selecting \"Leave Group\" from the menu. Make sure to settle any outstanding wallet balance with your admin before leaving. Note: You cannot leave if you're registered for any upcoming events.",
+  "faqUsersQ9Title": "Important: Real Money & Refunds",
+  "faqUsersQ9Body": "This app DOES NOT process or handle real money. The wallet feature is a virtual ledger to help you and your group admin track payments and credits.\n\nAll financial transactions must occur outside of the app. We are not responsible for any real-money disputes or refunds, which must be settled directly between members and their group administrator.",
+
+  "faqAdminsQ1Title": "How do I create a group?",
+  "faqAdminsQ1Body": "From the home screen, tap the \"Create Group\" button. Fill in the group details, and a unique group code will be generated for you to share with your members. You can find the group code in the group details screen.",
+  "faqAdminsQ2Title": "How do I create an event?",
+  "faqAdminsQ2Body": "Open your group details screen and tap the \"+\" button. Fill in the event details including date, time, location, capacity, fee, and commitment deadline. Once created, members will be able to see and register for the event.",
+  "faqAdminsQ3Title": "Can I edit an event after creating it?",
+  "faqAdminsQ3Body": "You can edit most event details like description, location, and time. However, you cannot change the capacity or fee once participants have registered, as this could affect fairness and financial tracking. If you need to make major changes, consider canceling the event and creating a new one.",
+  "faqAdminsQ4Title": "How do I manage join requests?",
+  "faqAdminsQ4Body": "When a user requests to join your group, you will see a notification badge on the group details screen. Tap on \"Members\" and you'll see the \"Join Requests\" section at the top. Review each request and tap \"Approve\" or \"Deny\".",
+  "faqAdminsQ5Title": "How do I add funds to a member's wallet?",
+  "faqAdminsQ5Body": "After collecting real money from a member outside the app, open the Members screen from your group details. Find the member, tap on their profile, and select \"Manage Wallet\". Enter the amount to add and include a description (e.g., \"Cash payment - Jan 2024\"). The transaction will be recorded in their wallet history.",
+  "faqAdminsQ6Title": "What happens if someone doesn't pay for an event?",
+  "faqAdminsQ6Body": "The app prevents registration if a member has insufficient wallet balance. If someone owes money from a past event, you can deduct it from their wallet balance or remove them from the group if necessary. All financial settlements must be handled directly between you and the member.",
+  "faqAdminsQ7Title": "How do I send announcements?",
+  "faqAdminsQ7Body": "From the group details screen, tap the \"Announcements\" button. Compose your message and tap \"Send\". All group members will receive a push notification and can view the announcement in the announcements list.",
+  "faqAdminsQ8Title": "Can I remove a member from the group?",
+  "faqAdminsQ8Body": "Yes, open the Members screen, find the member you want to remove, tap on their profile, and select \"Remove from Group\". Note: You cannot remove a member who is registered for upcoming events. They must withdraw from all events first, or you must cancel those events.",
+  "faqAdminsQ9Title": "What is the \"Commitment Deadline\"?",
+  "faqAdminsQ9Body": "The commitment deadline is the last time before an event when a participant can withdraw and receive a guaranteed full refund. Set this deadline based on when you need to finalize attendance (e.g., 24 hours before the event). After the deadline, participants who withdraw only get refunded if someone from the waitlist takes their spot.",
+  "faqAdminsQ10Title": "How do I cancel an event?",
+  "faqAdminsQ10Body": "Open the event details screen and select \"Cancel Event\" from the menu. All participants will be automatically refunded their fees, and they'll receive a notification about the cancellation. Consider sending an announcement explaining the reason for cancellation.",
+
+  "commonOk": "OK",
+  "@commonOk": {
+    "description": "Generic OK button, used to dismiss dialogs"
+  },
+
+  "profileNotSignedIn": "Not signed in",
+  "@profileNotSignedIn": {
+    "description": "Shown if the profile screen somehow renders with no signed-in user"
+  },
+  "profileAppBarTitle": "My Profile",
+  "@profileAppBarTitle": {
+    "description": "Member profile screen app bar title"
+  },
+  "profileAnonymousName": "Anonymous",
+  "@profileAnonymousName": {
+    "description": "Fallback shown in place of the user's display name when none is set"
+  },
+  "profileDebugToolsTitle": "Debug Tools",
+  "@profileDebugToolsTitle": {
+    "description": "Header for the debug-only crash testing card"
+  },
+  "profileTestCrashButton": "Test Crash",
+  "@profileTestCrashButton": {
+    "description": "Debug button to trigger a fatal Crashlytics test crash"
+  },
+  "profileTestErrorButton": "Test Error",
+  "@profileTestErrorButton": {
+    "description": "Debug button to log a non-fatal Crashlytics test error"
+  },
+  "profileTestErrorLogged": "Test error logged to Crashlytics",
+  "@profileTestErrorLogged": {
+    "description": "SnackBar confirming the test error was logged"
+  },
+  "profileDeleteAccountButton": "Delete Account",
+  "@profileDeleteAccountButton": {
+    "description": "Button to start the account deletion flow"
+  },
+  "profileDeleteConfirmTitle": "Delete Account?",
+  "@profileDeleteConfirmTitle": {
+    "description": "Confirmation dialog title before deleting the account"
+  },
+  "profileDeleteConfirmContent": "This action is irreversible. All your data will be permanently deleted. If you have a positive balance in any of your groups, it will be forfeited. Are you sure you want to continue?",
+  "@profileDeleteConfirmContent": {
+    "description": "Confirmation dialog body before deleting the account"
+  },
+  "profileDeleteButton": "Delete",
+  "@profileDeleteButton": {
+    "description": "Button to confirm account deletion"
+  },
+  "profileErrorTitle": "Error",
+  "@profileErrorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "profileGroupBalancesHeader": "Group Balances",
+  "@profileGroupBalancesHeader": {
+    "description": "Header above the list of per-group wallet balances"
+  },
+  "profileNoGroupMemberships": "No group memberships yet.",
+  "@profileNoGroupMemberships": {
+    "description": "Shown when the user has no group memberships"
+  },
+  "profileBalanceError": "Error: {error}",
+  "@profileBalanceError": {
+    "description": "Shown when group balances fail to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNotificationSettingsTitle": "Notification Settings",
+  "@profileNotificationSettingsTitle": {
+    "description": "Header for the notification settings card"
+  },
+  "profilePushNotificationsTitle": "Push Notifications",
+  "@profilePushNotificationsTitle": {
+    "description": "Title of the push notifications toggle"
+  },
+  "profilePushNotificationsSubtitle": "Receive notifications for new events, join approvals, and reminders",
+  "@profilePushNotificationsSubtitle": {
+    "description": "Subtitle explaining the push notifications toggle"
+  },
+  "profileNotificationsEnabled": "Notifications enabled",
+  "@profileNotificationsEnabled": {
+    "description": "SnackBar shown when notifications are turned on"
+  },
+  "profileNotificationsDisabled": "Notifications disabled",
+  "@profileNotificationsDisabled": {
+    "description": "SnackBar shown when notifications are turned off"
+  },
+  "profileErrorUpdatingSettings": "Error updating settings: {error}",
+  "@profileErrorUpdatingSettings": {
+    "description": "SnackBar shown when saving the notification toggle fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileEditNameTitle": "Edit Display Name",
+  "@profileEditNameTitle": {
+    "description": "Dialog title for editing the display name"
+  },
+  "profileNewNameLabel": "New Name",
+  "@profileNewNameLabel": {
+    "description": "Label for the new display name field"
+  },
+  "profileSaveButton": "Save",
+  "@profileSaveButton": {
+    "description": "Button to save the new display name"
+  },
+  "profileNameUpdated": "Display name updated successfully!",
+  "@profileNameUpdated": {
+    "description": "SnackBar shown after the display name is updated"
+  },
+  "profileGenericErrorOccurred": "An error occurred: {error}",
+  "@profileGenericErrorOccurred": {
+    "description": "SnackBar shown when updating the display name fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profileFallbackGroupName": "Group",
+  "@profileFallbackGroupName": {
+    "description": "Fallback shown in place of a group's name if it's missing"
+  },
+
+  "groupDetailsFallbackTitle": "Group Details",
+  "@groupDetailsFallbackTitle": {
+    "description": "App bar title fallback if the group has no name"
+  },
+  "groupDetailsShareTooltip": "Share Group",
+  "@groupDetailsShareTooltip": {
+    "description": "Tooltip for the share icon button"
+  },
+  "groupDetailsLeaveGroupMenuItem": "Leave Group",
+  "@groupDetailsLeaveGroupMenuItem": {
+    "description": "Popup menu item to leave the group"
+  },
+  "groupDetailsEventsTab": "Events",
+  "@groupDetailsEventsTab": {
+    "description": "Tab label for the events list"
+  },
+  "groupDetailsAnnouncementsTab": "Announcements",
+  "@groupDetailsAnnouncementsTab": {
+    "description": "Tab label for announcements"
+  },
+  "groupDetailsAdminTab": "Admin",
+  "@groupDetailsAdminTab": {
+    "description": "Tab label for the admin management tab"
+  },
+  "groupDetailsCodeLabel": "Group Code: {code}",
+  "@groupDetailsCodeLabel": {
+    "description": "Shows the group's join code",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsCopyCodeTooltip": "Copy group code",
+  "@groupDetailsCopyCodeTooltip": {
+    "description": "Tooltip for the copy-code icon button"
+  },
+  "groupDetailsCodeUnavailableText": "Group Code unavailable",
+  "@groupDetailsCodeUnavailableText": {
+    "description": "Shown in place of the group code when it's not set"
+  },
+  "groupDetailsCodeUnavailableSnackbar": "Group code not available.",
+  "@groupDetailsCodeUnavailableSnackbar": {
+    "description": "SnackBar shown when trying to copy/share a missing group code"
+  },
+  "groupDetailsCodeCopiedSnackbar": "Group code \"{code}\" copied to clipboard.",
+  "@groupDetailsCodeCopiedSnackbar": {
+    "description": "SnackBar confirming the group code was copied",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsMembersButton": "Members",
+  "@groupDetailsMembersButton": {
+    "description": "Button to open the group members screen"
+  },
+  "groupDetailsMyWalletButton": "My Wallet",
+  "@groupDetailsMyWalletButton": {
+    "description": "Button to open the current user's wallet for this group"
+  },
+  "groupDetailsCreateEventButton": "Create Event",
+  "@groupDetailsCreateEventButton": {
+    "description": "FAB label to create a new event"
+  },
+
+  "groupDetailsShareInviteText": "Join our group on GetSpot!",
+  "@groupDetailsShareInviteText": {
+    "description": "First line of the group invite share message"
+  },
+  "groupDetailsShareGroupLabel": "Group: {name}",
+  "@groupDetailsShareGroupLabel": {
+    "description": "Line in the share message naming the group",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareTapToJoin": "Tap to join: {link}",
+  "@groupDetailsShareTapToJoin": {
+    "description": "Line in the share message with the deep link",
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareUseCode": "Or use code: {code} in the GetSpot app",
+  "@groupDetailsShareUseCode": {
+    "description": "Line in the share message with the fallback group code",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareSubject": "Join {name} on GetSpot",
+  "@groupDetailsShareSubject": {
+    "description": "Subject line for the share sheet",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsShareFallbackName": "our group",
+  "@groupDetailsShareFallbackName": {
+    "description": "Fallback for the group name in the share subject if missing"
+  },
+  "groupDetailsSharingNotSupported": "Sharing isn't supported in this browser. Invite message copied to clipboard instead.",
+  "@groupDetailsSharingNotSupported": {
+    "description": "SnackBar shown when the Web Share API isn't available and the invite was copied instead"
+  },
+  "groupDetailsErrorSharing": "Error sharing: {error}",
+  "@groupDetailsErrorSharing": {
+    "description": "SnackBar shown when sharing fails outside the web fallback case",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groupDetailsFallbackGroupNameGeneric": "this group",
+  "@groupDetailsFallbackGroupNameGeneric": {
+    "description": "Fallback for the group name when leaving a group, if missing"
+  },
+  "groupDetailsLeaveConfirmTitle": "Leave {groupName}?",
+  "@groupDetailsLeaveConfirmTitle": {
+    "description": "Confirmation dialog title before leaving a group",
+    "placeholders": {
+      "groupName": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsLeaveConfirmContent": "You'll need a new invite or the group code to rejoin. Make sure your wallet balance is settled and you're not registered for any upcoming events first.",
+  "@groupDetailsLeaveConfirmContent": {
+    "description": "Confirmation dialog body before leaving a group"
+  },
+  "groupDetailsLeaveButton": "Leave",
+  "@groupDetailsLeaveButton": {
+    "description": "Button to confirm leaving the group"
+  },
+  "groupDetailsLeftGroupSnackbar": "You've left {groupName}.",
+  "@groupDetailsLeftGroupSnackbar": {
+    "description": "SnackBar shown after successfully leaving a group",
+    "placeholders": {
+      "groupName": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsCouldNotLeave": "Could not leave the group.",
+  "@groupDetailsCouldNotLeave": {
+    "description": "Fallback SnackBar message when leaving a group fails with no message"
+  },
+  "groupDetailsErrorLeaving": "Error leaving group: {error}",
+  "@groupDetailsErrorLeaving": {
+    "description": "SnackBar shown when leaving a group throws a non-functions exception",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groupDetailsMustBeLoggedInAnnouncement": "You must be logged in to post an announcement.",
+  "@groupDetailsMustBeLoggedInAnnouncement": {
+    "description": "Error thrown when posting an announcement while signed out"
+  },
+  "groupDetailsAdminAuthorFallback": "Admin",
+  "@groupDetailsAdminAuthorFallback": {
+    "description": "Fallback author name for an announcement when the poster has no display name"
+  },
+  "groupDetailsErrorPostingAnnouncement": "Error posting announcement: {error}",
+  "@groupDetailsErrorPostingAnnouncement": {
+    "description": "SnackBar shown when posting an announcement fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsNewAnnouncementLabel": "New Announcement",
+  "@groupDetailsNewAnnouncementLabel": {
+    "description": "Label for the new announcement text field"
+  },
+  "groupDetailsErrorLoadingAnnouncements": "Error loading announcements.",
+  "@groupDetailsErrorLoadingAnnouncements": {
+    "description": "Shown when the announcements stream errors"
+  },
+  "groupDetailsNoAnnouncementsYet": "No announcements yet.",
+  "@groupDetailsNoAnnouncementsYet": {
+    "description": "Shown when a group has no announcements"
+  },
+  "groupDetailsPostedBy": "Posted by {author} on {date}",
+  "@groupDetailsPostedBy": {
+    "description": "Attribution line under an announcement",
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groupDetailsErrorLoadingEvents": "Error loading events.",
+  "@groupDetailsErrorLoadingEvents": {
+    "description": "Shown when the events stream errors"
+  },
+  "groupDetailsUpcomingEventsHeader": "Upcoming Events",
+  "@groupDetailsUpcomingEventsHeader": {
+    "description": "Header above the event list"
+  },
+  "groupDetailsNoDate": "No date",
+  "@groupDetailsNoDate": {
+    "description": "Fallback shown when an event has no timestamp"
+  },
+  "groupDetailsUnnamedEvent": "Unnamed Event",
+  "@groupDetailsUnnamedEvent": {
+    "description": "Fallback shown when an event has no name"
+  },
+  "groupDetailsNoLocation": "No location",
+  "@groupDetailsNoLocation": {
+    "description": "Fallback shown when an event has no location"
+  },
+
+  "groupDetailsPendingRequestsTitle": "Pending Requests",
+  "@groupDetailsPendingRequestsTitle": {
+    "description": "Header for the pending join requests list"
+  },
+  "groupDetailsDeniedRequestsTitle": "Denied Requests",
+  "@groupDetailsDeniedRequestsTitle": {
+    "description": "Header for the denied join requests list"
+  },
+  "groupDetailsErrorLoadingList": "Error loading {title}.\nCheck console for details.",
+  "@groupDetailsErrorLoadingList": {
+    "description": "Shown when a join requests list fails to load",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetailsNoRequests": "No requests.",
+  "@groupDetailsNoRequests": {
+    "description": "Shown when a join requests list is empty"
+  },
+  "groupDetailsApproveButton": "Approve",
+  "@groupDetailsApproveButton": {
+    "description": "Button to approve a pending join request"
+  },
+  "groupDetailsDenyButton": "Deny",
+  "@groupDetailsDenyButton": {
+    "description": "Button to deny a pending join request"
+  },
+
+  "eventDetailsNotAMember": "You are not a member of this group.",
+  "@eventDetailsNotAMember": {
+    "description": "Shown when trying to register but the wallet member doc doesn't exist"
+  },
+  "eventDetailsInsufficientBalanceTitle": "Insufficient Balance",
+  "@eventDetailsInsufficientBalanceTitle": {
+    "description": "Dialog title when the user can't afford the event fee even with the negative balance limit"
+  },
+  "eventDetailsCurrentBalanceAmount": "Current Balance: {amount}",
+  "@eventDetailsCurrentBalanceAmount": {
+    "description": "Shows the user's current wallet balance, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsEventFeeAmount": "Event Fee: {amount}",
+  "@eventDetailsEventFeeAmount": {
+    "description": "Shows the event's fee, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNewBalanceAmount": "New Balance: {amount}",
+  "@eventDetailsNewBalanceAmount": {
+    "description": "Shows the wallet balance after registering, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsAllowedNegativeLimit": "Allowed Negative Limit: {amount}",
+  "@eventDetailsAllowedNegativeLimit": {
+    "description": "Shows the group's negative balance limit, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsInsufficientBalanceMessage": "You do not have sufficient balance to register for this event. Please contact your group admin to add funds.",
+  "@eventDetailsInsufficientBalanceMessage": {
+    "description": "Explanation shown when the user can't afford to register"
+  },
+  "eventDetailsGenericError": "Error: {error}",
+  "@eventDetailsGenericError": {
+    "description": "SnackBar shown when preparing the registration dialog fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsRegisterTitle": "Register for Event?",
+  "@eventDetailsRegisterTitle": {
+    "description": "Normal registration confirmation dialog title"
+  },
+  "eventDetailsFallbackEventName": "Event",
+  "@eventDetailsFallbackEventName": {
+    "description": "Fallback shown in place of the event name in dialogs if missing"
+  },
+  "eventDetailsConfirmRegistrationButton": "Confirm Registration",
+  "@eventDetailsConfirmRegistrationButton": {
+    "description": "Button to confirm normal registration"
+  },
+  "eventDetailsLowBalanceWarningTitle": "Low Balance Warning",
+  "@eventDetailsLowBalanceWarningTitle": {
+    "description": "Dialog title when registering would leave a negative but allowed balance"
+  },
+  "eventDetailsNewBalanceNegative": "New Balance: {amount} (negative)",
+  "@eventDetailsNewBalanceNegative": {
+    "description": "Shows the resulting negative wallet balance, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsAllowedLimit": "Allowed Limit: {amount}",
+  "@eventDetailsAllowedLimit": {
+    "description": "Shows the group's negative balance limit, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNegativeBalanceWarning": "You'll have a negative balance after registration. Please coordinate payment with your group admin.",
+  "@eventDetailsNegativeBalanceWarning": {
+    "description": "Explanation shown before allowing a negative-balance registration"
+  },
+  "eventDetailsUnderstandRegisterButton": "I Understand, Register",
+  "@eventDetailsUnderstandRegisterButton": {
+    "description": "Button to confirm registration despite a negative balance"
+  },
+  "eventDetailsJoinWaitlistTitle": "Join Waitlist?",
+  "@eventDetailsJoinWaitlistTitle": {
+    "description": "Waitlist confirmation dialog title"
+  },
+  "eventDetailsEventFullMessage": "This event is full. You'll be added to the waitlist.",
+  "@eventDetailsEventFullMessage": {
+    "description": "Explanation shown when the event is full"
+  },
+  "eventDetailsWaitlistFeeInfo": "Fee: {amount} (charged now, refunded if not confirmed)",
+  "@eventDetailsWaitlistFeeInfo": {
+    "description": "Explains the fee is charged upfront when joining a waitlist, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsAutoConfirmInfo": "You'll be automatically confirmed if a spot opens.",
+  "@eventDetailsAutoConfirmInfo": {
+    "description": "Explanation of waitlist auto-promotion"
+  },
+  "eventDetailsJoinWaitlistButton": "Join Waitlist",
+  "@eventDetailsJoinWaitlistButton": {
+    "description": "Button to confirm joining the waitlist"
+  },
+  "eventDetailsMustBeLoggedInRegister": "You must be logged in to register.",
+  "@eventDetailsMustBeLoggedInRegister": {
+    "description": "Error thrown when registering while signed out"
+  },
+  "eventDetailsRegistrationSubmitted": "Your registration request has been submitted!",
+  "@eventDetailsRegistrationSubmitted": {
+    "description": "SnackBar shown after successfully submitting a registration request"
+  },
+  "eventDetailsErrorSubmittingRequest": "Error submitting request: {error}",
+  "@eventDetailsErrorSubmittingRequest": {
+    "description": "SnackBar shown when submitting a registration request fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsWithdrawalSuccessful": "Withdrawal successful.",
+  "@eventDetailsWithdrawalSuccessful": {
+    "description": "Fallback SnackBar text after withdrawing when the function returns no message"
+  },
+  "eventDetailsCancelledSuccessfully": "Event cancelled successfully.",
+  "@eventDetailsCancelledSuccessfully": {
+    "description": "Fallback SnackBar text after cancelling an event when the function returns no message"
+  },
+  "eventDetailsCapacityUpdated": "Capacity updated successfully.",
+  "@eventDetailsCapacityUpdated": {
+    "description": "Fallback SnackBar text after updating capacity when the function returns no message"
+  },
+  "eventDetailsUpdateCapacityTitle": "Update Event Capacity",
+  "@eventDetailsUpdateCapacityTitle": {
+    "description": "Dialog title for updating event capacity"
+  },
+  "eventDetailsCurrentCapacity": "Current capacity: {count}",
+  "@eventDetailsCurrentCapacity": {
+    "description": "Shows the event's current max participants",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsConfirmedParticipants": "Confirmed participants: {count}",
+  "@eventDetailsConfirmedParticipants": {
+    "description": "Shows the number of confirmed participants",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsWaitlistedParticipants": "Waitlisted participants: {count}",
+  "@eventDetailsWaitlistedParticipants": {
+    "description": "Shows the number of waitlisted participants",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsNewCapacityLabel": "New Capacity",
+  "@eventDetailsNewCapacityLabel": {
+    "description": "Label for the new capacity input field"
+  },
+  "eventDetailsCannotReduceBelow": "Note: Cannot reduce below {count} (current confirmed count)",
+  "@eventDetailsCannotReduceBelow": {
+    "description": "Helper text explaining the minimum allowed capacity",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsUpdateButton": "Update",
+  "@eventDetailsUpdateButton": {
+    "description": "Button to submit the capacity update"
+  },
+  "eventDetailsValidPositiveNumber": "Please enter a valid positive number.",
+  "@eventDetailsValidPositiveNumber": {
+    "description": "Validation error for the new capacity field"
+  },
+  "eventDetailsIncreaseCapacityWithPromote": "Increasing capacity by {change} spots.\n\n{promoted, plural, one{{promoted} user will be automatically promoted from the waitlist.} other{{promoted} users will be automatically promoted from the waitlist.}}\n\nContinue?",
+  "@eventDetailsIncreaseCapacityWithPromote": {
+    "description": "Confirmation message when raising capacity will promote waitlisted users",
+    "placeholders": {
+      "change": {
+        "type": "int"
+      },
+      "promoted": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsIncreaseCapacityNoPromote": "Increasing capacity by {change} spots.\n\nNo waitlisted users to promote.\n\nContinue?",
+  "@eventDetailsIncreaseCapacityNoPromote": {
+    "description": "Confirmation message when raising capacity with no one to promote",
+    "placeholders": {
+      "change": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsDecreaseCapacity": "Decreasing capacity by {change} spots (from {oldCap} to {newCap}).\n\nThis will not affect current confirmed participants.\n\nContinue?",
+  "@eventDetailsDecreaseCapacity": {
+    "description": "Confirmation message when lowering capacity",
+    "placeholders": {
+      "change": {
+        "type": "int"
+      },
+      "oldCap": {
+        "type": "int"
+      },
+      "newCap": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsConfirmCapacityChangeTitle": "Confirm Capacity Change",
+  "@eventDetailsConfirmCapacityChangeTitle": {
+    "description": "Capacity change confirmation dialog title"
+  },
+  "eventDetailsConfirmCancellationTitle": "Confirm Cancellation",
+  "@eventDetailsConfirmCancellationTitle": {
+    "description": "Event cancellation confirmation dialog title"
+  },
+  "eventDetailsCancelConfirmMessage": "Are you sure you want to cancel this event? This action is irreversible and will refund all registered participants.",
+  "@eventDetailsCancelConfirmMessage": {
+    "description": "Event cancellation confirmation dialog body"
+  },
+  "eventDetailsNevermindButton": "Nevermind",
+  "@eventDetailsNevermindButton": {
+    "description": "Button to dismiss the cancellation confirmation without cancelling"
+  },
+  "eventDetailsConfirmCancellationButton": "Confirm Cancellation",
+  "@eventDetailsConfirmCancellationButton": {
+    "description": "Button to confirm cancelling the event"
+  },
+  "eventDetailsRefundMayBeForfeited": "Refund: May be forfeited (depends on waitlist)",
+  "@eventDetailsRefundMayBeForfeited": {
+    "description": "Refund info shown when withdrawing after the commitment deadline"
+  },
+  "eventDetailsRefundFullAmount": "Refund: {amount} (full refund)",
+  "@eventDetailsRefundFullAmount": {
+    "description": "Refund info shown when withdrawing before the commitment deadline, amount is pre-formatted with currency symbol",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsConfirmWithdrawalTitle": "Confirm Withdrawal",
+  "@eventDetailsConfirmWithdrawalTitle": {
+    "description": "Withdrawal confirmation dialog title"
+  },
+  "eventDetailsCommitmentDeadlineLabel": "Commitment Deadline: {date}",
+  "@eventDetailsCommitmentDeadlineLabel": {
+    "description": "Shows the event's commitment deadline",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsDeadlinePassedMessage": "The commitment deadline has passed. If you withdraw now, your fee will only be refunded if someone from the waitlist takes your spot.",
+  "@eventDetailsDeadlinePassedMessage": {
+    "description": "Withdrawal explanation shown after the commitment deadline"
+  },
+  "eventDetailsBeforeDeadlineMessage": "You are withdrawing before the commitment deadline. You will receive a full refund of your fee.",
+  "@eventDetailsBeforeDeadlineMessage": {
+    "description": "Withdrawal explanation shown before the commitment deadline"
+  },
+  "eventDetailsConfirmWithdrawalButton": "Confirm Withdrawal",
+  "@eventDetailsConfirmWithdrawalButton": {
+    "description": "Button to confirm withdrawing from the event"
+  },
+  "eventDetailsAppBarTitle": "Event Details",
+  "@eventDetailsAppBarTitle": {
+    "description": "Event details screen app bar title"
+  },
+  "eventDetailsErrorLoading": "Error loading event details.",
+  "@eventDetailsErrorLoading": {
+    "description": "Shown when the event document stream errors"
+  },
+  "eventDetailsNotFound": "Event not found.",
+  "@eventDetailsNotFound": {
+    "description": "Shown when the event document doesn't exist"
+  },
+  "eventDetailsCancelledBanner": "Event Cancelled",
+  "@eventDetailsCancelledBanner": {
+    "description": "Banner/button text shown when an event has been cancelled"
+  },
+  "eventDetailsNoLocationSet": "No location set",
+  "@eventDetailsNoLocationSet": {
+    "description": "Fallback shown when an event has no location"
+  },
+  "eventDetailsNoDateSet": "No date set",
+  "@eventDetailsNoDateSet": {
+    "description": "Fallback shown when an event has no timestamp"
+  },
+  "eventDetailsFeeCredits": "{fee} credits",
+  "@eventDetailsFeeCredits": {
+    "description": "Shows the event fee in virtual credits",
+    "placeholders": {
+      "fee": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNoDeadline": "No deadline",
+  "@eventDetailsNoDeadline": {
+    "description": "Fallback shown when an event has no commitment deadline"
+  },
+  "eventDetailsConfirmedHeader": "Confirmed ({count}/{max})",
+  "@eventDetailsConfirmedHeader": {
+    "description": "Header for the confirmed participants list",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsWaitlistHeader": "Waitlist ({count})",
+  "@eventDetailsWaitlistHeader": {
+    "description": "Header for the waitlist",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsNoParticipantsToCopy": "No participants to copy",
+  "@eventDetailsNoParticipantsToCopy": {
+    "description": "SnackBar shown when trying to copy an empty participant list"
+  },
+  "eventDetailsCopiedParticipants": "{count, plural, one{Copied {count} participant to clipboard} other{Copied {count} participants to clipboard}}",
+  "@eventDetailsCopiedParticipants": {
+    "description": "SnackBar confirming the participant list was copied",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDetailsErrorCopyingList": "Error copying list: {error}",
+  "@eventDetailsErrorCopyingList": {
+    "description": "SnackBar shown when copying the participant list fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsCopyListTooltip": "Copy list",
+  "@eventDetailsCopyListTooltip": {
+    "description": "Tooltip for the copy-participant-list icon button"
+  },
+  "eventDetailsErrorLoadingParticipants": "Error loading participants.",
+  "@eventDetailsErrorLoadingParticipants": {
+    "description": "Shown when a participant list stream errors"
+  },
+  "eventDetailsNoParticipantsYet": "No participants in this list yet.",
+  "@eventDetailsNoParticipantsYet": {
+    "description": "Shown when a participant list is empty"
+  },
+  "eventDetailsCancelEventButton": "Cancel Event",
+  "@eventDetailsCancelEventButton": {
+    "description": "Button to start the cancel-event flow"
+  },
+  "eventDetailsWithdrawButton": "Withdraw",
+  "@eventDetailsWithdrawButton": {
+    "description": "Button to start the withdraw flow"
+  },
+  "eventDetailsRegisterButton": "Register",
+  "@eventDetailsRegisterButton": {
+    "description": "Button to start the register flow"
+  },
+  "eventDetailsYourStatus": "Your status: {status}",
+  "@eventDetailsYourStatus": {
+    "description": "Shown for participant statuses without a dedicated action button",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDetailsStatusRequested": "Requested",
+  "@eventDetailsStatusRequested": {
+    "description": "Participant status label: registration request submitted, awaiting processing"
+  },
+  "eventDetailsStatusWithdrawnPenalty": "Withdrawn (Penalty)",
+  "@eventDetailsStatusWithdrawnPenalty": {
+    "description": "Participant status label: withdrew after the deadline with no waitlist replacement, fee forfeited"
+  }
+}

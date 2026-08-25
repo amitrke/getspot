@@ -13,6 +13,7 @@ import 'package:getspot/widgets/create_group_modal.dart';
 import 'package:getspot/widgets/join_group_modal.dart';
 import 'package:getspot/screens/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -68,9 +69,10 @@ class _HomeScreenState extends State<HomeScreen> {
       'HomeScreen build method executed. Logging should be working.',
       name: 'HomeScreen',
     );
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Groups'),
+        title: Text(l10n.homeAppBarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),
@@ -105,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () => _openJoinGroupModal(context),
-                  child: const Text('Join a Group'),
+                  child: Text(l10n.homeJoinGroupButton),
                 ),
               ),
               const SizedBox(width: 16),
@@ -116,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Create a Group'),
+                  child: Text(l10n.homeCreateGroupButton),
                 ),
               ),
             ],
@@ -160,6 +162,7 @@ class _GroupListState extends State<_GroupList> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return RefreshIndicator(
       key: _refreshIndicatorKey,
       onRefresh: _handleRefresh,
@@ -187,7 +190,7 @@ class _GroupListState extends State<_GroupList> {
                     const Icon(Icons.error_outline, size: 48, color: Colors.red),
                     const SizedBox(height: 16),
                     Text(
-                      'Error loading groups',
+                      l10n.homeErrorLoadingGroups,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -200,7 +203,7 @@ class _GroupListState extends State<_GroupList> {
                     ElevatedButton.icon(
                       onPressed: _handleRefresh,
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(l10n.homeRetryButton),
                     ),
                   ],
                 ),
@@ -224,14 +227,13 @@ class _GroupListState extends State<_GroupList> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            'Welcome to GetSpot!',
+                            l10n.homeWelcomeTitle,
                             style: Theme.of(context).textTheme.headlineSmall,
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'This is your space to manage sports groups and events. '
-                            'Get started by creating a new group or joining an existing one with a code.',
+                            l10n.homeWelcomeDescription,
                             style: Theme.of(context).textTheme.bodyMedium,
                             textAlign: TextAlign.center,
                           ),

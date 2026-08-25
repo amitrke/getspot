@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/models/group_view_model.dart';
 import 'package:getspot/screens/group_details_screen.dart';
 import 'package:intl/intl.dart';
@@ -11,6 +12,7 @@ class GroupListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final bool isPending =
         viewModel.membershipStatus == GroupMembershipStatus.pending;
     final bool isAdmin =
@@ -29,10 +31,10 @@ class GroupListItem extends StatelessWidget {
             children: [
               const SizedBox(height: 8),
               if (isPending)
-                const Chip(
-                  label: Text('Pending'),
+                Chip(
+                  label: Text(l10n.groupItemPendingChip),
                   backgroundColor: Colors.orange,
-                  labelStyle: TextStyle(color: Colors.white),
+                  labelStyle: const TextStyle(color: Colors.white),
                 )
               else
                 _buildMemberContent(context,
@@ -62,12 +64,14 @@ class GroupListItem extends StatelessWidget {
 
   Widget _buildMemberContent(BuildContext context,
       {required bool isAdmin, required bool hasPendingRequests}) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (isAdmin && hasPendingRequests) ...[
           Text(
-            '${viewModel.pendingJoinRequestsCount} member(s) pending approval',
+            l10n.groupItemPendingApproval(viewModel.pendingJoinRequestsCount),
             style: TextStyle(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
@@ -82,10 +86,10 @@ class GroupListItem extends StatelessWidget {
             Expanded(
               child: Text(
                 viewModel.nextEventDate != null
-                    ? DateFormat.yMMMEd()
+                    ? DateFormat.yMMMEd(locale)
                         .add_jm()
                         .format(viewModel.nextEventDate!)
-                    : 'No upcoming events',
+                    : l10n.groupItemNoUpcomingEvents,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -96,7 +100,7 @@ class GroupListItem extends StatelessWidget {
           children: [
             _getStatusIcon(viewModel.eventStatus),
             const SizedBox(width: 4),
-            Text(viewModel.eventStatus ?? 'Not Registered'),
+            Text(_statusLabel(l10n, viewModel.eventStatus)),
           ],
         ),
         const SizedBox(height: 4),
@@ -115,6 +119,19 @@ class GroupListItem extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _statusLabel(AppLocalizations l10n, String? status) {
+    switch (status) {
+      case 'confirmed':
+        return l10n.groupItemStatusConfirmed;
+      case 'waitlisted':
+        return l10n.groupItemStatusWaitlisted;
+      case 'denied':
+        return l10n.groupItemStatusDenied;
+      default:
+        return l10n.groupItemStatusNotRegistered;
+    }
   }
 
   Widget _getStatusIcon(String? status) {

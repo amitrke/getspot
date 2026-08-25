@@ -1,0 +1,1 @@
+sport,groupe,equipe,admin,evenement,horaire,inscrire,cagnotte,attente,badminton,football,pickleball

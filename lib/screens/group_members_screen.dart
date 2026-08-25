@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/user_cache_service.dart';
 
 class GroupMembersScreen extends StatelessWidget {
@@ -11,6 +12,7 @@ class GroupMembersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isAdmin = FirebaseAuth.instance.currentUser?.uid == adminUid;
     final membersQuery = FirebaseFirestore.instance
         .collection('groups')
@@ -20,7 +22,7 @@ class GroupMembersScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Members'),
+        title: Text(l10n.membersScreenTitle),
       ),
       body: SafeArea(
         child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -30,11 +32,11 @@ class GroupMembersScreen extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(child: Text(l10n.membersScreenError(snapshot.error.toString())));
             }
               final docs = snapshot.data?.docs ?? [];
               if (docs.isEmpty) {
-                return const Center(child: Text('No members yet.'));
+                return Center(child: Text(l10n.membersScreenNoMembersYet));
               }
               return ListView.separated(
                 itemCount: docs.length,
@@ -43,7 +45,7 @@ class GroupMembersScreen extends StatelessWidget {
                   final d = docs[index];
                   final data = d.data();
                   final uid = data['uid'] ?? d.id;
-                  final name = data['displayName'] ?? 'No Name';
+                  final name = data['displayName'] ?? l10n.commonNoName;
                   final balance = (data['walletBalance'] ?? 0).toString();
                   final isOwner = uid == adminUid; // single admin model
 
@@ -60,7 +62,7 @@ class GroupMembersScreen extends StatelessWidget {
                               : null,
                         ),
                         title: Text(name),
-                        subtitle: Text('Balance: $balance'),
+                        subtitle: Text(l10n.membersScreenBalanceLabel(balance)),
                         trailing: isAdmin ? _AdminActions(
                           groupId: groupId,
                           targetUid: uid,
@@ -99,14 +101,15 @@ class _AdminActionsState extends State<_AdminActions> {
   Future<void> _remove() async {
     if (widget.isOwner) return; // cannot remove owner
 
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Remove ${widget.name}?'),
-        content: const Text('This action cannot be undone.'),
+        title: Text(l10n.membersScreenRemoveConfirmTitle(widget.name)),
+        content: Text(l10n.membersScreenRemoveConfirmContent),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Remove')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.membersScreenRemoveButton)),
         ],
       ),
     ) ?? false;
@@ -123,9 +126,9 @@ class _AdminActionsState extends State<_AdminActions> {
         'action': 'remove',
       });
     } on FirebaseFunctionsException catch (e) {
-      if (mounted) _showSnack(e.message ?? 'Error');
+      if (mounted) _showSnack(e.message ?? l10n.membersScreenGenericError);
     } catch (e) {
-      if (mounted) _showSnack('Unexpected error');
+      if (mounted) _showSnack(l10n.membersScreenUnexpectedError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -134,12 +137,13 @@ class _AdminActionsState extends State<_AdminActions> {
   Future<void> _credit() async {
     final amountController = TextEditingController();
     final noteController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
 
     final result = await showDialog<Map<String, dynamic>?>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: Text('Credit ${widget.name}'),
+          title: Text(l10n.membersScreenCreditDialogTitle(widget.name)),
           content: Form(
             key: _formKey,
             child: Column(
@@ -148,33 +152,33 @@ class _AdminActionsState extends State<_AdminActions> {
                 TextFormField(
                   controller: amountController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Amount'),
+                  decoration: InputDecoration(labelText: l10n.membersScreenAmountLabel),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter an amount';
+                      return l10n.membersScreenAmountValidatorEmpty;
                     }
                     final amount = double.tryParse(value);
                     if (amount == null) {
-                      return 'Please enter a valid number';
+                      return l10n.membersScreenAmountValidatorInvalid;
                     }
                     if (amount <= 0) {
-                      return 'Amount must be positive';
+                      return l10n.membersScreenAmountValidatorPositive;
                     }
                     if (value.split('.').length > 1 && value.split('.')[1].length > 2) {
-                      return 'Please enter up to two decimal places';
+                      return l10n.membersScreenAmountValidatorDecimals;
                     }
                     return null;
                   },
                 ),
                 TextFormField(
                   controller: noteController,
-                  decoration: const InputDecoration(labelText: 'Description (optional)'),
+                  decoration: InputDecoration(labelText: l10n.membersScreenDescriptionOptionalLabel),
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
             TextButton(
               onPressed: () {
                 if (_formKey.currentState?.validate() ?? false) {
@@ -184,7 +188,7 @@ class _AdminActionsState extends State<_AdminActions> {
                   });
                 }
               },
-              child: const Text('Confirm'),
+              child: Text(l10n.commonConfirm),
             ),
           ],
         );
@@ -207,9 +211,9 @@ class _AdminActionsState extends State<_AdminActions> {
         'description': description,
       });
     } on FirebaseFunctionsException catch (e) {
-      if (mounted) _showSnack(e.message ?? 'Error');
+      if (mounted) _showSnack(e.message ?? l10n.membersScreenGenericError);
     } catch (e) {
-      if (mounted) _showSnack('Unexpected error');
+      if (mounted) _showSnack(l10n.membersScreenUnexpectedError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -225,6 +229,7 @@ class _AdminActionsState extends State<_AdminActions> {
       return const SizedBox(width: 80, child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))));
     }
 
+    final l10n = AppLocalizations.of(context)!;
     final canRemove = !widget.isOwner && widget.balance == 0;
 
     return Row(
@@ -233,7 +238,7 @@ class _AdminActionsState extends State<_AdminActions> {
         IconButton(
           icon: const Icon(Icons.add_circle_outline, color: Colors.green),
           onPressed: _credit,
-          tooltip: 'Add Credits',
+          tooltip: l10n.membersScreenAddCreditsTooltip,
         ),
         PopupMenuButton<String>(
           onSelected: (value) {
@@ -243,7 +248,7 @@ class _AdminActionsState extends State<_AdminActions> {
             PopupMenuItem(
               value: 'remove',
               enabled: canRemove,
-              child: Text(canRemove ? 'Remove Member' : 'Remove (balance > 0)'),
+              child: Text(canRemove ? l10n.membersScreenRemoveMemberOption : l10n.membersScreenRemoveBalanceNonZero),
             ),
           ],
           icon: const Icon(Icons.more_vert),

@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 
 class CreateGroupModal extends StatefulWidget {
   const CreateGroupModal({super.key});
@@ -53,7 +54,7 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.message ?? 'An unknown error occurred.'),
+          content: Text(e.message ?? AppLocalizations.of(context)!.createGroupUnknownError),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -61,7 +62,7 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('An unexpected error occurred.'),
+          content: Text(AppLocalizations.of(context)!.createGroupUnexpectedError),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -75,15 +76,16 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
   }
 
   void _showSuccessDialog(String groupCode) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Group Created!'),
+        title: Text(l10n.createGroupSuccessTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Share this code with your members:'),
+            Text(l10n.createGroupShareCode),
             const SizedBox(height: 16),
             SelectableText(
               groupCode,
@@ -99,14 +101,14 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
             onPressed: () {
               Clipboard.setData(ClipboardData(text: groupCode));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Group code copied!')),
+                SnackBar(content: Text(l10n.createGroupCodeCopiedSnackbar)),
               );
             },
-            child: const Text('Copy Code'),
+            child: Text(l10n.createGroupCopyCodeButton),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Done'),
+            child: Text(l10n.commonDone),
           ),
         ],
       ),
@@ -116,6 +118,7 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding + 16),
@@ -126,16 +129,16 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Create New Group',
+              l10n.createGroupTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Group Name'),
+              decoration: InputDecoration(labelText: l10n.createGroupNameLabel),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a group name.';
+                  return l10n.createGroupNameValidatorEmpty;
                 }
                 return null;
               },
@@ -143,10 +146,10 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(labelText: l10n.createGroupDescriptionLabel),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a description.';
+                  return l10n.createGroupDescriptionValidatorEmpty;
                 }
                 return null;
               },
@@ -154,14 +157,14 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _limitController,
-              decoration: const InputDecoration(
-                labelText: 'Negative Balance Limit',
-                helperText: 'Max negative balance a member can have.',
+              decoration: InputDecoration(
+                labelText: l10n.createGroupLimitLabel,
+                helperText: l10n.createGroupLimitHelper,
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || int.tryParse(value) == null) {
-                  return 'Please enter a valid number.';
+                  return l10n.createGroupLimitValidatorInvalid;
                 }
                 return null;
               },
@@ -172,7 +175,7 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.commonCancel),
                 ),
                 const SizedBox(width: 8),
                 if (_isCreating)
@@ -180,7 +183,7 @@ class _CreateGroupModalState extends State<CreateGroupModal> {
                 else
                   ElevatedButton(
                     onPressed: _submitCreateGroup,
-                    child: const Text('Create'),
+                    child: Text(l10n.createGroupCreateButton),
                   ),
               ],
             ),

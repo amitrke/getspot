@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:getspot/l10n/app_localizations.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final bool showSkip;
@@ -15,43 +16,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingPage> _pages = [
-    OnboardingPage(
-      icon: Icons.groups,
-      title: 'Create or Join Groups',
-      description:
-          'Start by creating your own sports group or join existing ones using a unique group code shared by organizers.',
-      color: Colors.blue,
-    ),
-    OnboardingPage(
-      icon: Icons.event,
-      title: 'Manage Events',
-      description:
-          'Create events with details like date, location, capacity, and fees. Members can register instantly if spots are available.',
-      color: Colors.green,
-    ),
-    OnboardingPage(
-      icon: Icons.account_balance_wallet,
-      title: 'Track Payments',
-      description:
-          'Virtual wallets help track event fees and payments. Note: No real money is processed through the app.',
-      color: Colors.orange,
-    ),
-    OnboardingPage(
-      icon: Icons.schedule,
-      title: 'Commitment System',
-      description:
-          'Set commitment deadlines for events. Members can withdraw before the deadline for a full refund, ensuring fair play.',
-      color: Colors.purple,
-    ),
-    OnboardingPage(
-      icon: Icons.notifications_active,
-      title: 'Stay Updated',
-      description:
-          'Get notifications for event registrations, confirmations, waitlist updates, and group announcements.',
-      color: Colors.red,
-    ),
-  ];
+  List<OnboardingPage> _buildPages(AppLocalizations l10n) => [
+        OnboardingPage(
+          icon: Icons.groups,
+          title: l10n.onboardingPage1Title,
+          description: l10n.onboardingPage1Description,
+          color: Colors.blue,
+        ),
+        OnboardingPage(
+          icon: Icons.event,
+          title: l10n.onboardingPage2Title,
+          description: l10n.onboardingPage2Description,
+          color: Colors.green,
+        ),
+        OnboardingPage(
+          icon: Icons.account_balance_wallet,
+          title: l10n.onboardingPage3Title,
+          description: l10n.onboardingPage3Description,
+          color: Colors.orange,
+        ),
+        OnboardingPage(
+          icon: Icons.schedule,
+          title: l10n.onboardingPage4Title,
+          description: l10n.onboardingPage4Description,
+          color: Colors.purple,
+        ),
+        OnboardingPage(
+          icon: Icons.notifications_active,
+          title: l10n.onboardingPage5Title,
+          description: l10n.onboardingPage5Description,
+          color: Colors.red,
+        ),
+      ];
 
   @override
   void dispose() {
@@ -68,7 +64,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < _pages.length - 1) {
+    final pageCount = _buildPages(AppLocalizations.of(context)!).length;
+    if (_currentPage < pageCount - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -80,6 +77,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final pages = _buildPages(l10n);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -92,7 +91,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   label: 'skip_onboarding_button',
                   child: TextButton(
                     onPressed: _completeOnboarding,
-                    child: const Text('Skip'),
+                    child: Text(l10n.onboardingSkipButton),
                   ),
                 ),
               ),
@@ -105,9 +104,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     _currentPage = index;
                   });
                 },
-                itemCount: _pages.length,
+                itemCount: pages.length,
                 itemBuilder: (context, index) {
-                  return _buildPage(_pages[index]);
+                  return _buildPage(pages[index]);
                 },
               ),
             ),
@@ -116,7 +115,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(vertical: 24.0),
               child: SmoothPageIndicator(
                 controller: _pageController,
-                count: _pages.length,
+                count: pages.length,
                 effect: WormEffect(
                   dotHeight: 12,
                   dotWidth: 12,
@@ -142,14 +141,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             curve: Curves.easeInOut,
                           );
                         },
-                        child: const Text('Back'),
+                        child: Text(l10n.onboardingBackButton),
                       ),
                     )
                   else
                     const SizedBox(width: 80),
                   // Next/Get Started button
                   Semantics(
-                    label: _currentPage == _pages.length - 1
+                    label: _currentPage == pages.length - 1
                         ? 'get_started_button'
                         : 'onboarding_next_button',
                     child: ElevatedButton(
@@ -161,9 +160,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentPage == _pages.length - 1
-                            ? 'Get Started'
-                            : 'Next',
+                        _currentPage == pages.length - 1
+                            ? l10n.onboardingGetStartedButton
+                            : l10n.onboardingNextButton,
                       ),
                     ),
                   ),
