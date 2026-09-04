@@ -14,7 +14,7 @@ google-cloud-storage==3.13.1
 
 # gRPC dependencies (pinned for Windows compatibility)
 grpcio==1.83.0
-grpcio-status==1.83.0
+grpcio-status==1.83.1
 
 # Utilities
 python-dotenv==1.2.3      # Environment variable management
