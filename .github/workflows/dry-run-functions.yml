@@ -39,7 +39,7 @@ jobs:
       - name: Set up Java
         # The Firestore emulator (used by the unit test suite below) requires
         # JDK 21+; ubuntu-latest's default java isn't guaranteed to satisfy that.
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -77,7 +77,7 @@ jobs:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GETSPOT01 }}'
 
       - name: Dry run deploy to Firebase
-        uses: w9jds/firebase-action@9ad0d519471afe1de970603de47075637414bfe9 # v15.27.0
+        uses: w9jds/firebase-action@5edc2e4fb0c08474ccf6cc71b29f49502aae5401 # v15.28.2
         with:
           args: deploy --only functions --dry-run
         env:
