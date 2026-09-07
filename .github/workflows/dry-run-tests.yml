@@ -1,0 +1,44 @@
+# Validates the Python data-integrity suite (tests/) by installing its
+# dependencies and collecting all test modules. This catches dependency
+# incompatibilities (e.g. a grpcio bump breaking firebase-admin imports)
+# before merge.
+#
+# The suite itself queries live production Firestore/Storage via a service
+# account key, so it can't be run for real here — Dependabot PRs don't
+# receive repo secrets (see dry-run-functions.yml for the same constraint).
+# Collection-only still catches the class of breakage that matters for a
+# dependency bump: import errors and version incompatibilities.
+
+name: Dry Run Data Integrity Tests
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'tests/**'
+  pull_request:
+    paths:
+      - 'tests/**'
+  workflow_dispatch:
+
+jobs:
+  dry_run_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./tests
+
+      - name: Collect tests (import/compatibility check only)
+        run: python -m pytest --collect-only -q
+        working-directory: ./tests
