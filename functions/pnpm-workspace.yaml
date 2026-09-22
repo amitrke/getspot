@@ -2,16 +2,7 @@
 # `packages` field whenever pnpm-workspace.yaml exists at all. This file
 # only exists to hold overrides that need to live here (see below).
 packages:
-  - '.'
-
-overrides:
-  '@types/node': ^22.0.0
-  # Google Cloud Build's deploy environment enforces a pnpm minimumReleaseAge
-  # policy that rejects packages published within roughly the last 24h. Pin
-  # these transitive deps to their previous release so a routine `pnpm
-  # install` doesn't silently pick up a too-fresh patch and break deploys.
-  content-type: 2.0.0
-  baseline-browser-mapping: 2.11.13
+  - .
 
 # Locally, pnpm just warns and skips these packages' install/postinstall
 # scripts. Google Cloud Build's deploy environment treats the same
@@ -32,3 +23,27 @@ allowBuilds:
   '@firebase/util': true
   protobufjs: true
   unrs-resolver: true
+
+# Pins/upgrades for transitive dependencies. Some entries (e.g. @types/node,
+# content-type, baseline-browser-mapping) pin to an older release because
+# Google Cloud Build's deploy environment enforces a pnpm minimumReleaseAge
+# policy that rejects packages published within roughly the last 24h, so a
+# routine `pnpm install` shouldn't silently pick up a too-fresh patch and
+# break deploys. The rest bump vulnerable transitive deps (pulled in by
+# firebase-tools, jest, eslint, firebase-functions-test) to patched versions
+# per `pnpm audit`. Regenerate with `pnpm audit --fix` when new advisories
+# show up, then re-add the comments this file carries (the command doesn't
+# preserve them).
+overrides:
+  '@types/node': ^22.0.0
+  baseline-browser-mapping: 2.11.13
+  content-type: 2.0.0
+  '@opentelemetry/core@<2.8.0': '>=2.8.0'
+  csv-parse@<7.0.2: '>=7.0.2'
+  js-yaml@>=3.0.0 <3.15.2: '>=3.15.2'
+  js-yaml@>=4.0.0 <4.3.2: '>=4.3.2'
+  qs@>=2.2.5 <6.16.0: '>=6.16.0'
+  qs@>=6.14.2 <=6.15.3: '>=6.16.0'
+  stream-json@<=3.4.0: '>=3.5.0'
+  ts-deepmerge@<8.0.0: '>=8.0.0'
+  uuid@<11.1.1: '>=11.1.1'

@@ -20,3 +20,12 @@ grpcio-status==1.83.1
 python-dotenv==1.2.3      # Environment variable management
 colorama==0.4.6           # Colored terminal output (Windows)
 tabulate==0.10.0           # Pretty table formattingH
+
+# Transitive deps pinned to patched versions (OSV-Scanner flagged CVEs in
+# whatever unpinned version pip resolved for httpx/pytest's own deps).
+# Pin explicitly so installs are reproducible and don't drift back to a
+# vulnerable version; bump these when `pip list --outdated` or OSV-Scanner
+# flags a newer advisory.
+anyio==4.14.2             # via httpx
+idna==3.19                # via anyio/httpx/requests
+pygments==2.21.0          # via pytest
