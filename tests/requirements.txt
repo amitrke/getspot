@@ -9,14 +9,23 @@ pytest-xdist==3.8.0       # Parallel test execution
 
 # Firebase Admin SDK
 firebase-admin==7.5.0
-google-cloud-firestore==2.29.0
-google-cloud-storage==3.13.1
+google-cloud-firestore==2.31.0
+google-cloud-storage==3.14.1
 
 # gRPC dependencies (pinned for Windows compatibility)
-grpcio==1.83.0
-grpcio-status==1.83.0
+grpcio==1.84.0
+grpcio-status==1.84.0
 
 # Utilities
 python-dotenv==1.2.3      # Environment variable management
 colorama==0.4.6           # Colored terminal output (Windows)
 tabulate==0.10.0           # Pretty table formattingH
+
+# Transitive deps pinned to patched versions (OSV-Scanner flagged CVEs in
+# whatever unpinned version pip resolved for httpx/pytest's own deps).
+# Pin explicitly so installs are reproducible and don't drift back to a
+# vulnerable version; bump these when `pip list --outdated` or OSV-Scanner
+# flags a newer advisory.
+anyio==4.14.2             # via httpx
+idna==3.19                # via anyio/httpx/requests
+pygments==2.21.0          # via pytest
