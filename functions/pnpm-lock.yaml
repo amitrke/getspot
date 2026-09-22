@@ -55,8 +55,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0(firebase-admin@13.10.0(supports-color@8.1.1))(firebase-functions@7.4.0(firebase-admin@13.10.0(supports-color@8.1.1))(supports-color@8.1.1))(jest@30.5.1(@types/node@22.20.1)(supports-color@8.1.1))
       firebase-tools:
-        specifier: ^15.29.0
-        version: 15.29.0(@types/node@22.20.1)(supports-color@8.1.1)
+        specifier: ^15.30.2
+        version: 15.30.2(@types/node@22.20.1)(supports-color@8.1.1)
       jest:
         specifier: ^30.5.1
         version: 30.5.1(@types/node@22.20.1)(supports-color@8.1.1)
@@ -2277,8 +2277,8 @@ packages:
       graphql:
         optional: true
 
-  firebase-tools@15.29.0:
-    resolution: {integrity: sha512-9v59oeU7seYNjMUykhQqodXl2J08QVVxVsxgJ0SycnX41xSA7nM4BboAdAK85z0tLSm6PsHjoNqop3cKAe4uaA==}
+  firebase-tools@15.30.2:
+    resolution: {integrity: sha512-9Y6fsgUh5CsL/hzB565iyIYdu3pgbKcONi7vRlSbZuB3d3RpZy4u49lMesKmQSGd1AqKvFyVw5ls8GCZNYy0MQ==}
     engines: {node: '>=20.0.0 || >=22.0.0 || >=24.0.0'}
     hasBin: true
 
@@ -7312,7 +7312,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  firebase-tools@15.29.0(@types/node@22.20.1)(supports-color@8.1.1):
+  firebase-tools@15.30.2(@types/node@22.20.1)(supports-color@8.1.1):
     dependencies:
       '@apphosting/common': 0.0.8
       '@electric-sql/pglite': 0.3.16
