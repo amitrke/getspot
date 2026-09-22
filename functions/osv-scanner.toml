@@ -1,0 +1,26 @@
+[[IgnoredVulns]]
+id = "GHSA-528h-pc64-c93x"
+reason = """
+stream-json <=3.4.0, pulled in by firebase-tools (a devDependency used only
+for local CLI/deploy, not shipped to Cloud Functions). The fix requires
+stream-json >=3.5.0, but firebase-tools requires stream-json@^1.7.3 even in
+its latest release (15.30.2) and does require("stream-json/filters/Pick"),
+a subpath that only exists in the 1.x package layout — forcing the fixed
+version breaks `firebase emulators:exec` and any CLI import command with
+MODULE_NOT_FOUND. See functions/pnpm-workspace.yaml overrides comment.
+Revisit once firebase-tools bumps its own stream-json dependency.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-87mf-gv2c-c62c"
+reason = """
+ts-deepmerge <8.0.0, pulled in by firebase-functions-test (a devDependency
+used only in unit tests, not shipped to Cloud Functions, and only ever
+merges test-authored fixtures, never untrusted input). The fix requires
+ts-deepmerge >=8.0.0, but firebase-functions-test@3.5.0 (latest) requires
+ts-deepmerge@^2.0.1 and calls it as `ts_deepmerge_1.default(...)`; 8.0.0
+renamed that export to a named `merge`, so forcing it breaks every test
+that uses firebase-functions-test's v2 CloudEvent helpers. See
+functions/pnpm-workspace.yaml overrides comment. Revisit once
+firebase-functions-test bumps its own ts-deepmerge dependency.
+"""

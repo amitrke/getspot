@@ -5,18 +5,16 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@opentelemetry/core@<2.8.0': '>=2.8.0'
   '@types/node': ^22.0.0
   baseline-browser-mapping: 2.11.13
   content-type: 2.0.0
+  '@opentelemetry/core@<2.8.0': '>=2.8.0'
   csv-parse@<7.0.2: '>=7.0.2'
   js-yaml@>=3.0.0 <3.15.2: '>=3.15.2'
   js-yaml@>=4.0.0 <4.3.2: '>=4.3.2'
   qs@>=2.2.5 <6.16.0: '>=6.16.0'
   qs@>=6.14.2 <=6.15.3: '>=6.16.0'
-  stream-json@<=3.4.0: '>=3.5.0'
-  ts-deepmerge@<8.0.0: '>=8.0.0'
-  uuid@<11.1.1: '>=11.1.1'
+  uuid@<11.1.1: ^11.1.1
 
 importers:
 
@@ -4134,15 +4132,11 @@ packages:
   stream-chain@2.2.5:
     resolution: {integrity: sha512-1TJmBx6aSWqZ4tx7aTpBDXK0/e2hhcNSTV8+CbFJtDjbb+I1mZ8lHit0Grw9GRT+6JbIrrDd8esncgBi8aBXGA==}
 
-  stream-chain@4.2.5:
-    resolution: {integrity: sha512-Wtyq3bNE3ggLR0v2vftqvuhltym3WbZAkZpfIrkr5F/6vpeUmWmwTgXa16zD87gpahwJ/Qulq3zVfUlgIc0J2A==}
-    engines: {node: '>=22'}
-
   stream-events@1.0.5:
     resolution: {integrity: sha512-E1GUzBSgvct8Jsb3v2X15pjzN1tYebtbLaMg+eBOUOAxgbLoSbT2NS91ckc5lJD1KfLjId+jXJRgo0qnV5Nerg==}
 
-  stream-json@3.7.0:
-    resolution: {integrity: sha512-rCSBdcBP/bPk6T8QFcxAj1MSzAuc5i49cYW6IE7sYObNEPccBJIUiL6fU9c9BWt40aJK0siVynLX7lWaW8alXw==}
+  stream-json@1.9.1:
+    resolution: {integrity: sha512-uWkjJ+2Nt/LO9Z/JyKZbMusL8Dkh97uUBTv3AJQ74y07lVahLY4eEFsPsE97pxYBwr8nnjMAIch5eqI0gPShyw==}
 
   stream-shift@1.0.3:
     resolution: {integrity: sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==}
@@ -4306,9 +4300,8 @@ packages:
     resolution: {integrity: sha512-aZbgViZrg1QNcG+LULa7nhZpJTZSLm/mXnHXnbAbjmN5aSa0y7V+wvv6+4WaBtpISJzThKy+PIPxc1Nq1EJ9mg==}
     engines: {node: '>= 14.0.0'}
 
-  ts-deepmerge@8.0.0:
-    resolution: {integrity: sha512-133O+10nJmVI8w5xeVZPEv5PIrv7iaUae07wv1aH8XJH95Ur6YIhWAPhPyP1YPlbPS9fCVcNIZTu7m8urRVF0A==}
-    engines: {node: '>=14.13.1'}
+  ts-deepmerge@2.0.7:
+    resolution: {integrity: sha512-3phiGcxPSSR47RBubQxPoZ+pqXsEsozLo4G4AlSrsMKTFg9TA3l+3he5BqpUi9wiuDbaHWXH/amlzQ49uEdXtg==}
 
   ts-jest@29.4.12:
     resolution: {integrity: sha512-Ov6ClY53Fflh6BGAnY2DlTq1hYDrTycz2PVTXBWFW2CU+9zrEqAp9fWdGXl42EXO5RLSFAcAZ2JFKbP+zBTFfw==}
@@ -4483,6 +4476,10 @@ packages:
   utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
+
+  uuid@11.1.1:
+    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
+    hasBin: true
 
   uuid@14.0.2:
     resolution: {integrity: sha512-xZe/16rV4aa+HGSOCiY2YeLT1OybRLrrkL/Rqaq7p7GMVXjFh+6wN4oMYgjFmnSnhY8t6Xpdl2l9qmnHYuMHwQ==}
@@ -6461,7 +6458,7 @@ snapshots:
       json-bigint: 1.0.0
       process: 0.11.10
       util: 0.12.5
-      uuid: 14.0.2
+      uuid: 11.1.1
 
   co@4.6.0: {}
 
@@ -7282,7 +7279,7 @@ snapshots:
       firebase-functions: 7.3.2(firebase-admin@13.10.0)
       jest: 30.5.1(@types/node@22.20.1)
       lodash: 4.18.1
-      ts-deepmerge: 8.0.0
+      ts-deepmerge: 2.0.7
 
   firebase-functions@7.3.2(firebase-admin@13.10.0):
     dependencies:
@@ -7353,7 +7350,7 @@ snapshots:
       semver: 7.8.5
       sql-formatter: 15.8.2
       stream-chain: 2.2.5
-      stream-json: 3.7.0
+      stream-json: 1.9.1
       superstatic: 10.0.0
       tar: 7.5.22
       tcp-port-used: 1.0.3
@@ -7464,7 +7461,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       is-stream: 2.0.1
       node-fetch: 2.7.0
-      uuid: 14.0.2
+      uuid: 11.1.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -7690,7 +7687,7 @@ snapshots:
       proto3-json-serializer: 2.0.2
       protobufjs: 7.6.5
       retry-request: 7.0.2
-      uuid: 14.0.2
+      uuid: 11.1.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -9649,15 +9646,13 @@ snapshots:
 
   stream-chain@2.2.5: {}
 
-  stream-chain@4.2.5: {}
-
   stream-events@1.0.5:
     dependencies:
       stubs: 3.0.0
 
-  stream-json@3.7.0:
+  stream-json@1.9.1:
     dependencies:
-      stream-chain: 4.2.5
+      stream-chain: 2.2.5
 
   stream-shift@1.0.3: {}
 
@@ -9829,7 +9824,7 @@ snapshots:
       https-proxy-agent: 5.0.1
       node-fetch: 2.7.0
       stream-events: 1.0.5
-      uuid: 14.0.2
+      uuid: 11.1.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -9888,7 +9883,7 @@ snapshots:
 
   triple-beam@1.4.1: {}
 
-  ts-deepmerge@8.0.0: {}
+  ts-deepmerge@2.0.7: {}
 
   ts-jest@29.4.12(@babel/core@7.29.7)(@jest/transform@30.5.1)(@jest/types@30.5.1)(babel-jest@30.5.1(@babel/core@7.29.7))(jest-util@30.5.1)(jest@30.5.1(@types/node@22.20.1))(typescript@6.0.3):
     dependencies:
@@ -10099,6 +10094,8 @@ snapshots:
       which-typed-array: 1.1.22
 
   utils-merge@1.0.1: {}
+
+  uuid@11.1.1: {}
 
   uuid@14.0.2: {}
 

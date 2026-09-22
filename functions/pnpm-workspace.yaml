@@ -34,6 +34,26 @@ allowBuilds:
 # per `pnpm audit`. Regenerate with `pnpm audit --fix` when new advisories
 # show up, then re-add the comments this file carries (the command doesn't
 # preserve them).
+#
+# NOT overridden: stream-json (GHSA-528h-pc64-c93x) and ts-deepmerge
+# (GHSA-87mf-gv2c-c62c). Both fixed versions are breaking major bumps that
+# their consumers don't support even in their latest release:
+#   - firebase-tools requires stream-json@^1.7.3 and does
+#     require("stream-json/filters/Pick"), a path that only exists in the
+#     1.x layout. Fix needs >=3.5.0. Breaks `firebase emulators:exec`
+#     outright (MODULE_NOT_FOUND).
+#   - firebase-functions-test@3.5.0 (latest) requires ts-deepmerge@^2.0.1
+#     and calls it as `ts_deepmerge_1.default(...)`. Fix (>=8.0.0) renamed
+#     the export to a named `merge`, so `.default` is undefined and every
+#     test using firebase-functions-test's v2 CloudEvent helpers throws.
+# Both are suppressed via functions/osv-scanner.toml instead — revisit once
+# firebase-tools / firebase-functions-test bump their own dependency.
+#
+# uuid is pinned to the 11.x line, not just ">=11.1.1": uuid dropped its CJS
+# build entirely starting at v12 (ESM-only), and gaxios/google-auth-library
+# (pulled in transitively by firebase-admin, in production, not just tests)
+# call `require("uuid")`. Letting the resolver pick latest (14.x) throws
+# ERR_REQUIRE_ESM at runtime. 11.1.1 has both the CVE fix and a CJS export.
 overrides:
   '@types/node': ^22.0.0
   baseline-browser-mapping: 2.11.13
@@ -44,6 +64,4 @@ overrides:
   js-yaml@>=4.0.0 <4.3.2: '>=4.3.2'
   qs@>=2.2.5 <6.16.0: '>=6.16.0'
   qs@>=6.14.2 <=6.15.3: '>=6.16.0'
-  stream-json@<=3.4.0: '>=3.5.0'
-  ts-deepmerge@<8.0.0: '>=8.0.0'
-  uuid@<11.1.1: '>=11.1.1'
+  uuid@<11.1.1: ^11.1.1
