@@ -78,7 +78,7 @@ jobs:
 
       - name: Dry run deploy to Firebase
         if: github.event_name == 'push'
-        uses: w9jds/firebase-action@844c33e381350ae5c600052ba95188f40572d8e0 # v15.30.2
+        uses: w9jds/firebase-action@4161c349226912980c1767a8d531465c09ebc470 # v15.32.0
         with:
           args: deploy --only functions --dry-run
         env:
