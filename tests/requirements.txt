@@ -8,9 +8,9 @@ pytest-cov==7.1.0         # Code coverage
 pytest-xdist==3.8.0       # Parallel test execution
 
 # Firebase Admin SDK
-firebase-admin==7.5.0
-google-cloud-firestore==2.31.0
-google-cloud-storage==3.14.1
+firebase-admin==7.7.0
+google-cloud-firestore==2.33.0
+google-cloud-storage==3.15.1
 
 # gRPC dependencies (pinned for Windows compatibility)
 grpcio==1.84.0
@@ -26,6 +26,6 @@ tabulate==0.10.0           # Pretty table formattingH
 # Pin explicitly so installs are reproducible and don't drift back to a
 # vulnerable version; bump these when `pip list --outdated` or OSV-Scanner
 # flags a newer advisory.
-anyio==4.14.2             # via httpx
-idna==3.19                # via anyio/httpx/requests
+anyio==4.15.1             # via httpx
+idna==3.20                # via anyio/httpx/requests
 pygments==2.21.0          # via pytest

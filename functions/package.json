@@ -29,10 +29,10 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.32.0",
     "firebase-functions-test": "^3.5.0",
-    "firebase-tools": "^15.30.2",
+    "firebase-tools": "^15.32.0",
     "typescript": "^6.0.3",
-    "jest": "^30.5.1",
-    "ts-jest": "^29.2.5",
+    "jest": "^30.5.2",
+    "ts-jest": "^29.4.14",
     "@types/jest": "^30.0.0"
   },
   "private": true
