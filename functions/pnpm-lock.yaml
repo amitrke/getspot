@@ -55,8 +55,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0(firebase-admin@13.10.0(supports-color@8.1.1))(firebase-functions@7.4.0(firebase-admin@13.10.0(supports-color@8.1.1))(supports-color@8.1.1))(jest@30.5.2(@types/node@22.20.1)(supports-color@8.1.1))
       firebase-tools:
-        specifier: ^15.32.0
-        version: 15.32.0(@types/node@22.20.1)(supports-color@8.1.1)
+        specifier: ^15.32.1
+        version: 15.32.1(@types/node@22.20.1)(supports-color@8.1.1)
       jest:
         specifier: ^30.5.2
         version: 30.5.2(@types/node@22.20.1)(supports-color@8.1.1)
@@ -1231,11 +1231,6 @@ packages:
 
   ajv-formats@3.0.1:
     resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
 
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
@@ -2277,8 +2272,8 @@ packages:
       graphql:
         optional: true
 
-  firebase-tools@15.32.0:
-    resolution: {integrity: sha512-yp0SOQFALo3q2K2/pBmWTrAM4C0503zK3UJ5IDQzr4o7i+5RKh3ZPX4RTkumCFt3STtI7EuR61M8tDJjNZmTYg==}
+  firebase-tools@15.32.1:
+    resolution: {integrity: sha512-Ppi8CWeACtJjx10LtaKQGf81+Zc5MYDQNqpE2ioY11KViaqa5OOPW9huqqwd5+Zmc/nayjyGiOrJ1YF7NGXHBQ==}
     engines: {node: '>=20.0.0 || >=22.0.0 || >=24.0.0'}
     hasBin: true
 
@@ -5515,7 +5510,7 @@ snapshots:
     dependencies:
       '@hono/node-server': 2.1.1(hono@4.13.7)
       ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
+      ajv-formats: 3.0.1
       content-type: 2.0.0
       cors: 2.8.6
       cross-spawn: 7.0.6
@@ -6003,8 +5998,8 @@ snapshots:
     optionalDependencies:
       ajv: 8.20.0
 
-  ajv-formats@3.0.1(ajv@8.20.0):
-    optionalDependencies:
+  ajv-formats@3.0.1:
+    dependencies:
       ajv: 8.20.0
 
   ajv@6.15.0:
@@ -7312,7 +7307,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  firebase-tools@15.32.0(@types/node@22.20.1)(supports-color@8.1.1):
+  firebase-tools@15.32.1(@types/node@22.20.1)(supports-color@8.1.1):
     dependencies:
       '@apphosting/common': 0.0.8
       '@electric-sql/pglite': 0.3.16
@@ -7323,7 +7318,7 @@ snapshots:
       '@modelcontextprotocol/sdk': 1.30.0(supports-color@8.1.1)(zod@4.5.4)
       abort-controller: 3.0.0
       ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
+      ajv-formats: 3.0.1
       archiver: 7.0.1
       async-lock: 1.4.1
       body-parser: 1.20.6(supports-color@8.1.1)
