@@ -9,7 +9,7 @@ pytest-xdist==3.8.0       # Parallel test execution
 
 # Firebase Admin SDK
 firebase-admin==7.7.0
-google-cloud-firestore==2.33.0
+google-cloud-firestore==2.34.0
 google-cloud-storage==3.15.1
 
 # gRPC dependencies (pinned for Windows compatibility)
@@ -17,7 +17,7 @@ grpcio==1.84.0
 grpcio-status==1.84.0
 
 # Utilities
-python-dotenv==1.2.3      # Environment variable management
+python-dotenv==1.2.4      # Environment variable management
 colorama==0.4.6           # Colored terminal output (Windows)
 tabulate==0.10.0           # Pretty table formattingH
 
