@@ -46,7 +46,7 @@ jobs:
         working-directory: ./functions
 
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@e29beaf3208f031d4864f2bf6ddd8f890d5c8afc # v15.33.0
+        uses: w9jds/firebase-action@fc894b2de04cfc04c398e98dea8ac546470fbd6b # v15.34.0
         with:
           args: deploy --only functions --force
         env:
