@@ -3,8 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/models/group_view_model.dart';
 import 'package:getspot/screens/group_details_screen.dart';
+import 'package:getspot/screens/wallet_screen.dart';
+import 'package:getspot/theme/theme.dart';
+import 'package:getspot/widgets/status_badge.dart';
 import 'package:intl/intl.dart';
 
+/// Compact row for one group on Home: initial, name, a one-line summary
+/// (next event, or pending approvals for admins), and the wallet balance,
+/// which opens that group's wallet. Meant to sit inside a shared Card with
+/// dividers between rows.
 class GroupListItem extends StatelessWidget {
   final GroupViewModel viewModel;
 
@@ -13,137 +20,182 @@ class GroupListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
     final bool isPending =
         viewModel.membershipStatus == GroupMembershipStatus.pending;
-    final bool isAdmin =
-        viewModel.admin == FirebaseAuth.instance.currentUser?.uid;
+    final bool isAdmin = viewModel.admin == uid;
     final bool hasPendingRequests = viewModel.pendingJoinRequestsCount > 0;
 
     return Semantics(
       label: 'group_item_${viewModel.groupId}',
-      child: Card(
+      child: InkWell(
         key: ValueKey('group_item_${viewModel.groupId}'),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListTile(
-          title: Text(viewModel.name),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        onTap: isPending ? null : () => _openGroup(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          child: Row(
             children: [
-              const SizedBox(height: 8),
-              if (isPending)
-                Chip(
-                  label: Text(l10n.groupItemPendingChip),
-                  backgroundColor: Colors.orange,
-                  labelStyle: const TextStyle(color: Colors.white),
-                )
-              else
-                _buildMemberContent(context,
-                    isAdmin: isAdmin, hasPendingRequests: hasPendingRequests),
+              _GroupAvatar(name: viewModel.name),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      viewModel.name,
+                      style: context.textStyles.titleSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    if (isPending)
+                      const StatusBadge(kind: StatusKind.pending)
+                    else if (isAdmin && hasPendingRequests)
+                      Text(
+                        l10n.groupItemPendingApproval(
+                          viewModel.pendingJoinRequestsCount,
+                        ),
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: context.semantic.info,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    else
+                      Text(
+                        _nextEventLabel(context, l10n),
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              if (!isPending) ...[
+                const SizedBox(width: AppSpacing.sm),
+                _BalanceChip(
+                  balance: viewModel.walletBalance,
+                  onTap: uid == null
+                      ? null
+                      : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => WalletScreen(
+                              groupId: viewModel.groupId,
+                              userId: uid,
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+              ],
             ],
           ),
-          trailing: isPending ? null : const Icon(Icons.chevron_right),
-          onTap: isPending
-              ? null
-              : () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => GroupDetailsScreen(group: {
-                        'groupId': viewModel.groupId,
-                        'name': viewModel.name,
-                        'description': viewModel.description,
-                        'admin': viewModel.admin,
-                        'groupCode': viewModel.groupCode,
-                      }),
-                    ),
-                  );
-                },
         ),
       ),
     );
   }
 
-  Widget _buildMemberContent(BuildContext context,
-      {required bool isAdmin, required bool hasPendingRequests}) {
-    final l10n = AppLocalizations.of(context)!;
+  String _nextEventLabel(BuildContext context, AppLocalizations l10n) {
+    final next = viewModel.nextEventDate;
+    if (next == null) return l10n.groupItemNoUpcomingEvents;
     final locale = Localizations.localeOf(context).toString();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (isAdmin && hasPendingRequests) ...[
-          Text(
-            l10n.groupItemPendingApproval(viewModel.pendingJoinRequestsCount),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        Row(
-          children: [
-            const Icon(Icons.calendar_today, size: 16),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                viewModel.nextEventDate != null
-                    ? DateFormat.yMMMEd(locale)
-                        .add_jm()
-                        .format(viewModel.nextEventDate!)
-                    : l10n.groupItemNoUpcomingEvents,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+    return l10n.homeGroupNextEvent(DateFormat.MMMEd(locale).format(next));
+  }
+
+  void _openGroup(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GroupDetailsScreen(
+          group: {
+            'groupId': viewModel.groupId,
+            'name': viewModel.name,
+            'description': viewModel.description,
+            'admin': viewModel.admin,
+            'groupCode': viewModel.groupCode,
+          },
         ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            _getStatusIcon(viewModel.eventStatus),
-            const SizedBox(width: 4),
-            Text(_statusLabel(l10n, viewModel.eventStatus)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            const Icon(Icons.account_balance_wallet, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              '\$${viewModel.walletBalance}',
-              style: TextStyle(
-                color:
-                    viewModel.walletBalance < 0 ? Colors.red : Colors.green,
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
+}
 
-  String _statusLabel(AppLocalizations l10n, String? status) {
-    switch (status) {
-      case 'confirmed':
-        return l10n.groupItemStatusConfirmed;
-      case 'waitlisted':
-        return l10n.groupItemStatusWaitlisted;
-      case 'denied':
-        return l10n.groupItemStatusDenied;
-      default:
-        return l10n.groupItemStatusNotRegistered;
-    }
+/// Tappable wallet balance; red tint when negative.
+class _BalanceChip extends StatelessWidget {
+  final int balance;
+  final VoidCallback? onTap;
+
+  const _BalanceChip({required this.balance, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final negative = balance < 0;
+    final fg = negative ? colors.onErrorContainer : colors.onSurfaceVariant;
+    final label = negative ? '-\$${-balance}' : '\$$balance';
+
+    return Material(
+      color: negative ? colors.errorContainer : colors.surfaceContainerHigh,
+      borderRadius: AppRadius.circular(AppRadius.sm),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.circular(AppRadius.sm),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 36),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: AppSizes.iconSm,
+                  color: fg,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  label,
+                  style: context.textStyles.labelLarge?.tabular.copyWith(
+                    color: fg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
+}
 
-  Widget _getStatusIcon(String? status) {
-    switch (status) {
-      case 'confirmed':
-        return const Icon(Icons.check_circle, color: Colors.green, size: 16);
-      case 'waitlisted':
-        return const Icon(Icons.pending, color: Colors.orange, size: 16);
-      case 'denied':
-        return const Icon(Icons.cancel, color: Colors.red, size: 16);
-      default:
-        return const Icon(Icons.help_outline, color: Colors.grey, size: 16);
-    }
+/// Rounded-square initial for a group.
+class _GroupAvatar extends StatelessWidget {
+  final String name;
+  const _GroupAvatar({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+    return Container(
+      width: AppSizes.avatar,
+      height: AppSizes.avatar,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: AppRadius.circular(AppRadius.md),
+      ),
+      child: Text(
+        initial,
+        style: context.textStyles.titleMedium?.copyWith(
+          color: colors.onPrimaryContainer,
+        ),
+      ),
+    );
   }
 }

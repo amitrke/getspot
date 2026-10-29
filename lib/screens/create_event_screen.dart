@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/event_cache_service.dart';
 import 'dart:developer' as developer;
+import 'package:getspot/widgets/constrained_content.dart';
+import 'package:getspot/theme/theme.dart';
 
 enum CommitmentDeadlineOption {
   oneDay,
@@ -282,145 +284,148 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.createEventAppBarTitle)),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                Semantics(
-                  label: 'event_name_field',
-                  child: TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(labelText: l10n.createEventNameLabel),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.createEventNameValidatorEmpty;
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'location_field',
-                  child: TextFormField(
-                    controller: _locationController,
-                    decoration: InputDecoration(labelText: l10n.createEventLocationLabel),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.createEventLocationValidatorEmpty;
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'event_date_time_picker',
-                  child: _buildDateTimePicker(
-                    label: l10n.createEventDateTimeLabel,
-                    date: _eventDate,
-                    time: _eventTime,
-                    onTap: () => _pickDateTime(isEvent: true),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'commitment_deadline_dropdown',
-                  child: DropdownButtonFormField<CommitmentDeadlineOption>(
-                    initialValue: _deadlineOption,
-                    decoration: InputDecoration(
-                      labelText: l10n.createEventDeadlineDropdownLabel,
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: CommitmentDeadlineOption.values
-                        .map(
-                          (option) => DropdownMenuItem(
-                            value: option,
-                            child: Text(_labelForOption(option)),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() {
-                        _deadlineOption = value;
-                        if (value != CommitmentDeadlineOption.custom) {
-                          _applyRelativeDeadline();
+        child: ConstrainedContent(
+          maxWidth: AppContentWidth.form,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  Semantics(
+                    label: 'event_name_field',
+                    child: TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(labelText: l10n.createEventNameLabel),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n.createEventNameValidatorEmpty;
                         }
-                      });
-                    },
+                        return null;
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                if (_deadlineOption == CommitmentDeadlineOption.custom)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: Semantics(
-                      label: 'commitment_deadline_picker',
-                      child: _buildDateTimePicker(
-                        label: l10n.createEventDeadlineLabel,
-                        date: _deadlineDate,
-                        time: _deadlineTime,
-                        onTap: () => _pickDateTime(isEvent: false),
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'location_field',
+                    child: TextFormField(
+                      controller: _locationController,
+                      decoration: InputDecoration(labelText: l10n.createEventLocationLabel),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n.createEventLocationValidatorEmpty;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'event_date_time_picker',
+                    child: _buildDateTimePicker(
+                      label: l10n.createEventDateTimeLabel,
+                      date: _eventDate,
+                      time: _eventTime,
+                      onTap: () => _pickDateTime(isEvent: true),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'commitment_deadline_dropdown',
+                    child: DropdownButtonFormField<CommitmentDeadlineOption>(
+                      initialValue: _deadlineOption,
+                      decoration: InputDecoration(
+                        labelText: l10n.createEventDeadlineDropdownLabel,
+                        border: const OutlineInputBorder(),
+                      ),
+                      items: CommitmentDeadlineOption.values
+                          .map(
+                            (option) => DropdownMenuItem(
+                              value: option,
+                              child: Text(_labelForOption(option)),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _deadlineOption = value;
+                          if (value != CommitmentDeadlineOption.custom) {
+                            _applyRelativeDeadline();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_deadlineOption == CommitmentDeadlineOption.custom)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Semantics(
+                        label: 'commitment_deadline_picker',
+                        child: _buildDateTimePicker(
+                          label: l10n.createEventDeadlineLabel,
+                          date: _deadlineDate,
+                          time: _deadlineTime,
+                          onTap: () => _pickDateTime(isEvent: false),
+                        ),
                       ),
                     ),
-                  ),
-                Semantics(
-                  label: 'fee_field',
-                  child: TextFormField(
-                    controller: _feeController,
-                    decoration: InputDecoration(
-                      labelText: l10n.createEventFeeLabel,
-                      helperText: l10n.createEventFeeHelper,
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || int.tryParse(value) == null) {
-                        return l10n.commonValidatorInvalidNumber;
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'max_participants_field',
-                  child: TextFormField(
-                    controller: _maxParticipantsController,
-                    decoration: InputDecoration(
-                      labelText: l10n.createEventMaxParticipantsLabel,
-                      helperText: l10n.createEventMaxParticipantsHelper(_maxEventCapacity),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || int.tryParse(value) == null) {
-                        return l10n.commonValidatorInvalidNumber;
-                      }
-                      final maxParticipants = int.parse(value);
-                      if (maxParticipants <= 0) {
-                        return l10n.createEventMaxParticipantsValidatorPositive;
-                      }
-                      if (maxParticipants > _maxEventCapacity) {
-                        return l10n.createEventMaxParticipantsValidatorExceedsLimit(_maxEventCapacity);
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 32),
-                if (_isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else
                   Semantics(
-                    label: 'create_event_button',
-                    child: ElevatedButton(
-                      onPressed: _createEvent,
-                      child: Text(l10n.createEventSubmitButton),
+                    label: 'fee_field',
+                    child: TextFormField(
+                      controller: _feeController,
+                      decoration: InputDecoration(
+                        labelText: l10n.createEventFeeLabel,
+                        helperText: l10n.createEventFeeHelper,
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || int.tryParse(value) == null) {
+                          return l10n.commonValidatorInvalidNumber;
+                        }
+                        return null;
+                      },
                     ),
                   ),
-              ],
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'max_participants_field',
+                    child: TextFormField(
+                      controller: _maxParticipantsController,
+                      decoration: InputDecoration(
+                        labelText: l10n.createEventMaxParticipantsLabel,
+                        helperText: l10n.createEventMaxParticipantsHelper(_maxEventCapacity),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || int.tryParse(value) == null) {
+                          return l10n.commonValidatorInvalidNumber;
+                        }
+                        final maxParticipants = int.parse(value);
+                        if (maxParticipants <= 0) {
+                          return l10n.createEventMaxParticipantsValidatorPositive;
+                        }
+                        if (maxParticipants > _maxEventCapacity) {
+                          return l10n.createEventMaxParticipantsValidatorExceedsLimit(_maxEventCapacity);
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  if (_isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    Semantics(
+                      label: 'create_event_button',
+                      child: ElevatedButton(
+                        onPressed: _createEvent,
+                        child: Text(l10n.createEventSubmitButton),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

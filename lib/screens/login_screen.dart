@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:getspot/helpers/platform_helper.dart';
 import 'package:getspot/l10n/app_localizations.dart';
+import 'package:getspot/theme/theme.dart';
 import 'package:getspot/screens/home_screen.dart';
 import 'package:getspot/services/auth_service.dart';
 import 'package:getspot/widgets/app_logo.dart';
@@ -144,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: const BoxConstraints(maxWidth: AppContentWidth.form),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(

@@ -374,5 +374,11 @@
   "eventDetailsRegisterButton": "Anmelden",
   "eventDetailsYourStatus": "Dein Status: {status}",
   "eventDetailsStatusRequested": "Angefragt",
-  "eventDetailsStatusWithdrawnPenalty": "Zurückgetreten (Strafe)"
+  "eventDetailsStatusWithdrawnPenalty": "Zurückgetreten (Strafe)",
+  "homeNextGamesHeader": "Deine nächsten Spiele",
+  "homeYourGroupsHeader": "Deine Gruppen",
+  "homeNoUpcomingGames": "In deinen Gruppen sind noch keine Spiele geplant.",
+  "homeSpotsTaken": "{count} von {max} Plätzen",
+  "homeEventFull": "Voll · {count} auf der Warteliste",
+  "homeGroupNextEvent": "Nächstes: {date}"
 }

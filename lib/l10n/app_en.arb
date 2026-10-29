@@ -1624,5 +1624,47 @@
   "eventDetailsStatusWithdrawnPenalty": "Withdrawn (Penalty)",
   "@eventDetailsStatusWithdrawnPenalty": {
     "description": "Participant status label: withdrew after the deadline with no waitlist replacement, fee forfeited"
+  },
+  "homeNextGamesHeader": "Your next games",
+  "@homeNextGamesHeader": {
+    "description": "Home section listing upcoming events across all of the user's groups"
+  },
+  "homeYourGroupsHeader": "Your groups",
+  "@homeYourGroupsHeader": {
+    "description": "Home section listing the user's groups"
+  },
+  "homeNoUpcomingGames": "No games scheduled in your groups yet.",
+  "@homeNoUpcomingGames": {
+    "description": "Shown on Home when none of the user's groups has an upcoming event"
+  },
+  "homeSpotsTaken": "{count} of {max} spots",
+  "@homeSpotsTaken": {
+    "description": "Event capacity on a Home event card",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "homeEventFull": "Full · {count} waiting",
+  "@homeEventFull": {
+    "description": "Event is at capacity; count is the number of people on the waitlist",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeGroupNextEvent": "Next: {date}",
+  "@homeGroupNextEvent": {
+    "description": "Group row subtitle showing the date of the group's next event",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

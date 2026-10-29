@@ -374,5 +374,11 @@
   "eventDetailsRegisterButton": "S'inscrire",
   "eventDetailsYourStatus": "Votre statut : {status}",
   "eventDetailsStatusRequested": "Demandé",
-  "eventDetailsStatusWithdrawnPenalty": "Désinscrit (pénalité)"
+  "eventDetailsStatusWithdrawnPenalty": "Désinscrit (pénalité)",
+  "homeNextGamesHeader": "Vos prochains matchs",
+  "homeYourGroupsHeader": "Vos groupes",
+  "homeNoUpcomingGames": "Aucun match n'est encore prévu dans vos groupes.",
+  "homeSpotsTaken": "{count} places sur {max}",
+  "homeEventFull": "Complet · {count} en attente",
+  "homeGroupNextEvent": "Prochain : {date}"
 }
