@@ -91,35 +91,6 @@ platform :android do
 end
 
 platform :ios do
-  desc "Push a new beta build to TestFlight"
-  lane :beta do
-    # Ensure we're on a clean git state
-    ensure_git_status_clean
-
-    # Increment build number
-    increment_build_number(
-      xcodeproj: "ios/Runner.xcodeproj"
-    )
-
-    # Build the app (Xcode Cloud handles this, but kept for manual runs)
-    build_app(
-      workspace: "ios/Runner.xcworkspace",
-      scheme: "Runner",
-      export_method: "app-store",
-      export_options: {
-        provisioningProfiles: {
-          "com.yourcompany.getspot" => "match AppStore com.yourcompany.getspot"
-        }
-      }
-    )
-
-    # Upload to TestFlight
-    upload_to_testflight(
-      skip_waiting_for_build_processing: true,
-      changelog: "Bug fixes and improvements"
-    )
-  end
-
   desc "Promote the latest TestFlight build to App Store Review"
   lane :promote_to_review do
     # Load API key from JSON file

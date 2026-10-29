@@ -13,7 +13,7 @@ This guide explains how to automate promoting TestFlight builds to App Store pro
 
 ## Prerequisites
 
-- Xcode Cloud is building and uploading to TestFlight successfully
+- `.github/workflows/release.yml` is building and uploading to TestFlight successfully (see `docs/RELEASING.md`)
 - Access to App Store Connect with App Manager or Admin role
 - Ruby 3.0+ installed (comes with macOS)
 - Bundler installed: `gem install bundler`
@@ -144,8 +144,8 @@ This will make the approved build live on the App Store.
 
 ```
 ┌─────────────────────┐
-│  Xcode Cloud Build  │
-│  (Automated)        │
+│  release.yml build  │
+│  (GitHub Actions)   │
 └──────────┬──────────┘
            │
            ▼
@@ -193,9 +193,9 @@ This will make the approved build live on the App Store.
 
 ### "Invalid provisioning profile"
 
-**Solution:** This shouldn't happen when using Xcode Cloud builds, but if it does:
-1. Ensure Xcode Cloud is using the correct provisioning profile
-2. Rebuild in Xcode Cloud
+**Solution:** This shouldn't happen with cloud-managed signing, but if it does:
+1. Check the App Store Connect API key still has the Admin role
+2. Re-run the iOS job of "Release to testers"
 
 ### "Metadata validation failed"
 

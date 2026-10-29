@@ -1,0 +1,327 @@
+name: Release to testers
+
+# Builds a signed App Bundle and pushes it to the Play Console internal testing
+# track, and builds a signed IPA and uploads it to TestFlight. Replaces Xcode
+# Cloud (iOS) and the old deploy-android.yml / deploy-ios-manual.yml. Setup is
+# in docs/RELEASING.md.
+#
+# Adapted from amitrke/voice-notes' release.yml, whose iOS job signs with
+# Apple's cloud-managed signing using only an App Store Connect API key.
+#
+# One workflow for both stores so one push ships both and the same build number
+# is used on both: Play's versionCode and iOS's CFBundleVersion match for the
+# same commit. Renaming or recreating this *file* restarts github.run_number,
+# which both stores would reject until it passed their highest build.
+
+on:
+  workflow_dispatch:
+    inputs:
+      status:
+        description: >-
+          Play release status. "completed" rolls out to internal testers at
+          once; "draft" leaves it in Play Console to roll out by hand.
+        type: choice
+        options: [completed, draft]
+        default: completed
+      platforms:
+        description: Which stores this run ships to.
+        type: choice
+        options: [both, android, ios]
+        default: both
+  push:
+    branches: [develop]
+    # Only changes that alter the app. Functions, rules, the marketing site and
+    # docs land on develop too, and none of them need a new store build.
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/release.yml'
+    # Release tags in this repository are the bare version, e.g. 1.0.4.
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+
+concurrency:
+  # Never cancel: a run killed mid-upload leaves an open Play edit behind.
+  group: release
+  cancel-in-progress: false
+
+env:
+  # Pinned to the version this has been built and verified with, not "latest",
+  # so an unrelated Flutter release is not a surprise CI failure.
+  FLUTTER_VERSION: '3.47.0'
+  PACKAGE_NAME: org.getspot
+  # Added to github.run_number. Before this workflow, Play's highest versionCode
+  # was 39 (deploy-android.yml) and TestFlight's highest build was 50 (Xcode
+  # Cloud), and a store rejects a build number it has seen.
+  BUILD_NUMBER_OFFSET: 100
+
+jobs:
+  check:
+    name: Analyse and test
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.version.outputs.code }}
+      name: ${{ steps.version.outputs.name }}
+      release_name: ${{ steps.version.outputs.release_name }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Work out the version
+        id: version
+        run: |
+          name="$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)"
+          if ! [[ "$name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::pubspec.yaml's version '$name' is not of the form 1.2.3"
+            exit 1
+          fi
+          if [ "${{ github.ref_type }}" = tag ]; then
+            if [ "$GITHUB_REF_NAME" != "$name" ]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match pubspec.yaml's version $name."
+              exit 1
+            fi
+          elif git ls-remote --exit-code --tags origin "refs/tags/$name" >/dev/null 2>&1; then
+            echo "::error::$name has already been released. Bump pubspec.yaml's version."
+            exit 1
+          fi
+          code=$(( ${{ github.run_number }} + BUILD_NUMBER_OFFSET ))
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "release_name=$name ($code)" >> "$GITHUB_OUTPUT"
+          echo "Version $name ($code)"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # Errors only: the existing codebase has info/warning lints that would
+      # otherwise block every release. Limited to the app's own code so a
+      # Dart template under functions/node_modules is never analysed.
+      #
+      # No flutter test yet: test/widget_test.dart is still the unedited
+      # counter template from flutter create and cannot pass against this app.
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings lib test
+
+  bundle:
+    name: Build and upload AAB
+    needs: check
+    # Repository variable RELEASE_ANDROID = 'false' skips Play; unset means on.
+    if: vars.RELEASE_ANDROID != 'false' && (inputs.platforms || 'both') != 'ios'
+    runs-on: ubuntu-latest
+    env:
+      HAS_PLAY_CREDENTIALS: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+
+      # Written outside the checkout and removed at the end whatever happens.
+      # Secret names are the ones deploy-android.yml used.
+      - name: Install the upload key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTOREPASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEYALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEYPASSWORD }}
+        run: |
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty: its secret is not set. See docs/RELEASING.md."
+              exit 1
+            fi
+          done
+          keystore="$RUNNER_TEMP/upload-keystore.jks"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          cat > android/key.properties <<EOF
+          storeFile=$keystore
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - run: >-
+          flutter build appbundle --release
+          --build-number=${{ needs.check.outputs.code }}
+          --build-name=${{ needs.check.outputs.name }}
+
+      # A debug-signed or unsigned bundle must never reach a store.
+      - name: Refuse a debug-signed bundle
+        run: |
+          aab=build/app/outputs/bundle/release/app-release.aab
+          cert="$(keytool -printcert -jarfile "$aab" 2>&1)" || true
+          if [ -z "$cert" ] || grep -q 'Not a signed jar file' <<< "$cert"; then
+            echo "::error::$aab is not signed"; exit 1
+          fi
+          if grep -q 'CN=Android Debug' <<< "$cert"; then
+            echo "::error::$aab is signed with the debug key"; exit 1
+          fi
+          grep -E 'SHA256:' <<< "$cert"
+
+      # Kept whether or not the upload runs, so a bundle can be uploaded by hand.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-${{ needs.check.outputs.code }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload to Play internal testing
+        if: env.HAS_PLAY_CREDENTIALS == 'true'
+        # Pinned to a commit (v1.1.5), not a tag the action's owner can move:
+        # this step is handed a service-account key.
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ env.PACKAGE_NAME }}
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          releaseName: ${{ needs.check.outputs.release_name }}
+          tracks: internal
+          status: ${{ inputs.status || 'completed' }}
+
+      - name: Note the skipped upload
+        if: env.HAS_PLAY_CREDENTIALS != 'true'
+        run: >-
+          echo "::notice::PLAYSTORE_SERVICE_ACCOUNT_JSON is not set, so the
+          bundle was built and kept as an artifact but not uploaded. See
+          docs/RELEASING.md."
+
+      - name: Remove the upload key
+        if: always()
+        run: rm -f android/key.properties "$RUNNER_TEMP/upload-keystore.jks"
+
+  ios:
+    name: Build and upload IPA
+    needs: check
+    if: vars.RELEASE_IOS != 'false' && (inputs.platforms || 'both') != 'android'
+    # macOS runners are free for a public repository.
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      HAS_ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY != '' }}
+      ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # App Store Connect rejects uploads built with an SDK older than Apple's
+      # current minimum, and the runner's default Xcode can lag.
+      - name: Select the newest Xcode
+        run: |
+          xcode="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      # This project uses CocoaPods for iOS dependencies, not Swift Package
+      # Manager. Without this, Flutter tries to add SPM integration for plugins
+      # that declare a Package.swift (e.g. firebase_app_check's unused
+      # recaptcha-enterprise dependency).
+      - run: flutter config --no-enable-swift-package-manager
+      - run: flutter pub get
+
+      # Not checked in (see .gitignore). Firebase and the Crashlytics symbol
+      # upload build phase both read it.
+      - name: Install GoogleService-Info.plist
+        env:
+          PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          if [ -z "$PLIST_BASE64" ]; then
+            echo "::error::GOOGLE_SERVICE_INFO_PLIST_BASE64 is not set. See docs/RELEASING.md."
+            exit 1
+          fi
+          echo "$PLIST_BASE64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          plutil -lint ios/Runner/GoogleService-Info.plist
+
+      - name: Install the App Store Connect API key
+        if: env.HAS_ASC_KEY == 'true'
+        env:
+          P8: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+        run: |
+          for name in ASC_KEY_ID ASC_ISSUER_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty: its secret is not set. See docs/RELEASING.md."
+              exit 1
+            fi
+          done
+          dir="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$dir"
+          key="$dir/AuthKey_$ASC_KEY_ID.p8"
+          printf '%s\n' "$P8" > "$key"
+          chmod 600 "$key"
+          echo "ASC_KEY_PATH=$key" >> "$GITHUB_ENV"
+
+      # Without the key there is no way to sign, but the run still proves the
+      # iOS build compiles.
+      - name: Compile without signing
+        if: env.HAS_ASC_KEY != 'true'
+        run: |
+          flutter build ios --release --no-codesign \
+            --build-number=${{ needs.check.outputs.code }} \
+            --build-name=${{ needs.check.outputs.name }}
+          echo "::notice::APP_STORE_CONNECT_API_PRIVATE_KEY is not set, so the iOS build was compiled but not signed or uploaded."
+
+      # flutter build ipa cannot pass an API key to xcodebuild, so Flutter only
+      # generates the Xcode configuration (and runs pod install) and xcodebuild
+      # archives itself. Cloud-managed signing needs the key to have the Admin
+      # role.
+      #
+      # The archive is built unsigned (CODE_SIGNING_ALLOWED=NO). A signed archive
+      # makes Xcode request an Apple Development certificate, and a fresh runner
+      # has no private key for the last one, so every run would create another
+      # until the account hit its certificate limit. -exportArchive signs for
+      # distribution with the cloud-managed certificate instead.
+      - name: Archive
+        if: env.HAS_ASC_KEY == 'true'
+        run: |
+          flutter build ios --release --config-only \
+            --build-number=${{ needs.check.outputs.code }} \
+            --build-name=${{ needs.check.outputs.name }}
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -n 40
+          # tail hides xcodebuild's exit status; the archive's presence is the check.
+          test -d "$RUNNER_TEMP/Runner.xcarchive/Products/Applications/Runner.app"
+          /usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:CFBundleVersion' \
+            "$RUNNER_TEMP/Runner.xcarchive/Info.plist"
+
+      # ios/ExportOptions.plist sets destination=upload, so this step both signs
+      # for distribution and sends the build. Its exit status is the result.
+      - name: Export and upload to TestFlight
+        if: env.HAS_ASC_KEY == 'true'
+        run: |
+          set -o pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            | tail -n 40
+
+      - name: Remove the API key and Firebase config
+        if: always()
+        run: rm -rf "$HOME/.appstoreconnect/private_keys" ios/Runner/GoogleService-Info.plist

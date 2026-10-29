@@ -194,7 +194,7 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
 - Hosting serves from: `build/web`
 - Functions predeploy: runs `npm run lint` and `npm run build`
 - All resources deployed to us-east4
-- **GoogleService-Info.plist:** Generated dynamically during CI/CD by `ios/ci_scripts/ci_post_clone.sh` from the `GOOGLE_SERVICE_INFO_PLIST_BASE64` environment variable. This file is not checked into source control for security. If Firebase services (Auth, Crashlytics, etc.) are working, the plist file is correctly configured.
+- **GoogleService-Info.plist:** Generated during CI by `.github/workflows/release.yml` from the `GOOGLE_SERVICE_INFO_PLIST_BASE64` GitHub secret (see `docs/RELEASING.md`). This file is not checked into source control for security. If Firebase services (Auth, Crashlytics, etc.) are working, the plist file is correctly configured.
 
 ## Important Notes
 
@@ -221,7 +221,7 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
     - Crashlytics upload script in Xcode (Runner target → Build Phases → "Upload Crashlytics Symbols")
     - Script runs `${PODS_ROOT}/FirebaseCrashlytics/run` to upload symbols after each build
   - **Testing Crashlytics (via TestFlight):**
-    1. Build and upload to TestFlight (or use Xcode Archive)
+    1. Build and upload to TestFlight (Actions → "Release to testers", or Xcode Archive)
     2. Install the TestFlight build on device
     3. Trigger a test error: `CrashlyticsService().testError()` (non-fatal) or `CrashlyticsService().testCrash()` (fatal)
     4. For fatal crashes: app will crash, reopen it immediately
@@ -229,6 +229,6 @@ Currently the project has basic testing infrastructure. When adding tests, ensur
     6. If crashes don't appear, check Xcode build logs for "Crashlytics" to verify symbol upload succeeded
   - **Troubleshooting:**
     - Verify `isCrashlyticsCollectionEnabled()` returns true when app is running
-    - Check that GoogleService-Info.plist exists at runtime (created by ci_post_clone.sh)
+    - Check that GoogleService-Info.plist exists at runtime (created by release.yml)
     - Ensure Firebase project has Crashlytics enabled in Firebase Console
     - First crash from a new build version may take longer to appear (up to 1 hour)

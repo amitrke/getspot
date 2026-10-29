@@ -4,7 +4,7 @@
 
 ## ✅ What's Already Configured
 
-Your existing `deploy-ios-manual.yml` workflow has these secrets:
+The `release.yml` workflow (which builds and uploads to TestFlight) uses these secrets:
 - `APP_STORE_CONNECT_API_KEY_ID`
 - `APP_STORE_CONNECT_API_ISSUER_ID`
 - `APP_STORE_CONNECT_API_PRIVATE_KEY`
@@ -16,8 +16,8 @@ The new `promote-to-appstore.yml` workflow **uses the same secrets** - no additi
 
 ## 🚀 How to Promote a Build
 
-### Step 1: Build with Xcode Cloud
-Your existing Xcode Cloud workflow builds and uploads to TestFlight automatically.
+### Step 1: Build with GitHub Actions
+The "Release to testers" workflow (`release.yml`) builds and uploads to TestFlight on pushes to `develop`, version tags, or a manual run. See `docs/RELEASING.md`.
 
 ### Step 2: Test in TestFlight
 Download and test the build with your team.
@@ -42,12 +42,12 @@ bundle exec fastlane release
 
 ## 📋 Current Workflow Files
 
-### Existing: `deploy-ios-manual.yml`
-- **Purpose:** Build and upload to TestFlight
-- **Trigger:** Manual (workflow_dispatch)
+### `release.yml`
+- **Purpose:** Build and upload to TestFlight (and Play internal testing)
+- **Trigger:** Push to `develop`, version tag, or manual (workflow_dispatch)
 - **Output:** TestFlight build
 
-### New: `promote-to-appstore.yml`
+### `promote-to-appstore.yml`
 - **Purpose:** Promote TestFlight build to App Store Review
 - **Trigger:** Manual (workflow_dispatch)
 - **Input:** Optional build number
@@ -59,7 +59,7 @@ bundle exec fastlane release
 
 ```
 ┌─────────────────────────────────┐
-│  Xcode Cloud                    │
+│  GitHub Actions: release.yml    │
 │  (Automatic on push)            │
 └────────────┬────────────────────┘
              │
@@ -143,7 +143,7 @@ For detailed information, see: `docs/IOS_RELEASE_AUTOMATION.md`
 ## 🎉 You're Done!
 
 Your iOS release automation is ready to use. Just:
-1. Build with Xcode Cloud
+1. Build with GitHub Actions (`release.yml`)
 2. Test in TestFlight
 3. Click "Run workflow" in GitHub Actions
 4. Wait for Apple approval
