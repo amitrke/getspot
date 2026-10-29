@@ -31,7 +31,7 @@ bundle install
 
 ### 2. You Already Have the Secrets
 
-`update-store-screenshots.yml` (screenshot uploads) already uses `PLAYSTORE_SERVICE_ACCOUNT_JSON` and `ANDROID_PACKAGE_NAME` GitHub secrets, and `deploy-android.yml` (release uploads) uses `PLAYSTORE_SERVICE_ACCOUNT_JSON` too. `update-android-metadata.yml` reuses both — **no new secrets required** unless that service account lacks the right Play Console permission (see below).
+`update-store-screenshots.yml` (screenshot uploads) already uses `PLAYSTORE_SERVICE_ACCOUNT_JSON` and `ANDROID_PACKAGE_NAME` GitHub secrets, and `release.yml` (release uploads) uses `PLAYSTORE_SERVICE_ACCOUNT_JSON` too. `update-android-metadata.yml` reuses both — **no new secrets required** unless that service account lacks the right Play Console permission (see below).
 
 ### 3. Check the Service Account's Play Console Permission
 
