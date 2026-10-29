@@ -374,5 +374,11 @@
   "eventDetailsRegisterButton": "Registrarse",
   "eventDetailsYourStatus": "Tu estado: {status}",
   "eventDetailsStatusRequested": "Solicitado",
-  "eventDetailsStatusWithdrawnPenalty": "Retirado (penalización)"
+  "eventDetailsStatusWithdrawnPenalty": "Retirado (penalización)",
+  "homeNextGamesHeader": "Tus próximos partidos",
+  "homeYourGroupsHeader": "Tus grupos",
+  "homeNoUpcomingGames": "Todavía no hay partidos programados en tus grupos.",
+  "homeSpotsTaken": "{count} de {max} plazas",
+  "homeEventFull": "Completo · {count} en espera",
+  "homeGroupNextEvent": "Próximo: {date}"
 }

@@ -7,6 +7,8 @@ import 'package:getspot/screens/faq_screen.dart';
 import 'package:getspot/services/group_service.dart';
 import 'package:getspot/services/group_cache_service.dart';
 import 'package:getspot/services/user_cache_service.dart';
+import 'package:getspot/services/upcoming_events_service.dart';
+import 'package:getspot/providers/participant_provider.dart';
 import 'package:getspot/screens/member_profile_screen.dart';
 import 'package:getspot/widgets/group_list_item.dart';
 import 'package:getspot/widgets/create_group_modal.dart';
@@ -17,6 +19,8 @@ import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/theme/theme.dart';
 import 'package:getspot/widgets/constrained_content.dart';
 import 'package:getspot/widgets/empty_state.dart';
+import 'package:getspot/widgets/section_header.dart';
+import 'package:getspot/widgets/upcoming_event_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -72,10 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
       'HomeScreen build method executed. Logging should be working.',
       name: 'HomeScreen',
     );
-    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.homeAppBarTitle),
+        // Brand name rather than "My Groups": Home now leads with games
+        // across all groups, not just the group list.
+        title: const Text('GetSpot'),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),
@@ -100,39 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: const SafeArea(child: ConstrainedContent(child: _GroupList())),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: context.colors.surface,
-          border: Border(top: BorderSide(color: context.colors.outlineVariant)),
-        ),
-        child: SafeArea(
-          child: ConstrainedContent(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _openJoinGroupModal(context),
-                      icon: const Icon(Icons.group_add_outlined),
-                      label: Text(l10n.homeJoinGroupButton),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => _openCreateGroupModal(context),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.homeCreateGroupButton),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      body: SafeArea(
+        child: ConstrainedContent(
+          child: _HomeFeed(
+            onJoinGroup: () => _openJoinGroupModal(context),
+            onCreateGroup: () => _openCreateGroupModal(context),
           ),
         ),
       ),
@@ -140,23 +117,63 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _GroupList extends StatefulWidget {
-  const _GroupList();
+/// Home content: "Your next games" across all groups, then "Your groups".
+/// With no groups yet it shows the first-run welcome with Join / Create.
+class _HomeFeed extends StatefulWidget {
+  final VoidCallback onJoinGroup;
+  final VoidCallback onCreateGroup;
+
+  const _HomeFeed({required this.onJoinGroup, required this.onCreateGroup});
 
   @override
-  State<_GroupList> createState() => _GroupListState();
+  State<_HomeFeed> createState() => _HomeFeedState();
 }
 
-class _GroupListState extends State<_GroupList> {
+class _HomeFeedState extends State<_HomeFeed> {
   late final Stream<List<GroupViewModel>> _groupsViewModelStream;
   final GroupService _groupService = GroupService();
+  final UpcomingEventsService _upcomingEventsService = UpcomingEventsService();
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
+  ParticipantProvider? _participantProvider;
+
+  // The groups stream re-emits on every participant change, so the events
+  // query is only rebuilt when the set of member groups actually changes.
+  String? _upcomingKey;
+  Stream<List<UpcomingEvent>>? _upcomingStream;
 
   @override
   void initState() {
     super.initState();
     _groupsViewModelStream = _groupService.getGroupViewModelsStream();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _participantProvider = ParticipantProvider(userId: user.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    _participantProvider?.dispose();
+    super.dispose();
+  }
+
+  Stream<List<UpcomingEvent>> _upcomingFor(List<GroupViewModel> groups) {
+    final ids =
+        groups
+            .where((g) => g.membershipStatus == GroupMembershipStatus.member)
+            .map((g) => g.groupId)
+            .toList()
+          ..sort();
+    final key = ids.join(',');
+    if (key != _upcomingKey || _upcomingStream == null) {
+      _upcomingKey = key;
+      _upcomingStream = _upcomingEventsService.getUpcomingEventsStream(
+        groups,
+        userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+      );
+    }
+    return _upcomingStream!;
   }
 
   Future<void> _handleRefresh() async {
@@ -212,30 +229,158 @@ class _GroupListState extends State<_GroupList> {
           final viewModels = snapshot.data;
 
           if (viewModels == null || viewModels.isEmpty) {
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
-                  child: EmptyState(
-                    icon: Icons.sports_tennis,
-                    title: l10n.homeWelcomeTitle,
-                    message: l10n.homeWelcomeDescription,
-                  ),
-                ),
-              ],
-            );
+            return _buildFirstRun(context, l10n);
           }
 
-          return ListView.builder(
+          return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            itemCount: viewModels.length,
-            itemBuilder: (context, index) {
-              return GroupListItem(viewModel: viewModels[index]);
-            },
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.xl,
+            ),
+            children: [
+              SectionHeader(title: l10n.homeNextGamesHeader),
+              _buildUpcoming(l10n, viewModels),
+              const SizedBox(height: AppSpacing.md),
+              SectionHeader(title: l10n.homeYourGroupsHeader),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    for (var i = 0; i < viewModels.length; i++) ...[
+                      if (i > 0) const Divider(indent: 64),
+                      GroupListItem(viewModel: viewModels[i]),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppSpacing.sm,
+                children: [
+                  TextButton.icon(
+                    onPressed: widget.onJoinGroup,
+                    icon: const Icon(Icons.group_add_outlined),
+                    label: Text(l10n.homeJoinGroupButton),
+                  ),
+                  TextButton.icon(
+                    onPressed: widget.onCreateGroup,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.homeCreateGroupButton),
+                  ),
+                ],
+              ),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildUpcoming(AppLocalizations l10n, List<GroupViewModel> groups) {
+    return StreamBuilder<List<UpcomingEvent>>(
+      stream: _upcomingFor(groups),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          developer.log(
+            'Error loading upcoming events',
+            name: 'HomeScreen',
+            error: snapshot.error,
+            stackTrace: snapshot.stackTrace,
+          );
+          return _UpcomingMessage(text: l10n.groupDetailsErrorLoadingEvents);
+        }
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(AppSpacing.xl),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final events = snapshot.data!;
+        if (events.isEmpty) {
+          return _UpcomingMessage(text: l10n.homeNoUpcomingGames);
+        }
+        return Column(
+          children: [
+            for (final event in events)
+              UpcomingEventCard(
+                key: ValueKey(event.id),
+                event: event,
+                participantProvider: _participantProvider,
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFirstRun(BuildContext context, AppLocalizations l10n) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.75,
+          child: EmptyState(
+            icon: Icons.sports_tennis,
+            title: l10n.homeWelcomeTitle,
+            message: l10n.homeWelcomeDescription,
+            action: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton.icon(
+                    onPressed: widget.onJoinGroup,
+                    icon: const Icon(Icons.group_add_outlined),
+                    label: Text(l10n.homeJoinGroupButton),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: widget.onCreateGroup,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.homeCreateGroupButton),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Muted one-line message shown in place of the upcoming-games list.
+class _UpcomingMessage extends StatelessWidget {
+  final String text;
+  const _UpcomingMessage({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            Icon(
+              Icons.event_available_outlined,
+              color: context.colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                text,
+                style: context.textStyles.bodyMedium?.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

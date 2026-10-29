@@ -23,6 +23,7 @@ import 'package:getspot/widgets/status_badge.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/widgets/constrained_content.dart';
+import 'package:getspot/widgets/date_tile.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> group;
@@ -758,7 +759,7 @@ class _EventListItemState extends State<_EventListItem> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _DateTile(date: eventDate, locale: locale),
+              DateTile(date: eventDate),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -814,46 +815,6 @@ class _EventListItemState extends State<_EventListItem> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Calendar-style month/day block used at the start of event cards.
-class _DateTile extends StatelessWidget {
-  final DateTime? date;
-  final String locale;
-
-  const _DateTile({required this.date, required this.locale});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      width: 56,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: colors.primaryContainer,
-        borderRadius: AppRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        children: [
-          Text(
-            date != null ? DateFormat.MMM(locale).format(date!).toUpperCase() : '-',
-            style: context.textStyles.labelSmall?.copyWith(
-              color: colors.onPrimaryContainer,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
-          ),
-          Text(
-            date != null ? DateFormat.d(locale).format(date!) : '',
-            style: context.textStyles.headlineSmall?.tabular.copyWith(
-              color: colors.onPrimaryContainer,
-              height: 1.1,
-            ),
-          ),
-        ],
       ),
     );
   }

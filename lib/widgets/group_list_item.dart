@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/models/group_view_model.dart';
 import 'package:getspot/screens/group_details_screen.dart';
+import 'package:getspot/screens/wallet_screen.dart';
 import 'package:getspot/theme/theme.dart';
 import 'package:getspot/widgets/status_badge.dart';
 import 'package:intl/intl.dart';
 
+/// Compact row for one group on Home: initial, name, a one-line summary
+/// (next event, or pending approvals for admins), and the wallet balance,
+/// which opens that group's wallet. Meant to sit inside a shared Card with
+/// dividers between rows.
 class GroupListItem extends StatelessWidget {
   final GroupViewModel viewModel;
 
@@ -14,145 +19,156 @@ class GroupListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
     final bool isPending =
         viewModel.membershipStatus == GroupMembershipStatus.pending;
-    final bool isAdmin =
-        viewModel.admin == FirebaseAuth.instance.currentUser?.uid;
+    final bool isAdmin = viewModel.admin == uid;
     final bool hasPendingRequests = viewModel.pendingJoinRequestsCount > 0;
 
     return Semantics(
       label: 'group_item_${viewModel.groupId}',
-      child: Card(
+      child: InkWell(
         key: ValueKey('group_item_${viewModel.groupId}'),
-        margin: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.xs + 2,
-        ),
-        child: InkWell(
-          onTap: isPending
-              ? null
-              : () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => GroupDetailsScreen(
-                        group: {
-                          'groupId': viewModel.groupId,
-                          'name': viewModel.name,
-                          'description': viewModel.description,
-                          'admin': viewModel.admin,
-                          'groupCode': viewModel.groupCode,
-                        },
-                      ),
-                    ),
-                  );
-                },
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        onTap: isPending ? null : () => _openGroup(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              _GroupAvatar(name: viewModel.name),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _GroupAvatar(name: viewModel.name),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        viewModel.name,
-                        style: context.textStyles.titleMedium,
+                    Text(
+                      viewModel.name,
+                      style: context.textStyles.titleSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    if (isPending)
+                      const StatusBadge(kind: StatusKind.pending)
+                    else if (isAdmin && hasPendingRequests)
+                      Text(
+                        l10n.groupItemPendingApproval(
+                          viewModel.pendingJoinRequestsCount,
+                        ),
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: context.semantic.info,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    else
+                      Text(
+                        _nextEventLabel(context, l10n),
+                        style: context.textStyles.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    if (!isPending)
-                      Icon(
-                        Icons.chevron_right,
-                        color: context.colors.onSurfaceVariant,
-                      ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
-                if (isPending)
-                  const StatusBadge(kind: StatusKind.pending)
-                else
-                  _buildMemberContent(
-                    context,
-                    isAdmin: isAdmin,
-                    hasPendingRequests: hasPendingRequests,
-                  ),
+              ),
+              if (!isPending) ...[
+                const SizedBox(width: AppSpacing.sm),
+                _BalanceChip(
+                  balance: viewModel.walletBalance,
+                  onTap: uid == null
+                      ? null
+                      : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => WalletScreen(
+                              groupId: viewModel.groupId,
+                              userId: uid,
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
               ],
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMemberContent(
-    BuildContext context, {
-    required bool isAdmin,
-    required bool hasPendingRequests,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
+  String _nextEventLabel(BuildContext context, AppLocalizations l10n) {
+    final next = viewModel.nextEventDate;
+    if (next == null) return l10n.groupItemNoUpcomingEvents;
     final locale = Localizations.localeOf(context).toString();
-    final colors = context.colors;
-    final semantic = context.semantic;
-    final balance = viewModel.walletBalance;
+    return l10n.homeGroupNextEvent(DateFormat.MMMEd(locale).format(next));
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (isAdmin && hasPendingRequests) ...[
-          StatusBadge(
-            kind: StatusKind.requested,
-            label: l10n.groupItemPendingApproval(
-              viewModel.pendingJoinRequestsCount,
+  void _openGroup(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GroupDetailsScreen(
+          group: {
+            'groupId': viewModel.groupId,
+            'name': viewModel.name,
+            'description': viewModel.description,
+            'admin': viewModel.admin,
+            'groupCode': viewModel.groupCode,
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Tappable wallet balance; red tint when negative.
+class _BalanceChip extends StatelessWidget {
+  final int balance;
+  final VoidCallback? onTap;
+
+  const _BalanceChip({required this.balance, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final negative = balance < 0;
+    final fg = negative ? colors.onErrorContainer : colors.onSurfaceVariant;
+    final label = negative ? '-\$${-balance}' : '\$$balance';
+
+    return Material(
+      color: negative ? colors.errorContainer : colors.surfaceContainerHigh,
+      borderRadius: AppRadius.circular(AppRadius.sm),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.circular(AppRadius.sm),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 36),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: AppSizes.iconSm,
+                  color: fg,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  label,
+                  style: context.textStyles.labelLarge?.tabular.copyWith(
+                    color: fg,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        Row(
-          children: [
-            Icon(
-              Icons.event,
-              size: AppSizes.iconSm,
-              color: colors.onSurfaceVariant,
-            ),
-            const SizedBox(width: AppSpacing.xs + 2),
-            Expanded(
-              child: Text(
-                viewModel.nextEventDate != null
-                    ? DateFormat.MMMEd(
-                        locale,
-                      ).add_jm().format(viewModel.nextEventDate!)
-                    : l10n.groupItemNoUpcomingEvents,
-                style: context.textStyles.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
         ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            StatusBadge.fromParticipantStatus(viewModel.eventStatus),
-            const Spacer(),
-            Icon(
-              Icons.account_balance_wallet_outlined,
-              size: AppSizes.iconSm,
-              color: colors.onSurfaceVariant,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              balance < 0 ? '-\$${-balance}' : '\$$balance',
-              style: context.textStyles.titleSmall?.tabular.copyWith(
-                color: balance < 0 ? semantic.debit : semantic.credit,
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }

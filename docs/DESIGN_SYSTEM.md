@@ -179,13 +179,25 @@ that haven't been migrated still match. New code should use `FilledButton`.
   radius, a 1px outline, a 4px vertical margin, and clipping for ink.
 - For tappable cards, put an `InkWell` directly inside the `Card`, then
   `Padding(AppSpacing.lg or md)`.
-- **Group card** (`GroupListItem`): rounded-square initial avatar, then the
-  name in `titleMedium` and a chevron. Next comes the next-event line, then a
-  row with the `StatusBadge` on the left and the balance (`titleSmall.tabular`,
-  `credit`/`debit`) on the right.
-- **Event card** (`_EventListItem`): a `_DateTile` (month + day on
-  `primaryContainer`), then the title, time and location lines, and the
-  `StatusBadge`.
+- **Group row** (`GroupListItem`): a compact row meant to sit with others
+  inside one `Card`, separated by `Divider(indent: 64)`. It has a
+  rounded-square initial avatar, the name in `titleSmall`, and one summary
+  line: the next event, "N members pending approval" (admins, in `info`), or a
+  Pending badge. On the right is a **balance chip** that opens that group's
+  wallet (red `errorContainer` when negative, neutral otherwise, at least 36px
+  tall), then a chevron.
+- **Upcoming game card** (`UpcomingEventCard`, Home): a `DateTile`, the title,
+  and a meta line (`Sat 7:00 AM · location · group`). Below that is a capacity
+  bar (`LinearProgressIndicator`, 6px, `primary`, or `warning` when full) with
+  "12 of 16 spots" or "Full · 2 waiting". The last row is the `StatusBadge`
+  plus, when the user isn't signed up, a compact **Register · $12**
+  (`FilledButton`) or **Join Waitlist · $10** (`FilledButton.tonal`). Tapping
+  the card opens Event Details.
+- **Event card** (`_EventListItem`, Group details): a `DateTile`, then the
+  title, time and location lines, and the `StatusBadge`.
+- **DateTile** (`lib/widgets/date_tile.dart`): a 56px-wide month + day block
+  on `primaryContainer` with a `md` radius. Use it at the start of any
+  event card.
 - **Transaction row:** a `CircleAvatar` with ↙ for credit (`successContainer`)
   or ↗ for debit (`errorContainer`). Description in `bodyLarge`, date as
   subtitle, amount in `titleMedium.tabular`.
@@ -223,6 +235,15 @@ tonal button). Replaces ad-hoc `Padding(Text(…, titleLarge))`.
 A 72px tinted icon circle, a title, an optional message and an optional
 action. Use it for empty lists and full-screen errors (`isError: true`
 switches to error colors).
+
+### Registration flow — `lib/helpers/event_registration.dart`
+
+`startEventRegistration(context, eventId:, eventData:, onSubmitting:)` is the
+one way to register for an event from any screen. It checks the wallet and
+shows the matching dialog (normal, low balance, insufficient balance, or
+waitlist), then writes the `requested` participant document. Event Details and
+the Home cards both use it, so the money confirmation always looks and behaves
+the same. Use `onSubmitting` to show a spinner on the button that started it.
 
 ### Inputs
 
@@ -266,7 +287,7 @@ doesn't jump.
 | Area | Status |
 |---|---|
 | `main.dart` theme, light + dark | ✅ |
-| Home + `GroupListItem` | ✅ |
+| Home: next games across groups, compact group rows, first-run state | ✅ |
 | Group details (events, announcements, admin tabs) | ✅ |
 | Event details (incl. dialogs and actions) | ✅ |
 | Wallet | ✅ |
