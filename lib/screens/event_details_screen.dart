@@ -7,8 +7,10 @@ import 'package:intl/intl.dart';
 import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/services/event_cache_service.dart';
 import 'package:getspot/services/transaction_cache_service.dart';
+import 'package:getspot/theme/theme.dart';
 import 'dart:developer' as developer;
 import 'dart:math' as math;
+import 'package:getspot/widgets/constrained_content.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -108,7 +110,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             return AlertDialog(
               title: Row(
                 children: [
-                  const Icon(Icons.warning, color: Colors.red),
+                  Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error),
                   const SizedBox(width: 8),
                   Text(l10n.eventDetailsInsufficientBalanceTitle),
                 ],
@@ -125,7 +127,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   const SizedBox(height: 16),
                   Text(
                     l10n.eventDetailsInsufficientBalanceMessage,
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                 ],
               ),
@@ -192,7 +194,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             children: [
               Text(
                 eventData['name'] ?? l10n.eventDetailsFallbackEventName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
               Text(l10n.eventDetailsEventFeeAmount(_fmtAmount(fee))),
@@ -209,7 +211,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(l10n.commonCancel),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _registerForEvent();
@@ -236,7 +238,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         return AlertDialog(
           title: Row(
             children: [
-              const Icon(Icons.warning, color: Colors.orange),
+              Icon(Icons.warning_amber_rounded, color: AppSemanticColors.of(context).warning),
               const SizedBox(width: 8),
               Text(l10n.eventDetailsLowBalanceWarningTitle),
             ],
@@ -247,7 +249,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             children: [
               Text(
                 eventData['name'] ?? l10n.eventDetailsFallbackEventName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
               Text(l10n.eventDetailsEventFeeAmount(_fmtAmount(fee))),
@@ -255,13 +257,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               Text(l10n.eventDetailsCurrentBalanceAmount(_fmtAmount(currentBalance))),
               Text(
                 l10n.eventDetailsNewBalanceNegative(_fmtAmount(newBalance)),
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppSemanticColors.of(context).warning,
+                ),
               ),
               Text(l10n.eventDetailsAllowedLimit(_fmtAmount(negativeLimit))),
               const SizedBox(height: 16),
               Text(
                 l10n.eventDetailsNegativeBalanceWarning,
-                style: const TextStyle(fontSize: 13),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
@@ -270,12 +275,15 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(l10n.commonCancel),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _registerForEvent();
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppSemanticColors.of(context).warning,
+                foregroundColor: AppSemanticColors.of(context).onWarning,
+              ),
               child: Text(l10n.eventDetailsUnderstandRegisterButton),
             ),
           ],
@@ -297,7 +305,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         return AlertDialog(
           title: Row(
             children: [
-              const Icon(Icons.list, color: Colors.blue),
+              Icon(Icons.hourglass_top, color: AppSemanticColors.of(context).info),
               const SizedBox(width: 8),
               Text(l10n.eventDetailsJoinWaitlistTitle),
             ],
@@ -321,7 +329,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               const SizedBox(height: 16),
               Text(
                 l10n.eventDetailsAutoConfirmInfo,
-                style: const TextStyle(fontSize: 13),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
@@ -330,7 +338,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
               onPressed: () => Navigator.of(context).pop(),
               child: Text(l10n.commonCancel),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _registerForEvent();
@@ -372,7 +380,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.eventDetailsRegistrationSubmitted),
-            backgroundColor: Colors.green,
+            backgroundColor: AppSemanticColors.of(context).success,
           ),
         );
       }
@@ -414,7 +422,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.data['message'] ?? AppLocalizations.of(context)!.eventDetailsWithdrawalSuccessful),
-            backgroundColor: Colors.green,
+            backgroundColor: AppSemanticColors.of(context).success,
           ),
         );
       }
@@ -476,7 +484,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.data['message'] ?? AppLocalizations.of(context)!.eventDetailsCancelledSuccessfully),
-            backgroundColor: Colors.green,
+            backgroundColor: AppSemanticColors.of(context).success,
           ),
         );
       }
@@ -536,7 +544,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.data['message'] ?? AppLocalizations.of(context)!.eventDetailsCapacityUpdated),
-            backgroundColor: Colors.green,
+            backgroundColor: AppSemanticColors.of(context).success,
           ),
         );
       }
@@ -745,11 +753,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
     if (isAfterDeadline) {
       refundInfo = l10n.eventDetailsRefundMayBeForfeited;
-      refundColor = Colors.orange;
-      refundIcon = Icons.warning;
+      refundColor = AppSemanticColors.of(context).warning;
+      refundIcon = Icons.warning_amber_rounded;
     } else {
       refundInfo = l10n.eventDetailsRefundFullAmount(_fmtAmount(fee));
-      refundColor = Colors.green;
+      refundColor = AppSemanticColors.of(context).success;
       refundIcon = Icons.check_circle;
     }
 
@@ -764,7 +772,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             children: [
               Text(
                 eventData['name'] ?? l10n.eventDetailsFallbackEventName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
               Text(l10n.eventDetailsEventFeeAmount(_fmtAmount(fee))),
@@ -790,7 +798,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   l10n.eventDetailsCommitmentDeadlineLabel(
                     DateFormat.yMMMd(locale).add_jm().format(deadlineTimestamp.toDate()),
                   ),
-                  style: const TextStyle(fontSize: 13),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),
               ],
@@ -798,7 +806,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 isAfterDeadline
                     ? l10n.eventDetailsDeadlinePassedMessage
                     : l10n.eventDetailsBeforeDeadlineMessage,
-                style: const TextStyle(fontSize: 13),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
@@ -809,9 +817,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                 Navigator.of(context).pop();
               },
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isAfterDeadline ? Colors.orange : Colors.red,
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -833,109 +842,128 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         title: Text(l10n.eventDetailsAppBarTitle),
       ),
       body: SafeArea(
-        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance
-              .collection('events')
-              .doc(widget.eventId)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text(l10n.eventDetailsErrorLoading));
-            }
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return Center(child: Text(l10n.eventDetailsNotFound));
-            }
-
-            final locale = Localizations.localeOf(context).toString();
-            final event = snapshot.data!.data()!;
-            final eventTimestamp = event['eventTimestamp'] as Timestamp?;
-            final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
-            final isCancelled = event['status'] == 'cancelled';
-
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isCancelled)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withAlpha((255 * 0.1).round()),
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(color: Colors.red),
+        child: ConstrainedContent(
+          maxWidth: AppContentWidth.reading,
+          child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            stream: FirebaseFirestore.instance
+                .collection('events')
+                .doc(widget.eventId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text(l10n.eventDetailsErrorLoading));
+              }
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return Center(child: Text(l10n.eventDetailsNotFound));
+              }
+  
+              final locale = Localizations.localeOf(context).toString();
+              final event = snapshot.data!.data()!;
+              final eventTimestamp = event['eventTimestamp'] as Timestamp?;
+              final deadlineTimestamp = event['commitmentDeadline'] as Timestamp?;
+              final isCancelled = event['status'] == 'cancelled';
+  
+              return Padding(
+                padding: AppSpacing.page,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isCancelled)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: context.colors.errorContainer,
+                          borderRadius: AppRadius.circular(AppRadius.md),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.event_busy, color: context.colors.onErrorContainer),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                l10n.eventDetailsCancelledBanner,
+                                style: context.textStyles.titleSmall
+                                    ?.copyWith(color: context.colors.onErrorContainer),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Text(
-                        l10n.eventDetailsCancelledBanner,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
+                    if (isCancelled) const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      event['name'] ?? l10n.groupDetailsUnnamedEvent,
+                      style: context.textStyles.headlineSmall,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Column(
+                          children: [
+                    _buildCompactDetailRow(
+                      icon: Icons.location_on_outlined,
+                      value: event['location'] ?? l10n.eventDetailsNoLocationSet,
+                    ),
+                    _buildCompactDetailRow(
+                      icon: Icons.event_outlined,
+                      value: eventTimestamp != null
+                          ? DateFormat.yMMMd(locale)
+                              .add_jm()
+                              .format(eventTimestamp.toDate())
+                          : l10n.eventDetailsNoDateSet,
+                    ),
+                    _buildCompactDetailRow(
+                      icon: Icons.payments_outlined,
+                      value: l10n.eventDetailsFeeCredits('${event['fee'] ?? 0}'),
+                    ),
+                    _buildCompactDetailRow(
+                      icon: Icons.timer_outlined,
+                      value: deadlineTimestamp != null
+                          ? DateFormat.yMMMd(locale)
+                              .add_jm()
+                              .format(deadlineTimestamp.toDate())
+                          : l10n.eventDetailsNoDeadline,
+                    ),
+                          ],
                         ),
                       ),
                     ),
-                  if (isCancelled) const SizedBox(height: 16),
-                  Text(
-                    event['name'] ?? l10n.groupDetailsUnnamedEvent,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildCompactDetailRow(
-                    icon: Icons.location_on,
-                    value: event['location'] ?? l10n.eventDetailsNoLocationSet,
-                  ),
-                  _buildCompactDetailRow(
-                    icon: Icons.calendar_today,
-                    value: eventTimestamp != null
-                        ? DateFormat.yMMMd(locale)
-                            .add_jm()
-                            .format(eventTimestamp.toDate())
-                        : l10n.eventDetailsNoDateSet,
-                  ),
-                  _buildCompactDetailRow(
-                    icon: Icons.attach_money,
-                    value: l10n.eventDetailsFeeCredits('${event['fee'] ?? 0}'),
-                  ),
-                  _buildCompactDetailRow(
-                    icon: Icons.timer,
-                    value: deadlineTimestamp != null
-                        ? DateFormat.yMMMd(locale)
-                            .add_jm()
-                            .format(deadlineTimestamp.toDate())
-                        : l10n.eventDetailsNoDeadline,
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(),
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        _buildParticipantList(
-                          title: l10n.eventDetailsConfirmedHeader(
-                            '${event['confirmedCount'] ?? 0}',
-                            '${event['maxParticipants'] ?? 'N/A'}',
+                    const SizedBox(height: AppSpacing.sm),
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          _buildParticipantList(
+                            title: l10n.eventDetailsConfirmedHeader(
+                              '${event['confirmedCount'] ?? 0}',
+                              '${event['maxParticipants'] ?? 'N/A'}',
+                            ),
+                            status: 'confirmed',
+                            showUpdateButton: _isAdmin && !isCancelled,
+                            onUpdatePressed: () => _showUpdateCapacityDialog(event),
+                            isUpdating: _isUpdatingCapacity,
                           ),
-                          status: 'confirmed',
-                          showUpdateButton: _isAdmin && !isCancelled,
-                          onUpdatePressed: () => _showUpdateCapacityDialog(event),
-                          isUpdating: _isUpdatingCapacity,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildParticipantList(
-                          title: l10n.eventDetailsWaitlistHeader('${event['waitlistCount'] ?? 0}'),
-                          status: 'waitlisted',
-                        ),
-                      ],
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildParticipantList(
+                            title: l10n.eventDetailsWaitlistHeader('${event['waitlistCount'] ?? 0}'),
+                            status: 'waitlisted',
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  _buildActionButton(event),
-                ],
-              ),
-            );
-          },
+                    _buildActionButton(event),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -986,7 +1014,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.eventDetailsCopiedParticipants(participants.length)),
-            backgroundColor: Colors.green,
+            backgroundColor: AppSemanticColors.of(context).success,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -1021,47 +1049,41 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.titleLarge,
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.xs),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(title, style: context.textStyles.titleMedium),
               ),
-            ),
-            if (_isAdmin) ...[
-              IconButton(
-                onPressed: () => _copyParticipantList(status, title),
-                icon: const Icon(Icons.copy, size: 20),
-                tooltip: l10n.eventDetailsCopyListTooltip,
-                style: IconButton.styleFrom(
-                  foregroundColor: Colors.grey[700],
+              if (_isAdmin) ...[
+                IconButton(
+                  onPressed: () => _copyParticipantList(status, title),
+                  icon: const Icon(Icons.copy, size: AppSizes.iconMd),
+                  tooltip: l10n.eventDetailsCopyListTooltip,
+                  color: context.colors.onSurfaceVariant,
                 ),
-              ),
-              const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              if (showUpdateButton)
+                FilledButton.tonalIcon(
+                  onPressed: isUpdating ? null : onUpdatePressed,
+                  icon: isUpdating
+                      ? const SizedBox.square(
+                          dimension: AppSizes.iconSm,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.edit_outlined, size: AppSizes.iconSm + 2),
+                  label: Text(l10n.eventDetailsUpdateButton),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  ),
+                ),
             ],
-            if (showUpdateButton)
-              ElevatedButton.icon(
-                onPressed: isUpdating ? null : onUpdatePressed,
-                icon: isUpdating
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.edit_outlined, size: 18),
-                label: Text(l10n.eventDetailsUpdateButton),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-              ),
-          ],
+          ),
         ),
-        const SizedBox(height: 8),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('events')
@@ -1079,10 +1101,20 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             }
             final participants = snapshot.data?.docs ?? [];
             if (participants.isEmpty) {
-              return Text(l10n.eventDetailsNoParticipantsYet);
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: Text(
+                  l10n.eventDetailsNoParticipantsYet,
+                  style: context.textStyles.bodyMedium
+                      ?.copyWith(color: context.colors.onSurfaceVariant),
+                ),
+              );
             }
-            return ListView.builder(
+            return Card(
+              margin: EdgeInsets.zero,
+              child: ListView.separated(
               shrinkWrap: true,
+              separatorBuilder: (_, _) => const Divider(indent: 72),
               physics: const NeverScrollableScrollPhysics(),
               itemCount: participants.length,
               itemBuilder: (context, index) {
@@ -1105,6 +1137,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                   ),
                 );
               },
+              ),
             );
           },
         ),
@@ -1138,12 +1171,14 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       buttons.add(
         Semantics(
           label: 'cancel_event_button',
-          child: ElevatedButton(
+          child: OutlinedButton.icon(
             onPressed: _isCancelling ? null : () => _showCancelConfirmationDialog(groupId),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: _isCancelling
-                ? const CircularProgressIndicator(color: Colors.white)
-                : Text(l10n.eventDetailsCancelEventButton),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: context.colors.error,
+              side: BorderSide(color: context.colors.error),
+            ),
+            icon: _isCancelling ? _buttonSpinner() : const Icon(Icons.event_busy),
+            label: Text(l10n.eventDetailsCancelEventButton),
           ),
         ),
       );
@@ -1151,11 +1186,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
     if (isCancelled) {
       buttons.add(
-        ElevatedButton(
+        FilledButton(
           onPressed: null,
-          style: const ButtonStyle(
-            backgroundColor: WidgetStatePropertyAll(Colors.grey),
-          ),
           child: Text(l10n.eventDetailsCancelledBanner),
         ),
       );
@@ -1180,32 +1212,30 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             if (status == 'confirmed' || status == 'waitlisted') {
               button = Semantics(
                 label: 'withdraw_button',
-                child: ElevatedButton(
+                child: OutlinedButton.icon(
                   onPressed: _isWithdrawing
                       ? null
                       : () => _showWithdrawConfirmationDialog(eventData),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: _isWithdrawing
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(l10n.eventDetailsWithdrawButton),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.colors.error,
+                    side: BorderSide(color: context.colors.error),
+                  ),
+                  icon: _isWithdrawing ? _buttonSpinner() : const Icon(Icons.logout),
+                  label: Text(l10n.eventDetailsWithdrawButton),
                 ),
               );
             } else if (status == null || status == 'withdrawn') {
               button = Semantics(
                 label: 'register_button',
-                child: ElevatedButton(
+                child: FilledButton.icon(
                   onPressed: _isRegistering ? null : () => _showRegistrationConfirmationDialog(eventData),
-                  child: _isRegistering
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(l10n.eventDetailsRegisterButton),
+                  icon: _isRegistering ? _buttonSpinner() : const Icon(Icons.how_to_reg),
+                  label: Text(l10n.eventDetailsRegisterButton),
                 ),
               );
             } else { // Handles withdrawn_penalty, requested, etc.
-              button = ElevatedButton(
+              button = FilledButton(
                 onPressed: null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey,
-                ),
                 child: Text(l10n.eventDetailsYourStatus(_participantStatusLabel(l10n, status))),
               );
             }
@@ -1220,9 +1250,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: buttons
-            .map((b) => Padding(padding: const EdgeInsets.only(top: 8.0), child: b))
+            .map((b) => Padding(padding: const EdgeInsets.only(top: AppSpacing.sm), child: b))
             .toList(),
       ),
+    );
+  }
+
+  Widget _buttonSpinner() {
+    return const SizedBox.square(
+      dimension: AppSizes.iconMd,
+      child: CircularProgressIndicator(strokeWidth: 2),
     );
   }
 
@@ -1231,11 +1268,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
     required String value,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Theme.of(context).colorScheme.secondary),
-          const SizedBox(width: 12),
+          Icon(icon, size: AppSizes.iconMd, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               value,

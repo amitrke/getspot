@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:getspot/l10n/app_localizations.dart';
 import 'package:getspot/models/group_view_model.dart';
 import 'package:getspot/screens/group_details_screen.dart';
+import 'package:getspot/theme/theme.dart';
+import 'package:getspot/widgets/status_badge.dart';
 import 'package:intl/intl.dart';
 
 class GroupListItem extends StatelessWidget {
@@ -12,7 +14,6 @@ class GroupListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final bool isPending =
         viewModel.membershipStatus == GroupMembershipStatus.pending;
     final bool isAdmin =
@@ -23,96 +24,130 @@ class GroupListItem extends StatelessWidget {
       label: 'group_item_${viewModel.groupId}',
       child: Card(
         key: ValueKey('group_item_${viewModel.groupId}'),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListTile(
-          title: Text(viewModel.name),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              if (isPending)
-                Chip(
-                  label: Text(l10n.groupItemPendingChip),
-                  backgroundColor: Colors.orange,
-                  labelStyle: const TextStyle(color: Colors.white),
-                )
-              else
-                _buildMemberContent(context,
-                    isAdmin: isAdmin, hasPendingRequests: hasPendingRequests),
-            ],
-          ),
-          trailing: isPending ? null : const Icon(Icons.chevron_right),
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xs + 2,
+        ),
+        child: InkWell(
           onTap: isPending
               ? null
               : () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => GroupDetailsScreen(group: {
-                        'groupId': viewModel.groupId,
-                        'name': viewModel.name,
-                        'description': viewModel.description,
-                        'admin': viewModel.admin,
-                        'groupCode': viewModel.groupCode,
-                      }),
+                      builder: (context) => GroupDetailsScreen(
+                        group: {
+                          'groupId': viewModel.groupId,
+                          'name': viewModel.name,
+                          'description': viewModel.description,
+                          'admin': viewModel.admin,
+                          'groupCode': viewModel.groupCode,
+                        },
+                      ),
                     ),
                   );
                 },
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _GroupAvatar(name: viewModel.name),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Text(
+                        viewModel.name,
+                        style: context.textStyles.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (!isPending)
+                      Icon(
+                        Icons.chevron_right,
+                        color: context.colors.onSurfaceVariant,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (isPending)
+                  const StatusBadge(kind: StatusKind.pending)
+                else
+                  _buildMemberContent(
+                    context,
+                    isAdmin: isAdmin,
+                    hasPendingRequests: hasPendingRequests,
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMemberContent(BuildContext context,
-      {required bool isAdmin, required bool hasPendingRequests}) {
+  Widget _buildMemberContent(
+    BuildContext context, {
+    required bool isAdmin,
+    required bool hasPendingRequests,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
+    final colors = context.colors;
+    final semantic = context.semantic;
+    final balance = viewModel.walletBalance;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (isAdmin && hasPendingRequests) ...[
-          Text(
-            l10n.groupItemPendingApproval(viewModel.pendingJoinRequestsCount),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
+          StatusBadge(
+            kind: StatusKind.requested,
+            label: l10n.groupItemPendingApproval(
+              viewModel.pendingJoinRequestsCount,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
         ],
         Row(
           children: [
-            const Icon(Icons.calendar_today, size: 16),
-            const SizedBox(width: 4),
+            Icon(
+              Icons.event,
+              size: AppSizes.iconSm,
+              color: colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.xs + 2),
             Expanded(
               child: Text(
                 viewModel.nextEventDate != null
-                    ? DateFormat.yMMMEd(locale)
-                        .add_jm()
-                        .format(viewModel.nextEventDate!)
+                    ? DateFormat.MMMEd(
+                        locale,
+                      ).add_jm().format(viewModel.nextEventDate!)
                     : l10n.groupItemNoUpcomingEvents,
+                style: context.textStyles.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
-            _getStatusIcon(viewModel.eventStatus),
-            const SizedBox(width: 4),
-            Text(_statusLabel(l10n, viewModel.eventStatus)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            const Icon(Icons.account_balance_wallet, size: 16),
-            const SizedBox(width: 4),
+            StatusBadge.fromParticipantStatus(viewModel.eventStatus),
+            const Spacer(),
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              size: AppSizes.iconSm,
+              color: colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.xs),
             Text(
-              '\$${viewModel.walletBalance}',
-              style: TextStyle(
-                color:
-                    viewModel.walletBalance < 0 ? Colors.red : Colors.green,
+              balance < 0 ? '-\$${-balance}' : '\$$balance',
+              style: context.textStyles.titleSmall?.tabular.copyWith(
+                color: balance < 0 ? semantic.debit : semantic.credit,
               ),
             ),
           ],
@@ -120,30 +155,31 @@ class GroupListItem extends StatelessWidget {
       ],
     );
   }
+}
 
-  String _statusLabel(AppLocalizations l10n, String? status) {
-    switch (status) {
-      case 'confirmed':
-        return l10n.groupItemStatusConfirmed;
-      case 'waitlisted':
-        return l10n.groupItemStatusWaitlisted;
-      case 'denied':
-        return l10n.groupItemStatusDenied;
-      default:
-        return l10n.groupItemStatusNotRegistered;
-    }
-  }
+/// Rounded-square initial for a group.
+class _GroupAvatar extends StatelessWidget {
+  final String name;
+  const _GroupAvatar({required this.name});
 
-  Widget _getStatusIcon(String? status) {
-    switch (status) {
-      case 'confirmed':
-        return const Icon(Icons.check_circle, color: Colors.green, size: 16);
-      case 'waitlisted':
-        return const Icon(Icons.pending, color: Colors.orange, size: 16);
-      case 'denied':
-        return const Icon(Icons.cancel, color: Colors.red, size: 16);
-      default:
-        return const Icon(Icons.help_outline, color: Colors.grey, size: 16);
-    }
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+    return Container(
+      width: AppSizes.avatar,
+      height: AppSizes.avatar,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: AppRadius.circular(AppRadius.md),
+      ),
+      child: Text(
+        initial,
+        style: context.textStyles.titleMedium?.copyWith(
+          color: colors.onPrimaryContainer,
+        ),
+      ),
+    );
   }
 }

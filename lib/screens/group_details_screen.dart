@@ -16,8 +16,13 @@ import 'package:getspot/services/analytics_service.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/screens/group_members_screen.dart';
 import 'package:getspot/screens/wallet_screen.dart';
+import 'package:getspot/theme/theme.dart';
+import 'package:getspot/widgets/empty_state.dart';
+import 'package:getspot/widgets/section_header.dart';
+import 'package:getspot/widgets/status_badge.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:developer' as developer;
+import 'package:getspot/widgets/constrained_content.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> group;
@@ -283,118 +288,117 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Text(
-              //   widget.group['name'] ?? 'Unnamed Group',
-              //   style: Theme.of(context).textTheme.headlineSmall,
-              // ),
-              const SizedBox(height: 8),
-              Text(
-                widget.group['description'] ?? '',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 8),
-              if ((widget.group['groupCode'] as String?)?.isNotEmpty ?? false)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.groupDetailsCodeLabel(widget.group['groupCode']),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        tooltip: l10n.groupDetailsCopyCodeTooltip,
-                        onPressed: _copyGroupCode,
-                        icon: const Icon(Icons.copy),
-                      ),
-                    ],
+        child: ConstrainedContent(
+          maxWidth: AppContentWidth.reading,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if ((widget.group['description'] as String?)?.isNotEmpty ?? false) ...[
+                  Text(
+                    widget.group['description'],
+                    style: context.textStyles.bodyMedium
+                        ?.copyWith(color: context.colors.onSurfaceVariant),
                   ),
-                )
-              else
-                Text(
-                  l10n.groupDetailsCodeUnavailableText,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              const SizedBox(height: 24),
-              const Divider(),
-              Row(
-                children: [
-                  if (_isAdmin) ...[
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => GroupMembersScreen(
-                              groupId: widget.group['groupId'],
-                              adminUid: widget.group['admin'],
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.group),
-                      label: Text(l10n.groupDetailsMembersButton),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user != null) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => WalletScreen(
-                              groupId: widget.group['groupId'],
-                              userId: user.uid,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.wallet),
-                    label: Text(l10n.groupDetailsMyWalletButton),
-                  ),
+                  const SizedBox(height: AppSpacing.md),
                 ],
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: RefreshIndicator(
-                  key: _refreshIndicatorKey,
-                  onRefresh: _handleRefresh,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: _isAdmin
-                        ? [
-                            _EventList(
-                              groupId: widget.group['groupId'],
-                              isAdmin: _isAdmin,
-                            ),
-                            _AnnouncementsTab(
-                              groupId: widget.group['groupId'],
-                              isAdmin: _isAdmin,
-                            ),
-                            _AdminManagementTab(groupId: widget.group['groupId']),
-                          ]
-                        : [
-                            _EventList(
-                              groupId: widget.group['groupId'],
-                              isAdmin: _isAdmin,
-                            ),
-                            _AnnouncementsTab(
-                              groupId: widget.group['groupId'],
-                              isAdmin: _isAdmin,
-                            ),
-                          ],
+                if ((widget.group['groupCode'] as String?)?.isNotEmpty ?? false)
+                  Tooltip(
+                    message: l10n.groupDetailsCopyCodeTooltip,
+                    child: ActionChip(
+                      avatar: const Icon(Icons.copy, size: AppSizes.iconSm),
+                      label: Text(l10n.groupDetailsCodeLabel(widget.group['groupCode'])),
+                      onPressed: _copyGroupCode,
+                    ),
+                  )
+                else
+                  Text(
+                    l10n.groupDetailsCodeUnavailableText,
+                    style: context.textStyles.bodyMedium,
+                  ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    if (_isAdmin) ...[
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => GroupMembersScreen(
+                                  groupId: widget.group['groupId'],
+                                  adminUid: widget.group['admin'],
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.group_outlined),
+                          label: Text(l10n.groupDetailsMembersButton),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                    ],
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () {
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user != null) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => WalletScreen(
+                                  groupId: widget.group['groupId'],
+                                  userId: user.uid,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.account_balance_wallet_outlined),
+                        label: Text(l10n.groupDetailsMyWalletButton),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Expanded(
+                  child: RefreshIndicator(
+                    key: _refreshIndicatorKey,
+                    onRefresh: _handleRefresh,
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: _isAdmin
+                          ? [
+                              _EventList(
+                                groupId: widget.group['groupId'],
+                                isAdmin: _isAdmin,
+                              ),
+                              _AnnouncementsTab(
+                                groupId: widget.group['groupId'],
+                                isAdmin: _isAdmin,
+                              ),
+                              _AdminManagementTab(groupId: widget.group['groupId']),
+                            ]
+                          : [
+                              _EventList(
+                                groupId: widget.group['groupId'],
+                                isAdmin: _isAdmin,
+                              ),
+                              _AnnouncementsTab(
+                                groupId: widget.group['groupId'],
+                                isAdmin: _isAdmin,
+                              ),
+                            ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -491,7 +495,7 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
         children: [
           if (widget.isAdmin)
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: Row(
                 children: [
                   Expanded(
@@ -499,7 +503,6 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                       controller: _announcementController,
                       decoration: InputDecoration(
                         labelText: l10n.groupDetailsNewAnnouncementLabel,
-                        border: const OutlineInputBorder(),
                       ),
                       maxLines: null,
                       textInputAction: TextInputAction.done,
@@ -510,10 +513,16 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                       },
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   _isPosting
-                      ? const CircularProgressIndicator()
-                      : IconButton(
+                      ? const SizedBox.square(
+                          dimension: AppSizes.buttonHeight,
+                          child: Padding(
+                            padding: EdgeInsets.all(AppSpacing.md),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton.filled(
                           icon: const Icon(Icons.send),
                           onPressed: () {
                             // Dismiss keyboard before posting
@@ -538,7 +547,10 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                 }
                 final announcements = snapshot.data ?? [];
                 if (announcements.isEmpty) {
-                  return Center(child: Text(l10n.groupDetailsNoAnnouncementsYet));
+                  return EmptyState(
+                    icon: Icons.campaign_outlined,
+                    title: l10n.groupDetailsNoAnnouncementsYet,
+                  );
                 }
                 final locale = Localizations.localeOf(context).toString();
                 return ListView.builder(
@@ -548,17 +560,37 @@ class __AnnouncementsTabState extends State<_AnnouncementsTab> {
                     final announcement = announcements[index];
                     final createdAt = announcement.createdAt;
                     return Card(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 4,
-                        horizontal: 0,
-                      ),
-                      child: ListTile(
-                        title: Text(announcement.content),
-                        subtitle: Text(
-                          l10n.groupDetailsPostedBy(
-                            announcement.authorName ?? l10n.groupDetailsAdminAuthorFallback,
-                            createdAt != null ? DateFormat.yMMMd(locale).format(createdAt) : '',
-                          ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.campaign_outlined,
+                                  size: AppSizes.iconSm,
+                                  color: context.colors.primary,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    l10n.groupDetailsPostedBy(
+                                      announcement.authorName ?? l10n.groupDetailsAdminAuthorFallback,
+                                      createdAt != null ? DateFormat.yMMMd(locale).format(createdAt) : '',
+                                    ),
+                                    style: context.textStyles.labelMedium
+                                        ?.copyWith(color: context.colors.onSurfaceVariant),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              announcement.content,
+                              style: context.textStyles.bodyLarge,
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -626,21 +658,26 @@ class _EventListState extends State<_EventList> {
         final events = snapshot.data ?? [];
 
         if (events.isEmpty) {
-          return Center(child: Text(l10n.groupItemNoUpcomingEvents));
+          return EmptyState(
+            icon: Icons.event_available_outlined,
+            title: l10n.groupItemNoUpcomingEvents,
+          );
         }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                l10n.groupDetailsUpcomingEventsHeader,
-                style: Theme.of(context).textTheme.titleLarge,
+            SectionHeader(
+              title: l10n.groupDetailsUpcomingEventsHeader,
+              padding: const EdgeInsets.only(
+                top: AppSpacing.md,
+                bottom: AppSpacing.xs,
               ),
             ),
             Expanded(
               child: ListView.builder(
+                // Leaves room for the admin "Create event" FAB.
+                padding: const EdgeInsets.only(bottom: 88),
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   final event = events[index];
@@ -690,101 +727,22 @@ class _EventListItemState extends State<_EventListItem> {
     widget.participantProvider?.subscribeToEvent(widget.eventId);
   }
 
-  Widget _getStatusIcon(String? status) {
-    switch (status) {
-      case 'confirmed':
-        return const Icon(Icons.check_circle, color: Colors.green, size: 16);
-      case 'waitlisted':
-        return const Icon(Icons.pending, color: Colors.orange, size: 16);
-      default:
-        return const Icon(Icons.help_outline, color: Colors.grey, size: 16);
-    }
-  }
-
-  String _statusLabel(AppLocalizations l10n, String? status) {
-    switch (status) {
-      case 'confirmed':
-        return l10n.groupItemStatusConfirmed;
-      case 'waitlisted':
-        return l10n.groupItemStatusWaitlisted;
-      case 'denied':
-        return l10n.groupItemStatusDenied;
-      default:
-        return l10n.groupItemStatusNotRegistered;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
+    final colors = context.colors;
     final eventData = widget.eventData;
     final eventTimestamp = eventData['eventTimestamp'] as Timestamp?;
-    final formattedDate = eventTimestamp != null
-        ? DateFormat.yMMMEd(locale).add_jm().format(eventTimestamp.toDate())
+    final eventDate = eventTimestamp?.toDate();
+    final formattedTime = eventDate != null
+        ? DateFormat.E(locale).add_jm().format(eventDate)
         : l10n.groupDetailsNoDate;
+    final secondaryStyle =
+        context.textStyles.bodyMedium?.copyWith(color: colors.onSurfaceVariant);
 
     return Card(
-      child: ListTile(
-        title: Text(eventData['name'] ?? l10n.groupDetailsUnnamedEvent),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 16),
-                const SizedBox(width: 4),
-                Text(eventData['location'] ?? l10n.groupDetailsNoLocation),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16),
-                const SizedBox(width: 4),
-                Text(formattedDate),
-              ],
-            ),
-            const SizedBox(height: 4),
-            widget.participantProvider != null
-                ? ListenableBuilder(
-                    listenable: widget.participantProvider!,
-                    builder: (context, child) {
-                      final participantData = widget.participantProvider!
-                          .getParticipantStatus(widget.eventId);
-                      final status = participantData?['status'] as String?;
-
-                      if (participantData == null) {
-                        return Row(
-                          children: [
-                            const Icon(Icons.help_outline,
-                                color: Colors.grey, size: 16),
-                            const SizedBox(width: 4),
-                            Text(l10n.groupItemStatusNotRegistered),
-                          ],
-                        );
-                      }
-
-                      return Row(
-                        children: [
-                          _getStatusIcon(status),
-                          const SizedBox(width: 4),
-                          Text(_statusLabel(l10n, status)),
-                        ],
-                      );
-                    },
-                  )
-                : Row(
-                    children: [
-                      const Icon(Icons.help_outline, color: Colors.grey, size: 16),
-                      const SizedBox(width: 4),
-                      Text(l10n.groupItemStatusNotRegistered),
-                    ],
-                  ),
-          ],
-        ),
-        trailing: const Icon(Icons.chevron_right),
+      child: InkWell(
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -795,6 +753,107 @@ class _EventListItemState extends State<_EventListItem> {
             ),
           );
         },
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DateTile(date: eventDate, locale: locale),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      eventData['name'] ?? l10n.groupDetailsUnnamedEvent,
+                      style: context.textStyles.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Icon(Icons.schedule,
+                            size: AppSizes.iconSm, color: colors.onSurfaceVariant),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(formattedTime, style: secondaryStyle),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_outlined,
+                            size: AppSizes.iconSm, color: colors.onSurfaceVariant),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            eventData['location'] ?? l10n.groupDetailsNoLocation,
+                            style: secondaryStyle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    widget.participantProvider != null
+                        ? ListenableBuilder(
+                            listenable: widget.participantProvider!,
+                            builder: (context, child) {
+                              final participantData = widget.participantProvider!
+                                  .getParticipantStatus(widget.eventId);
+                              return StatusBadge.fromParticipantStatus(
+                                participantData?['status'] as String?,
+                              );
+                            },
+                          )
+                        : const StatusBadge(kind: StatusKind.notRegistered),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Calendar-style month/day block used at the start of event cards.
+class _DateTile extends StatelessWidget {
+  final DateTime? date;
+  final String locale;
+
+  const _DateTile({required this.date, required this.locale});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      width: 56,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: AppRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        children: [
+          Text(
+            date != null ? DateFormat.MMM(locale).format(date!).toUpperCase() : '-',
+            style: context.textStyles.labelSmall?.copyWith(
+              color: colors.onPrimaryContainer,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+            ),
+          ),
+          Text(
+            date != null ? DateFormat.d(locale).format(date!) : '',
+            style: context.textStyles.headlineSmall?.tabular.copyWith(
+              color: colors.onPrimaryContainer,
+              height: 1.1,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -818,7 +877,7 @@ class _AdminManagementTab extends StatelessWidget {
           status: 'pending',
           title: l10n.groupDetailsPendingRequestsTitle,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xl),
         _JoinRequestsList(
           groupId: groupId,
           status: 'denied',
@@ -942,13 +1001,7 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                widget.title,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
+            SectionHeader(title: widget.title),
             ListView.builder(
               shrinkWrap: true, // Important for nested lists
               physics:
@@ -963,7 +1016,10 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
                   child: ListTile(
                     title: Text(requestData['displayName'] ?? l10n.commonNoName),
                     trailing: isLoading
-                        ? const CircularProgressIndicator()
+                        ? const SizedBox.square(
+                            dimension: AppSizes.iconLg,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : _buildActionButtons(request.id),
                   ),
                 );
@@ -982,12 +1038,20 @@ class _JoinRequestsListState extends State<_JoinRequestsList> {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextButton(
-            onPressed: () => _processRequest(requestedUserId, 'approve'),
-            child: Text(l10n.groupDetailsApproveButton),
-          ),
-          TextButton(
             onPressed: () => _processRequest(requestedUserId, 'deny'),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: Text(l10n.groupDetailsDenyButton),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          FilledButton(
+            onPressed: () => _processRequest(requestedUserId, 'approve'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 36),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            ),
+            child: Text(l10n.groupDetailsApproveButton),
           ),
         ],
       );

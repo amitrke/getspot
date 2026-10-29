@@ -14,6 +14,9 @@ import 'package:getspot/widgets/join_group_modal.dart';
 import 'package:getspot/screens/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:getspot/l10n/app_localizations.dart';
+import 'package:getspot/theme/theme.dart';
+import 'package:getspot/widgets/constrained_content.dart';
+import 'package:getspot/widgets/empty_state.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -77,9 +80,9 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const FaqScreen()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const FaqScreen()));
             },
           ),
           Semantics(
@@ -97,31 +100,39 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: const SafeArea(child: _GroupList()),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _openJoinGroupModal(context),
-                  child: Text(l10n.homeJoinGroupButton),
-                ),
+      body: const SafeArea(child: ConstrainedContent(child: _GroupList())),
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          border: Border(top: BorderSide(color: context.colors.outlineVariant)),
+        ),
+        child: SafeArea(
+          child: ConstrainedContent(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _openCreateGroupModal(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openJoinGroupModal(context),
+                      icon: const Icon(Icons.group_add_outlined),
+                      label: Text(l10n.homeJoinGroupButton),
+                    ),
                   ),
-                  child: Text(l10n.homeCreateGroupButton),
-                ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => _openCreateGroupModal(context),
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.homeCreateGroupButton),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -139,7 +150,8 @@ class _GroupList extends StatefulWidget {
 class _GroupListState extends State<_GroupList> {
   late final Stream<List<GroupViewModel>> _groupsViewModelStream;
   final GroupService _groupService = GroupService();
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
@@ -148,7 +160,10 @@ class _GroupListState extends State<_GroupList> {
   }
 
   Future<void> _handleRefresh() async {
-    developer.log('Pull-to-refresh triggered on Home Screen', name: 'HomeScreen');
+    developer.log(
+      'Pull-to-refresh triggered on Home Screen',
+      name: 'HomeScreen',
+    );
 
     // Invalidate all caches to force fresh data
     GroupCacheService().clear();
@@ -181,32 +196,15 @@ class _GroupListState extends State<_GroupList> {
               error: snapshot.error,
               stackTrace: snapshot.stackTrace,
             );
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.homeErrorLoadingGroups,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${snapshot.error}',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: _handleRefresh,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(l10n.homeRetryButton),
-                    ),
-                  ],
-                ),
+            return EmptyState(
+              icon: Icons.error_outline,
+              isError: true,
+              title: l10n.homeErrorLoadingGroups,
+              message: '${snapshot.error}',
+              action: FilledButton.tonalIcon(
+                onPressed: _handleRefresh,
+                icon: const Icon(Icons.refresh),
+                label: Text(l10n.homeRetryButton),
               ),
             );
           }
@@ -219,27 +217,10 @@ class _GroupListState extends State<_GroupList> {
               children: [
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.6,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            l10n.homeWelcomeTitle,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.homeWelcomeDescription,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: EmptyState(
+                    icon: Icons.sports_tennis,
+                    title: l10n.homeWelcomeTitle,
+                    message: l10n.homeWelcomeDescription,
                   ),
                 ),
               ],
@@ -248,6 +229,7 @@ class _GroupListState extends State<_GroupList> {
 
           return ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             itemCount: viewModels.length,
             itemBuilder: (context, index) {
               return GroupListItem(viewModel: viewModels[index]);
