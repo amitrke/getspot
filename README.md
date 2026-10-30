@@ -52,8 +52,7 @@ GetSpot streamlines the organization of local sports meetups, starting with badm
 
 ### Deployment & Operations
 - **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Deploy to Web, Android, and iOS
-- **[IOS_RELEASE_QUICKSTART.md](./docs/IOS_RELEASE_QUICKSTART.md)** - Quick iOS release guide
-- **[IOS_RELEASE_AUTOMATION.md](./docs/IOS_RELEASE_AUTOMATION.md)** - Detailed iOS automation
+- **[RELEASING.md](./docs/RELEASING.md)** - Test builds and production releases for Android and iOS
 - **[DATA_RETENTION.md](./docs/DATA_RETENTION.md)** - Data lifecycle policies
 - **[DEPENDENCIES.md](./docs/DEPENDENCIES.md)** - Updating dependencies and resolving OSV-Scanner vulnerability findings
 

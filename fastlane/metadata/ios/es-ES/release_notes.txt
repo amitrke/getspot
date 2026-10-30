@@ -1,0 +1,6 @@
+Novedades
+- Un diseño nuevo, con modo oscuro que sigue la configuración de tu teléfono.
+- La pantalla de inicio muestra tus próximos partidos de todos tus grupos, y puedes inscribirte con un toque.
+- Tu saldo en cada grupo aparece directamente en la pantalla de inicio.
+- GetSpot ya está disponible en alemán, español y francés.
+- Mejor aprovechamiento del espacio en tabletas y pantallas grandes.

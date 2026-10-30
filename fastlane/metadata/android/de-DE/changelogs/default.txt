@@ -1,0 +1,6 @@
+Neuigkeiten
+- Ein frisches neues Design mit dunklem Modus, der der Einstellung deines Telefons folgt.
+- Die Startseite zeigt jetzt deine nächsten Spiele aus allen Gruppen, und du kannst dich mit einem Tippen anmelden.
+- Dein Guthaben in jeder Gruppe wird direkt auf der Startseite angezeigt.
+- GetSpot gibt es jetzt auf Deutsch, Spanisch und Französisch.
+- Bessere Nutzung des Platzes auf Tablets und größeren Bildschirmen.
