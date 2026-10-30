@@ -40,8 +40,10 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - '.github/workflows/release.yml'
-    # Release tags in this repository are the bare version, e.g. 1.0.4.
-    tags: ['[0-9]+.[0-9]+.[0-9]+']
+    # promote.yml tags releases itself (with GITHUB_TOKEN, which starts no
+    # workflow), so a release needs no tag push. A v-tag pushed by hand still
+    # builds that version for testers.
+    tags: ['v*']
 
 concurrency:
   # Never cancel: a run killed mid-upload leaves an open Play edit behind.
@@ -78,12 +80,12 @@ jobs:
             exit 1
           fi
           if [ "${{ github.ref_type }}" = tag ]; then
-            if [ "$GITHUB_REF_NAME" != "$name" ]; then
+            if [ "$GITHUB_REF_NAME" != "v$name" ]; then
               echo "::error::Tag $GITHUB_REF_NAME does not match pubspec.yaml's version $name."
               exit 1
             fi
-          elif git ls-remote --exit-code --tags origin "refs/tags/$name" >/dev/null 2>&1; then
-            echo "::error::$name has already been released. Bump pubspec.yaml's version."
+          elif git ls-remote --exit-code --tags origin "refs/tags/v$name" >/dev/null 2>&1; then
+            echo "::error::v$name has already been released. Bump pubspec.yaml's version."
             exit 1
           fi
           code=$(( ${{ github.run_number }} + BUILD_NUMBER_OFFSET ))

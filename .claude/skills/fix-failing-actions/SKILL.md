@@ -70,7 +70,7 @@ than guessing at a fix.
 - Don't weaken CI to get green: no removing checks, adding `continue-on-error`,
   loosening lint rules, or skipping tests, unless the user explicitly asks.
 - Changes to deploy workflows (`deploy-*.yml`, `firebase-hosting-merge.yml`,
-  `promote-to-appstore.yml`) run against production; make the minimal fix and
+  `promote.yml`) run against production; make the minimal fix and
   call it out in the PR.
 - Commit and open the PR using the `commit-push-pr` skill (Conventional
   Commits, `type(ci|functions|...)`, base `develop`). One PR per distinct root
