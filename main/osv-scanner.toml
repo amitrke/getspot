@@ -1,0 +1,8 @@
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2027-01-11
+reason = """
+braces 3.0.3, dev-only (eslint-config-next -> fast-glob -> micromatch). No
+patched release exists yet. Not part of the production bundle. Re-check when a
+fix is published; the date forces a re-evaluation.
+"""

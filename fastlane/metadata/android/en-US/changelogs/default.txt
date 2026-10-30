@@ -1,0 +1,6 @@
+What's new
+- A fresh new look, with dark mode that follows your phone's setting.
+- Home now shows your next games from all your groups, and you can register in one tap.
+- Your balance in each group is shown right on Home.
+- GetSpot is now available in German, Spanish and French.
+- Layouts make better use of the space on tablets and larger screens.

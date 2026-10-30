@@ -25,7 +25,7 @@ Detailed setup instructions for running GetSpot locally. For a quick-reference c
 
 2. **Firebase config files:** the app needs platform-specific Firebase config that is **not committed to the repo**:
    - `android/app/google-services.json`
-   - `ios/Runner/GoogleService-Info.plist` (generated in CI by `ios/ci_scripts/ci_post_clone.sh`; for local iOS builds, download it yourself from Firebase Console → Project Settings → your iOS app)
+   - `ios/Runner/GoogleService-Info.plist` (generated in CI by `.github/workflows/release.yml`; for local iOS builds, download it yourself from Firebase Console → Project Settings → your iOS app)
    - `lib/firebase_options.dart` is committed and points at the `getspot01` Firebase project — no local changes needed unless you're pointing at a different project
 
    Download the missing files from [Firebase Console](https://console.firebase.google.com/project/getspot01/settings/general) if you don't already have them.

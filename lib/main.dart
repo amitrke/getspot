@@ -18,6 +18,7 @@ import 'dart:developer' as developer;
 import 'package:getspot/services/notification_service.dart';
 import 'package:getspot/services/analytics_service.dart';
 import 'package:getspot/services/crashlytics_service.dart';
+import 'package:getspot/theme/theme.dart';
 import 'package:getspot/services/feature_flag_service.dart';
 import 'package:getspot/screens/join_group_screen.dart';
 import 'package:app_links/app_links.dart';
@@ -107,10 +108,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'GetSpot',
       navigatorKey: navigatorKey,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
       home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

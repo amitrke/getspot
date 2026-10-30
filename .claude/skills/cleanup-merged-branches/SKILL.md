@@ -11,9 +11,11 @@ commits not in `develop`.
 
 ## 0. Protected: never delete
 
-`main`, `develop`, the currently checked-out branch, any branch checked out in
-another worktree (`git worktree list`), any branch matching `release/*` or
-`gh-pages`, and any branch with an **open** PR
+`main`, `develop`, **`XCode-Cloud`** and **`XCode-Cloud-Release`** (long-lived
+branches used by Xcode Cloud for iOS builds; they look merged but must always
+stay, locally and on `origin`), the currently checked-out branch, any branch
+checked out in another worktree (`git worktree list`), any branch matching
+`release/*` or `gh-pages`, and any branch with an **open** PR
 (`gh pr list --state open --json headRefName`).
 
 ## 1. Update refs

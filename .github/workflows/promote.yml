@@ -1,0 +1,278 @@
+name: Promote to production
+
+# Sends a build that testers already have to production: Play's internal
+# testing track to production, and TestFlight to App Review (released
+# automatically once Apple approves it). Nothing is built, so what ships is the
+# binary that was tested. The store listings and release notes come from
+# fastlane/metadata. Setup (the "production" environment) is in
+# docs/RELEASING.md.
+#
+# Adapted from amitrke/voice-notes' promote.yml.
+#
+# Every job that talks to a store runs in the "production" environment, so a
+# run waits for approval before it can change anything.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: >-
+          "release" promotes a build and tags the release. "listing" uploads
+          the store listings only. "check" shows how the live listings differ
+          from fastlane/metadata and changes nothing.
+        type: choice
+        options: [release, listing, check]
+        default: release
+      build:
+        description: >-
+          Build number to promote, for "release": the number in brackets in
+          TestFlight and Play Console, e.g. 103 for "1.0.4 (103)".
+        type: string
+        required: false
+      platforms:
+        description: Which stores this run changes.
+        type: choice
+        options: [both, android, ios]
+        default: both
+      rollout:
+        description: >-
+          Percentage of Play users who get the release at first. Run again
+          with a higher number (100 completes it) to widen a staged rollout.
+        type: string
+        default: '100'
+
+concurrency:
+  group: promote
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  RUBY_VERSION: '3.4'
+
+jobs:
+  check:
+    name: Check the request
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.version.outputs.name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check the version and inputs
+        id: version
+        env:
+          ACTION: ${{ inputs.action }}
+          BUILD: ${{ inputs.build }}
+          ROLLOUT: ${{ inputs.rollout }}
+        run: |
+          name="$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)"
+          if ! [[ "$name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::pubspec.yaml's version '$name' is not of the form 1.2.3"
+            exit 1
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          if [ "$ACTION" = check ]; then
+            exit 0
+          fi
+          # Production gets only what has been merged to main.
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::Run \"$ACTION\" from main (merge develop into main first), not $GITHUB_REF_NAME."
+            exit 1
+          fi
+          if [ "$ACTION" = release ]; then
+            if ! [[ "$BUILD" =~ ^[0-9]+$ ]]; then
+              echo "::error::\"release\" needs the build number testers have, e.g. 103 for \"$name (103)\"."
+              exit 1
+            fi
+            if ! [[ "$ROLLOUT" =~ ^[0-9]+$ ]] || [ "$ROLLOUT" -lt 1 ] || [ "$ROLLOUT" -gt 100 ]; then
+              echo "::error::rollout must be a whole percentage from 1 to 100, not '$ROLLOUT'."
+              exit 1
+            fi
+            # A re-run after one store failed finds its own tag, which is fine.
+            tagged="$(git rev-parse -q --verify "refs/tags/v$name^{commit}" || true)"
+            if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
+              echo "::error::v$name is already released from another commit. Bump pubspec.yaml's version."
+              exit 1
+            fi
+          fi
+          echo "$ACTION $name${BUILD:+ ($BUILD)}"
+
+  android:
+    name: Google Play
+    needs: check
+    if: inputs.platforms != 'ios'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      BUILD: ${{ inputs.build }}
+      ROLLOUT: ${{ inputs.rollout }}
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned to a commit (v1.328.0): this job is handed a service-account key.
+      - uses: ruby/setup-ruby@e81a8fa391b11a595c1b7ed84177cc0fe02faf83
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      # Written outside the checkout and removed at the end whatever happens.
+      - name: Install the Play key
+        env:
+          # The same key release.yml uploads test builds with. Its service
+          # account also needs production and store-listing permissions.
+          KEY: ${{ secrets.PLAYSTORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::PLAYSTORE_SERVICE_ACCOUNT_JSON is not set. See docs/RELEASING.md."
+            exit 1
+          fi
+          key="$RUNNER_TEMP/play.json"
+          printf '%s' "$KEY" > "$key"
+          chmod 600 "$key"
+          echo "PLAY_JSON_KEY_PATH=$key" >> "$GITHUB_ENV"
+
+      - name: Promote to production
+        if: inputs.action == 'release'
+        run: bundle exec fastlane android promote build:"$BUILD" rollout:"$ROLLOUT"
+
+      - name: Upload the listing
+        if: inputs.action == 'listing'
+        run: bundle exec fastlane android listing
+
+      - name: Compare with the live listing
+        if: inputs.action == 'check'
+        run: |
+          live="$RUNNER_TEMP/live-android"
+          bundle exec fastlane android fetch_listing path:"$live"
+          # Images are not managed here.
+          find "$live" -type d -name images -prune -exec rm -rf {} +
+          {
+            echo '### Google Play: repository (a) against live (b)'
+            echo '```diff'
+            git diff --no-index --ignore-space-at-eol fastlane/metadata/android "$live" || true
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the Play key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/play.json"
+
+  ios:
+    name: App Store
+    needs: check
+    if: inputs.platforms != 'android'
+    # deliver uploads no binary here, so it needs no Xcode.
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+      BUILD: ${{ inputs.build }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@e81a8fa391b11a595c1b7ed84177cc0fe02faf83
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Install the App Store Connect API key
+        env:
+          P8: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+        run: |
+          for name in P8 ASC_KEY_ID ASC_ISSUER_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty: its secret is not set. See docs/RELEASING.md."
+              exit 1
+            fi
+          done
+          key="$RUNNER_TEMP/asc/AuthKey.p8"
+          mkdir -p "$(dirname "$key")"
+          printf '%s\n' "$P8" > "$key"
+          chmod 600 "$key"
+          echo "ASC_KEY_PATH=$key" >> "$GITHUB_ENV"
+
+      - name: Submit for review
+        if: inputs.action == 'release'
+        run: bundle exec fastlane ios promote build:"$BUILD"
+
+      - name: Upload the listing
+        if: inputs.action == 'listing'
+        run: bundle exec fastlane ios listing
+
+      - name: Compare with the live listing
+        if: inputs.action == 'check'
+        run: |
+          live="$RUNNER_TEMP/live-ios"
+          key_json="$(dirname "$ASC_KEY_PATH")/key.json"
+          jq -n --arg id "$ASC_KEY_ID" --arg issuer "$ASC_ISSUER_ID" --rawfile key "$ASC_KEY_PATH" \
+            '{key_id: $id, issuer_id: $issuer, key: $key}' > "$key_json"
+          bundle exec fastlane deliver download_metadata \
+            --api_key_path "$key_json" \
+            --app_identifier org.getspot \
+            --metadata_path "$live" \
+            --force
+          # The repository is public, so this log and the summary are too. App
+          # Review details (the reviewer sign-in, the contact's phone number)
+          # and the trade representative's address are compared by file name
+          # only, never printed.
+          repo="$RUNNER_TEMP/repo-ios"
+          cp -R fastlane/metadata/ios "$repo"
+          private=(review_information trade_representative_contact_information)
+          {
+            echo '#### App Review details (file names only, contents not shown)'
+            echo '```'
+            for dir in "${private[@]}"; do
+              (cd "$repo" && find "$dir" -type f 2>/dev/null | sed 's/^/repository: /')
+              (cd "$live" && find "$dir" -type f -size +1c 2>/dev/null | sed 's/^/live: /')
+            done
+            echo '```'
+          } > "$RUNNER_TEMP/private-summary.md"
+          for dir in "${private[@]}"; do
+            rm -rf "${repo:?}/$dir" "${live:?}/$dir"
+          done
+          {
+            echo '### App Store: repository (a) against live (b)'
+            echo '```diff'
+            git diff --no-index --ignore-space-at-eol "$repo" "$live" || true
+            echo '```'
+            cat "$RUNNER_TEMP/private-summary.md"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          rm -rf "$repo" "$RUNNER_TEMP/private-summary.md"
+
+      - name: Remove the API key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"
+
+  tag:
+    name: Tag the release
+    needs: [check, android, ios]
+    # Tags once every store this run covered has succeeded. A skipped store is
+    # fine; a failed one means fixing it and running again first.
+    if: >-
+      always() && inputs.action == 'release'
+      && needs.check.result == 'success'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      # Pushed with GITHUB_TOKEN, so it does not start release.yml and no new
+      # test build replaces the one just promoted.
+      - name: Tag v${{ needs.check.outputs.name }}
+        env:
+          NAME: ${{ needs.check.outputs.name }}
+          BUILD: ${{ inputs.build }}
+          PLATFORMS: ${{ inputs.platforms }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v$NAME" >/dev/null 2>&1; then
+            echo "v$NAME already exists."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$NAME" -m "GetSpot $NAME ($BUILD), promoted to production ($PLATFORMS)"
+          git push origin "v$NAME"
