@@ -172,7 +172,7 @@ jobs:
           grep -E 'SHA256:' <<< "$cert"
 
       # Kept whether or not the upload runs, so a bundle can be uploaded by hand.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android-aab-${{ needs.check.outputs.code }}
           path: build/app/outputs/bundle/release/app-release.aab
