@@ -286,8 +286,8 @@ packages:
     resolution: {integrity: sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  '@fastify/busboy@3.2.3':
-    resolution: {integrity: sha512-fmo/IKgkenPzz3qTKG+sIUXdF/Kv83AkvvOXJHPTHJeKJbat8SsL1ihUaFaDotqoEl4UZ1Lf8Eb/3vK6eaWX2A==}
+  '@fastify/busboy@3.2.4':
+    resolution: {integrity: sha512-lQS8xcXT54rdJb+wlG/Q7SMSdtkZEpLPHooSDUZyyZm9LJD7X1kONPhVoPaHq+dsPtWUGGLIz9gBNhs9qKbylw==}
 
   '@firebase/app-check-interop-types@0.3.4':
     resolution: {integrity: sha512-zz3i6e13B8BfWiLy8MABtTh8aGIACgKbf9UVnyHcWs+yQzJXgQcl8A46b0zfaiJHdQ+niF0ouAfcpuf+3LMPQg==}
@@ -2515,8 +2515,8 @@ packages:
   highlight.js@10.7.3:
     resolution: {integrity: sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==}
 
-  hono@4.13.7:
-    resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
+  hono@4.13.14:
+    resolution: {integrity: sha512-yhRLQ21U6qa9Hsu2N7Qcbh8tE+WKEcoErjIo56LeSGiGXGp9sA7UpE86Ui9uexb61KakiGwuHMn2QdV7w6i6kQ==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@7.0.2:
@@ -4837,7 +4837,7 @@ snapshots:
 
   '@eslint/js@8.57.1': {}
 
-  '@fastify/busboy@3.2.3': {}
+  '@fastify/busboy@3.2.4': {}
 
   '@firebase/app-check-interop-types@0.3.4': {}
 
@@ -5016,9 +5016,9 @@ snapshots:
       protobufjs: 7.6.6
       yargs: 17.7.3
 
-  '@hono/node-server@2.1.1(hono@4.13.7)':
+  '@hono/node-server@2.1.1(hono@4.13.14)':
     dependencies:
-      hono: 4.13.7
+      hono: 4.13.14
 
   '@humanwhocodes/config-array@0.13.0(supports-color@8.1.1)':
     dependencies:
@@ -5411,7 +5411,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.32.1(supports-color@8.1.1)(zod@4.5.4)':
     dependencies:
-      '@hono/node-server': 2.1.1(hono@4.13.7)
+      '@hono/node-server': 2.1.1(hono@4.13.14)
       ajv: 8.20.0
       ajv-formats: 3.0.1
       content-type: 2.0.0
@@ -5421,7 +5421,7 @@ snapshots:
       eventsource-parser: 3.1.1
       express: 5.2.1(supports-color@8.1.1)
       express-rate-limit: 8.7.0(express@5.2.1(supports-color@8.1.1))(supports-color@8.1.1)
-      hono: 4.13.7
+      hono: 4.13.14
       jose: 6.2.11
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -7148,7 +7148,7 @@ snapshots:
 
   firebase-admin@13.10.0(supports-color@8.1.1):
     dependencies:
-      '@fastify/busboy': 3.2.3
+      '@fastify/busboy': 3.2.4
       '@firebase/database-compat': 2.1.6
       '@firebase/database-types': 1.0.21
       farmhash-modern: 1.1.0
@@ -7670,7 +7670,7 @@ snapshots:
 
   highlight.js@10.7.3: {}
 
-  hono@4.13.7: {}
+  hono@4.13.14: {}
 
   hosted-git-info@7.0.2:
     dependencies:
