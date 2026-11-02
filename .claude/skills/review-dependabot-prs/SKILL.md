@@ -19,8 +19,21 @@ gh pr list --author "app/dependabot" --state open --limit 50 \
   --json number,title,baseRefName,mergeable,mergeStateStatus,statusCheckRollup,url
 ```
 
-If there are none, say so and stop. Skip (and report) any PR whose base isn't
-`develop`.
+If there are none, say so and stop.
+
+**Retarget any PR whose base is `main` to `develop`** before classifying, one
+at a time:
+
+```
+gh pr edit <n> --base develop
+gh pr comment <n> --body "@dependabot rebase"
+```
+
+Never merge a Dependabot PR into `main`. Changing the base does not re-run
+the checks, so the existing results are stale (they were run against `main`);
+the `@dependabot rebase` rebuilds the branch on `develop` and triggers fresh
+checks. Report retargeted PRs as pending this run, and they are classified
+and merged normally on the next run. Skip (and report) any PR whose base is neither `develop` nor `main`.
 
 ## 2. Classify each PR from `statusCheckRollup`
 
@@ -59,7 +72,8 @@ picked up on the next run.
 ## 4. Report
 
 Give a short table: merged (number, package, from→to), failing (with cause),
-pending, conflicting/awaiting rebase, skipped (non-`develop` base). Call out any
+pending, conflicting/awaiting rebase, retargeted from `main`, skipped (other
+base). Call out any
 **major version bumps** or bumps of `firebase-admin`/`firebase-functions` that
 were merged, so the user knows to sanity-check `develop`'s preview deploy before
 promoting to `main`.
