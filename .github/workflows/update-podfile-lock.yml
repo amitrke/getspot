@@ -1,0 +1,75 @@
+name: Update iOS Podfile.lock
+
+# Regenerates ios/Podfile.lock on macOS and commits it back to the branch.
+#
+# Why: firebase_core pins an exact Firebase iOS SDK version, so a FlutterFire
+# bump in pubspec.lock needs a matching Podfile.lock. CocoaPods only runs on
+# macOS, and release.yml's `pod install` fails on the version conflict until
+# the lock is updated. Running `pod update` inside release.yml instead would make
+# every store build resolve fresh versions, so it lives here and its result is
+# reviewed and committed like any other change.
+#
+# Only Firebase and its transitive pods (Google*, gRPC, abseil, ...) are
+# unlocked; every other pod stays at its locked version.
+
+on:
+  workflow_dispatch:
+  push:
+    # main only receives merges from develop, and Dependabot's token cannot push
+    # back to its own branches.
+    branches-ignore: [main, 'dependabot/**']
+    paths: ['pubspec.lock']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: podfile-lock-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep in step with release.yml.
+  FLUTTER_VERSION: '3.47.8'
+
+jobs:
+  update:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      # Same as release.yml: this project uses CocoaPods, not SPM.
+      - run: flutter config --no-enable-swift-package-manager
+      # Generates ios/Flutter/Generated.xcconfig and the plugin symlinks the
+      # Podfile reads.
+      - run: flutter pub get
+      - run: flutter build ios --config-only --no-codesign
+
+      - name: Update Firebase pods
+        working-directory: ios
+        run: |
+          # Some names are quoted in the lock (e.g. "gRPC-C++ (1.69.0)").
+          pods="$(grep -oE '^  - "?(Firebase[A-Za-z]*|GoogleAppMeasurement|GoogleAdsOnDeviceConversion|GoogleDataTransport|GoogleUtilities|AppCheckCore|RecaptchaInterop|gRPC-Core|gRPC-C\+\+|BoringSSL-GRPC|abseil|leveldb-library|nanopb|PromisesObjC|PromisesSwift|GTMSessionFetcher)( |/)' Podfile.lock \
+            | sed -E 's/^  - "?//; s/[ /]$//' | sort -u | tr '\n' ' ')"
+          echo "Unlocking: $pods"
+          pod update $pods --repo-update
+          grep -E '^  - (Firebase|FirebaseCore|FirebaseFirestore) \(' Podfile.lock
+
+      - name: Commit Podfile.lock
+        run: |
+          if git diff --quiet -- ios/Podfile.lock; then
+            echo "Podfile.lock is already up to date."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ios/Podfile.lock
+          git commit -m 'chore(ios): update Podfile.lock for Firebase SDK bump'
+          # A GITHUB_TOKEN push starts no workflow, so this cannot loop.
+          git push origin "HEAD:${GITHUB_REF_NAME}"
