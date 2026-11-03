@@ -18,7 +18,7 @@ on:
     # main only receives merges from develop, and Dependabot's token cannot push
     # back to its own branches.
     branches-ignore: [main, 'dependabot/**']
-    paths: ['pubspec.lock']
+    paths: ['pubspec.lock', '.github/workflows/update-podfile-lock.yml']
 
 permissions:
   contents: write
@@ -46,10 +46,12 @@ jobs:
 
       # Same as release.yml: this project uses CocoaPods, not SPM.
       - run: flutter config --no-enable-swift-package-manager
-      # Generates ios/Flutter/Generated.xcconfig and the plugin symlinks the
-      # Podfile reads.
+      # Writes ios/Flutter/Generated.xcconfig and .flutter-plugins-dependencies,
+      # which the Podfile reads (it creates the plugin symlinks itself). Not
+      # `flutter build ios --config-only`: that runs `pod install`, which fails
+      # on the very lock conflict this workflow exists to resolve.
+      - run: flutter precache --ios
       - run: flutter pub get
-      - run: flutter build ios --config-only --no-codesign
 
       - name: Update Firebase pods
         working-directory: ios
