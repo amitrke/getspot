@@ -35,7 +35,7 @@ dependencies:
   firebase_core: ^4.3.0
   firebase_messaging: ^16.1.0
   firebase_auth: ^6.1.3
-  firebase_analytics: ^12.1.0
+  firebase_analytics: ^12.6.1
   firebase_crashlytics: ^5.0.6
   firebase_remote_config: ^6.1.3
   firebase_app_check: ^0.4.1+3
@@ -48,7 +48,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   cloud_functions: ^6.0.5
-  cloud_firestore: ^6.1.1
+  cloud_firestore: ^6.10.1
   url_launcher: ^6.3.0
   web: ^1.1.1
   sign_in_with_apple: ^8.1.0
