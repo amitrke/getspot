@@ -46,23 +46,36 @@ Never commit state files.
 
 ## One-time setup
 
-Run once by a project owner (`gcloud auth login` and
-`gcloud auth application-default login` first):
+Run once by a project owner (`gcloud auth login` first):
 
 ```bash
 bash infra/bootstrap.sh
 ```
 
-It enables APIs, creates the state bucket, a `terraform-ci` service account
-with least-privilege roles, a Workload Identity Federation pool restricted to
+It enables APIs, creates the state bucket, two service accounts with separate
+trust (below), a Workload Identity Federation pool restricted to
 `github.com/amitrke/getspot`, and imports the two pre-existing alert policies.
-It prints two values to save as **GitHub repository variables**:
+It prints values to save as **GitHub repository variables**:
 
 - `GCP_WORKLOAD_IDENTITY_PROVIDER`
-- `GCP_TERRAFORM_SERVICE_ACCOUNT`
+- `GCP_TERRAFORM_PLAN_SERVICE_ACCOUNT`
+- `GCP_TERRAFORM_APPLY_SERVICE_ACCOUNT`
 
-Optionally add required reviewers to the `terraform-apply` GitHub Environment
-for a manual approval before apply.
+Then create the GitHub Environment **`terraform-apply`** (Settings >
+Environments), add yourself as a required reviewer, and set *Deployment
+branches* to *Selected branches = main*. That restriction is what stops an
+arbitrary branch's workflow from running with the privileged identity.
+
+### Two identities, least privilege
+
+| Service account | Who can impersonate it | Can do |
+|---|---|---|
+| `terraform-plan` | Only `pull_request` runs of this repo (OIDC subject `repo:amitrke/getspot:pull_request`) | Read-only on monitoring and Cloud Run; read-only on state (plans use `-lock=false`) |
+| `terraform-apply` | Only jobs in the `terraform-apply` environment (subject `repo:amitrke/getspot:environment:terraform-apply`) | Edit alert policies, set Cloud Run IAM, write state |
+
+Trust is bound to the exact OIDC subject, not just the repository, so a plain
+branch push, an unrelated workflow, or a compromised action in a PR job cannot
+get write access, and every privileged run passes the environment's approval.
 
 ## Day to day
 

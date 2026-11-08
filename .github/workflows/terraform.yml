@@ -6,9 +6,17 @@
 #  - Push to main touching infra/: apply, gated by the `terraform-apply` GitHub
 #    Environment (add required reviewers there for a manual approval step).
 #
-# Auth is keyless via Workload Identity Federation; the pool only trusts this
-# repository. Required repository variables:
-#   GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_TERRAFORM_SERVICE_ACCOUNT
+# Auth is keyless via Workload Identity Federation with two separate identities:
+#   - plan job  -> terraform-plan  (READ-ONLY; trusted only for pull_request runs;
+#                  plans use -lock=false because it can't write state)
+#   - apply job -> terraform-apply (can change infra/state; trusted ONLY for jobs
+#                  running in the `terraform-apply` Environment, so its protection
+#                  rules gate every privileged run. Restrict that environment's
+#                  deployment branches to main.)
+# Required repository variables:
+#   GCP_WORKLOAD_IDENTITY_PROVIDER
+#   GCP_TERRAFORM_PLAN_SERVICE_ACCOUNT
+#   GCP_TERRAFORM_APPLY_SERVICE_ACCOUNT
 
 name: Terraform
 
@@ -51,7 +59,7 @@ jobs:
       - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+          service_account: ${{ vars.GCP_TERRAFORM_PLAN_SERVICE_ACCOUNT }}
 
       - run: terraform fmt -check -recursive
       - run: terraform init -input=false
@@ -60,7 +68,7 @@ jobs:
       - name: Plan
         run: |
           set -o pipefail
-          terraform plan -input=false -lock-timeout=120s -no-color | tee plan.txt
+          terraform plan -input=false -lock=false -no-color | tee plan.txt
           {
             echo '## Terraform plan'
             echo '```'
@@ -82,7 +90,7 @@ jobs:
       - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+          service_account: ${{ vars.GCP_TERRAFORM_APPLY_SERVICE_ACCOUNT }}
 
       - run: terraform init -input=false
       - run: terraform apply -input=false -auto-approve -lock-timeout=120s
