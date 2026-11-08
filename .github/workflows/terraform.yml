@@ -1,0 +1,88 @@
+# Terraform for GetSpot's Google Cloud resources (infra/): monitoring alerts and
+# callable-function invoker IAM. See docs/MONITORING.md.
+#
+#  - Pull requests touching infra/: fmt check, validate, and plan (shown in the
+#    job summary). Fork PRs are skipped (no access to cloud credentials).
+#  - Push to main touching infra/: apply, gated by the `terraform-apply` GitHub
+#    Environment (add required reviewers there for a manual approval step).
+#
+# Auth is keyless via Workload Identity Federation; the pool only trusts this
+# repository. Required repository variables:
+#   GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_TERRAFORM_SERVICE_ACCOUNT
+
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/terraform.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+  workflow_dispatch:
+
+# Serialize runs so two jobs never fight over the state lock.
+concurrency:
+  group: terraform
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+defaults:
+  run:
+    working-directory: infra
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+
+      - run: terraform fmt -check -recursive
+      - run: terraform init -input=false
+      - run: terraform validate
+
+      - name: Plan
+        run: |
+          set -o pipefail
+          terraform plan -input=false -lock-timeout=120s -no-color | tee plan.txt
+          {
+            echo '## Terraform plan'
+            echo '```'
+            cat plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: terraform-apply
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+
+      - run: terraform init -input=false
+      - run: terraform apply -input=false -auto-approve -lock-timeout=120s
