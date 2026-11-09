@@ -6,3 +6,14 @@ braces 3.0.3, dev-only (eslint-config-next -> fast-glob -> micromatch). No
 patched release exists yet. Not part of the production bundle. Re-check when a
 fix is published; the date forces a re-evaluation.
 """
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-01-08
+reason = """
+minimatch 10.2.6 (denial of service via globparts amplification), dev-only
+(eslint, @eslint/config-array, typescript-eslint). Not part of the production
+bundle. Fixed in minimatch 11.0.1, a major bump the eslint packages don't yet
+declare support for. Revisit once eslint updates its own dependency; the date
+forces a re-evaluation.
+"""

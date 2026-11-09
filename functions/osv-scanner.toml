@@ -31,3 +31,39 @@ Functions, and only reachable via FTP proxy-autoconfig URLs). The fix is the
 6.x major, which get-uri@6 does not declare support for. Revisit once
 firebase-tools / get-uri bump their own basic-ftp dependency.
 """
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-01-08
+reason = """
+minimatch 9.0.9 / 10.2.6 (denial of service via globparts amplification), pulled
+in by glob -> firebase-tools, jest (test-exclude, jest-config) and rimraf. All
+devDependencies for local lint/test/deploy tooling; none ship to Cloud
+Functions. Fixed in minimatch 11.0.1, a major bump that glob 10/13 and their
+parents don't declare support for, so forcing it risks breaking firebase-tools
+and jest. Revisit once those packages update their own dependency; the date
+forces a re-evaluation.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2027-01-08
+reason = """
+glob 10.5.0 / 13.0.6 (AbortSignal cancellation bypass allows post-timeout
+filesystem traversal), pulled in by firebase-tools, jest (jest-config,
+jest-runtime, test-exclude), rimraf and exegesis. Dev-only tooling that only
+globs trusted local paths with no cancellation timeout; not shipped to Cloud
+Functions. Fixed in glob 14.0.2, a major bump that parents don't declare
+support for. Revisit once firebase-tools / jest bump their own glob dependency.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-gcqx-w48m-w2h4"
+ignoreUntil = 2027-01-08
+reason = """
+deepmerge 4.3.1 (mergeObject() prototype poisoning), pulled in by jest-config
+(devDependency used only in unit tests; merges test-authored config, never
+untrusted input). Severity low. No patched release exists (OSV lists 4.3.1 as
+last affected), so there is nothing to upgrade to. Re-check when a fix is
+published; the date forces a re-evaluation.
+"""
