@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:getspot/l10n/app_localizations.dart';
+import 'package:getspot/helpers/event_overlap.dart';
 import 'package:getspot/services/event_cache_service.dart';
 import 'dart:developer' as developer;
 import 'package:getspot/widgets/constrained_content.dart';
@@ -192,6 +193,92 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     return l10n.createEventDeadlineOptionDaysBefore(days);
   }
 
+  /// Returns true if the event should be created: either nothing overlaps, the
+  /// overlap check itself failed (fail open - never block creation on a lookup
+  /// error), or the admin chose "Create anyway".
+  Future<bool> _confirmDespiteOverlap(DateTime newStart) async {
+    final List<EventSlot> overlaps;
+    try {
+      // Same shape as the event list query (groupId + status + eventTimestamp
+      // range), so it's served by the existing composite index. Always a fresh
+      // read: the 10-min cache could miss an event created moments ago.
+      final snapshot = await FirebaseFirestore.instance
+          .collection('events')
+          .where('groupId', isEqualTo: widget.groupId)
+          .where('status', isEqualTo: 'active')
+          .where(
+            'eventTimestamp',
+            isGreaterThan:
+                Timestamp.fromDate(newStart.subtract(kAssumedEventDuration)),
+          )
+          .where(
+            'eventTimestamp',
+            isLessThan:
+                Timestamp.fromDate(newStart.add(kAssumedEventDuration)),
+          )
+          .get();
+
+      overlaps = findOverlappingEvents(
+        newStart,
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+          return EventSlot(
+            name: (data['name'] as String?) ?? '',
+            start: (data['eventTimestamp'] as Timestamp).toDate(),
+          );
+        }),
+      );
+    } catch (e, st) {
+      developer.log(
+        'Error checking for overlapping events',
+        name: 'CreateEventScreen',
+        error: e,
+        stackTrace: st,
+      );
+      return true;
+    }
+
+    if (overlaps.isEmpty || !mounted) {
+      return true;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final format = DateFormat.yMMMEd(l10n.localeName).add_jm();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.createEventOverlapTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.createEventOverlapMessage),
+            const SizedBox(height: 12),
+            for (final e in overlaps)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  '${e.name} · ${format.format(e.start)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.createEventOverlapCreateAnyway),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
   Future<void> _createEvent() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -231,6 +318,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _deadlineTime!.hour,
         _deadlineTime!.minute,
       );
+
+      // Warn (but don't block) if another active event in this group starts
+      // around the same time, e.g. an accidental duplicate.
+      final proceed = await _confirmDespiteOverlap(eventTimestamp);
+      if (!proceed) {
+        return;
+      }
 
       await FirebaseFirestore.instance.collection('events').add({
         'name': _nameController.text,

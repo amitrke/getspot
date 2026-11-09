@@ -53,7 +53,7 @@ concurrency:
 env:
   # Pinned to the version this has been built and verified with, not "latest",
   # so an unrelated Flutter release is not a surprise CI failure.
-  FLUTTER_VERSION: '3.47.0'
+  FLUTTER_VERSION: '3.47.8'
   PACKAGE_NAME: org.getspot
   # Added to github.run_number. Before this workflow, Play's highest versionCode
   # was 39 (deploy-android.yml) and TestFlight's highest build was 50 (Xcode
@@ -172,7 +172,7 @@ jobs:
           grep -E 'SHA256:' <<< "$cert"
 
       # Kept whether or not the upload runs, so a bundle can be uploaded by hand.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android-aab-${{ needs.check.outputs.code }}
           path: build/app/outputs/bundle/release/app-release.aab

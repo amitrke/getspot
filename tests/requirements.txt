@@ -2,7 +2,7 @@
 # Python 3.9+
 
 # Core testing framework
-pytest==9.1.1
+pytest==9.2.0
 pytest-html==4.2.0        # HTML test reports
 pytest-cov==7.1.0         # Code coverage
 pytest-xdist==3.8.0       # Parallel test execution
@@ -13,8 +13,8 @@ google-cloud-firestore==2.34.1
 google-cloud-storage==3.17.1
 
 # gRPC dependencies (pinned for Windows compatibility)
-grpcio==1.84.0
-grpcio-status==1.84.0
+grpcio==1.85.1
+grpcio-status==1.85.1
 
 # Utilities
 python-dotenv==1.2.4      # Environment variable management
@@ -26,6 +26,7 @@ tabulate==0.10.0           # Pretty table formattingH
 # Pin explicitly so installs are reproducible and don't drift back to a
 # vulnerable version; bump these when `pip list --outdated` or OSV-Scanner
 # flags a newer advisory.
-anyio==4.15.1             # via httpx
+anyio==4.16.0             # via httpx
+certifi==2026.10.23       # via requests/httpx (PYSEC-2026-4320)
 idna==3.20                # via anyio/httpx/requests
 pygments==2.21.0          # via pytest
