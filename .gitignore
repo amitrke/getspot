@@ -112,3 +112,8 @@ tests/serviceAccountKey.json
 tests/*-firebase-adminsdk-*.json
 tests/credentials.json
 servicesAccountKey.json
+# Terraform (state lives in GCS; never commit local state or plans)
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
