@@ -172,6 +172,9 @@
   "createEventSelectDateToCalculate": "Eventdatum zur Berechnung auswählen",
   "createEventSelectDateAndTime": "Datum und Uhrzeit auswählen",
   "createEventSelectDatesTimes": "Bitte wähle alle Daten und Uhrzeiten aus.",
+  "createEventOverlapTitle": "Überschneidender Termin",
+  "createEventOverlapMessage": "Diese Gruppe hat bereits ein aktives Event zur gleichen Zeit:",
+  "createEventOverlapCreateAnyway": "Trotzdem erstellen",
   "createEventMustBeLoggedIn": "Du musst angemeldet sein, um ein Event zu erstellen.",
   "createEventErrorCreating": "Fehler beim Erstellen des Events: {error}",
 

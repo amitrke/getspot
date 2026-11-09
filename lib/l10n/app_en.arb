@@ -723,6 +723,18 @@
   "@createEventSelectDatesTimes": {
     "description": "SnackBar shown when submitting without picking event/deadline date and time"
   },
+  "createEventOverlapTitle": "Overlapping event",
+  "@createEventOverlapTitle": {
+    "description": "Title of the warning dialog shown when a new event starts close to an existing active event in the same group"
+  },
+  "createEventOverlapMessage": "This group already has an active event around the same time:",
+  "@createEventOverlapMessage": {
+    "description": "Body of the overlap warning dialog; followed by a list of the overlapping events"
+  },
+  "createEventOverlapCreateAnyway": "Create anyway",
+  "@createEventOverlapCreateAnyway": {
+    "description": "Button on the overlap warning dialog to create the event despite the overlap"
+  },
   "createEventMustBeLoggedIn": "You must be logged in to create an event.",
   "@createEventMustBeLoggedIn": {
     "description": "Error thrown when creating an event while signed out"
