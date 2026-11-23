@@ -11,23 +11,3 @@ that uses firebase-functions-test's v2 CloudEvent helpers. See
 functions/pnpm-workspace.yaml overrides comment. Revisit once
 firebase-functions-test bumps its own ts-deepmerge dependency.
 """
-
-[[IgnoredVulns]]
-id = "GHSA-vfj7-8cjw-p6xm"
-ignoreUntil = 2027-01-11
-reason = """
-braces 3.0.3, pulled in by dev-only tooling (eslint/jest/micromatch). No patched
-release exists yet ("--" fixed version in the OSV report). Not shipped to Cloud
-Functions. Re-check when a fix is published; the date forces a re-evaluation.
-"""
-
-[[IgnoredVulns]]
-id = "GHSA-c475-qrg2-pj4r"
-ignoreUntil = 2027-01-11
-reason = """
-basic-ftp 5.3.1, pulled in by firebase-tools -> proxy-agent -> pac-proxy-agent
--> get-uri (devDependency for local CLI/deploy only, not shipped to Cloud
-Functions, and only reachable via FTP proxy-autoconfig URLs). The fix is the
-6.x major, which get-uri@6 does not declare support for. Revisit once
-firebase-tools / get-uri bump their own basic-ftp dependency.
-"""
