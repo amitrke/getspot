@@ -30,7 +30,7 @@ jobs:
           node-version: '22'
 
       - name: Deploy Firestore rules
-        uses: w9jds/firebase-action@4cdc4914d02e1044478456e9d0f87118e13541d9 # v15.36.0
+        uses: w9jds/firebase-action@e01972352bce28ca4658ce13d6abefd26053a4e2 # v15.37.0
         with:
           args: deploy --only firestore:rules
         env:
